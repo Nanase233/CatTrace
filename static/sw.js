@@ -1,5 +1,5 @@
 // Service Worker - PWA 离线支持
-const CACHE_NAME = 'meowguard-v1';
+const CACHE_NAME = 'cattrace-v1';
 const OFFLINE_URL = '/';
 
 // 安装阶段

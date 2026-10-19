@@ -1,6 +1,6 @@
 {
-  "name": "MeowGuard · 城市流浪猫生命共同体",
-  "short_name": "MeowGuard",
+  "name": "CatTrace · 流浪猫科学救助平台",
+  "short_name": "CatTrace",
   "description": "城市流浪猫救助、绝育、领养一体化平台",
   "start_url": "/",
   "display": "standalone",

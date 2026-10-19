@@ -1,5 +1,5 @@
 """
-MeowGuard 自学习引擎 (Self-Learning Engine)
+CatTrace 自学习引擎 (Self-Learning Engine)
 ============================================
 通过分析用户行为和猫咪数据，自动学习模式、发现异常、生成推荐。
 
@@ -9,7 +9,7 @@ MeowGuard 自学习引擎 (Self-Learning Engine)
   3. 异常检测与健康预警 - 自动发现数据异常，计算健康评分
   4. 识别自优化       - 通过用户反馈持续改进识别准确率
 
-作者：MeowGuard 项目组
+作者：CatTrace 项目组
 版本：v1.0
 """
 
@@ -21,7 +21,7 @@ import os
 
 class SelfLearningEngine:
     """
-    MeowGuard 自学习引擎
+    CatTrace 自学习引擎
 
     用法:
         engine = SelfLearningEngine('data.json')

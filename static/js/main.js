@@ -1,6 +1,6 @@
 /**
- * MeowGuard - 项目猫前端核心模块
- * 城市流浪猫生命共同体
+ * CatTrace - 前端核心模块
+ * 流浪猫科学救助平台
  */
 
 // ============================================
@@ -147,7 +147,7 @@ const Auth = {
             <div class="modal-overlay" id="loginOverlay"></div>
             <div class="modal-content login-modal-content">
                 <div class="modal-header">
-                    <h3>📱 登录 MeowGuard</h3>
+                    <h3>📱 登录 CatTrace</h3>
                     <button class="modal-close" id="loginClose">&times;</button>
                 </div>
                 <div class="modal-body">

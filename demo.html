@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeowGuard · 城市流浪猫生命共同体</title>
+<title>CatTrace · 流浪猫科学救助平台</title>
 <style>
 /* ===== 全局变量与重置 ===== */
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -259,8 +259,8 @@ body.dark-mode .footer { border-top-color:rgba(255,255,255,0.08); }
     <div class="nav-brand">
         <span class="icon">🐱</span>
         <div>
-            <div>MeowGuard</div>
-            <span class="tagline">城市流浪猫生命共同体</span>
+            <div>CatTrace</div>
+            <span class="tagline">流浪猫科学救助平台</span>
         </div>
     </div>
     <div class="nav-actions">
@@ -564,7 +564,7 @@ body.dark-mode .footer { border-top-color:rgba(255,255,255,0.08); }
 
 <!-- ===== Footer ===== -->
 <div class="footer">
-    <p style="font-weight:700;">🐱 MeowGuard · 城市流浪猫生命共同体</p>
+    <p style="font-weight:700;">🐱 CatTrace · 流浪猫科学救助平台</p>
     <p style="font-size:0.85rem;">基于 AIoT 的流浪猫科学救助与社区共治平台 | 产品原型演示 v2.0</p>
 </div>
 
@@ -897,7 +897,7 @@ function showStageDetail(stage) {
         1: { title:'📱 线上试养 · 第1-7天', desc:'领养人每日上传进食、饮水、精神短视频 → AI自动分析猫咪状态（食欲、活跃度、体态）。第7天AI初筛报告自动生成。' },
         2: { title:'🏠 月度过渡 · 第8-30天', desc:'每周上传视频+填写行为问卷。第30天上传居家环境全景照片+猫咪称重照片 → AI检测环境安全（窗户/植物/电线）+体态变化分析。异常标记人工介入。' },
         3: { title:'✅ 稳定期 · 第31-90天', desc:'每月简单反馈+猫咪现状照片。系统自动审核记录连续性，全部正常则第90天自动签署电子确认书。保障金¥300照常退还。' },
-        4: { title:'🏆 终身关怀 · 长期', desc:'每年猫咪健康年报、疫苗/绝育提醒。系统自动推送，无需上门。猫咪永远是MeowGuard大家庭的一员。' },
+        4: { title:'🏆 终身关怀 · 长期', desc:'每年猫咪健康年报、疫苗/绝育提醒。系统自动推送，无需上门。猫咪永远是CatTrace大家庭的一员。' },
     };
     const d = details[stage];
     const nodes = document.querySelectorAll('.stage-node');
@@ -1002,7 +1002,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     // 登录按钮
     $('loginBtn').addEventListener('click', ()=>showToast('👤 登录功能（模拟）：支持手机号+验证码登录'));
 
-    console.log('🐱 MeowGuard Demo v2.0 — 全部模块已就绪');
+    console.log('🐱 CatTrace Demo v2.0 — 全部模块已就绪');
     console.log('  📹 云吸猫 | 📖 猫咪日记 | 💰 透明看板 | 🐱 生命档案 | 🏠 领养系统 | ⚠️ 预警中心 | 🤝 社区共治');
 });
 </script>
