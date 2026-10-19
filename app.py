@@ -8,6 +8,9 @@ import uuid
 import functools
 from datetime import datetime, timedelta
 
+# 导入自学习模块
+from self_learning import SelfLearningEngine
+
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.environ.get('PROJECTCAT_DATA_FILE', os.path.join(BASE_DIR, 'data.json'))
@@ -23,6 +26,9 @@ APP_CACHE_BUST = os.environ.get('PROJECTCAT_CACHE_BUST') or str(int(time.time())
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
+
+# 初始化自学习引擎
+learning_engine = SelfLearningEngine(DATA_FILE)
 
 # ---------- 登录鉴权装饰器 ----------
 def login_required(f):
@@ -616,6 +622,17 @@ def feed_cat():
     
     save_data(data)
     
+    # ⭐ 触发自学习引擎
+    try:
+        user = getattr(request, '_current_user', None)
+        user_id = user.get('id') if user else None
+        learning_engine.on_feed(cat_id, user_id=user_id, user_name=user_name)
+        # 同步学习数据到 data.json
+        learning_engine._save_to_data(data)
+        save_data(data)
+    except Exception:
+        pass  # 自学习失败不影响投喂主流程
+    
     return jsonify({
         'success': True,
         'message': f'投喂成功！{user_name} 投喂了 {target_cat.get("name", "猫咪")}',
@@ -1126,6 +1143,14 @@ def feed_cat_login():
 
     save_data(data)
 
+    # ⭐ 触发自学习引擎
+    try:
+        learning_engine.on_feed(cat_id, user_id=user.get('id'), user_name=user_name)
+        learning_engine._save_to_data(data)
+        save_data(data)
+    except Exception:
+        pass
+
     return jsonify({
         'success': True,
         'message': f'投喂成功！{user_name} 投喂了 {target_cat.get("name", "猫咪")}',
@@ -1471,6 +1496,71 @@ def get_finance_monthly():
         'success': True,
         'monthly': result
     })
+
+# ========== 自学习模块 API ==========
+
+@app.route('/api/learning/cat-profile/<int:cat_id>')
+def get_learning_cat_profile(cat_id):
+    """获取猫咪学习画像"""
+    return jsonify(learning_engine.get_cat_profile(cat_id))
+
+@app.route('/api/learning/user-profile/<user_id>')
+def get_learning_user_profile(user_id):
+    """获取用户偏好画像"""
+    return jsonify(learning_engine.get_user_profile(user_id))
+
+@app.route('/api/learning/recommendations/<user_id>')
+def get_learning_recommendations(user_id):
+    """获取个性化推荐"""
+    return jsonify({
+        'success': True,
+        'recommendations': learning_engine.get_recommendations(user_id)
+    })
+
+@app.route('/api/learning/anomalies')
+def get_learning_anomalies():
+    """获取异常预警列表"""
+    anomalies = learning_engine.detect_anomalies()
+    return jsonify({
+        'success': True,
+        'anomalies': anomalies,
+        'count': len(anomalies)
+    })
+
+@app.route('/api/learning/insights')
+def get_learning_insights():
+    """获取全局模式洞察"""
+    return jsonify(learning_engine.get_global_insights())
+
+@app.route('/api/learning/health-report/<int:cat_id>')
+def get_learning_health_report(cat_id):
+    """获取猫咪健康报告"""
+    return jsonify(learning_engine.compute_health_score(cat_id))
+
+@app.route('/api/learning/feedback', methods=['POST'])
+def post_learning_feedback():
+    """提交识别纠错反馈"""
+    if not request.is_json:
+        return jsonify({'success': False, 'message': '请求格式错误'}), 400
+    req_data = request.get_json(silent=True) or {}
+    predicted = req_data.get('predicted_cat_id')
+    actual = req_data.get('actual_cat_id')
+    confidence = req_data.get('confidence', 0)
+    image = req_data.get('image_path')
+    if predicted is None or actual is None:
+        return jsonify({'success': False, 'message': '缺少 predicted_cat_id 或 actual_cat_id'}), 400
+    learning_engine.record_feedback(predicted, actual, confidence, image)
+    return jsonify({'success': True, 'message': '反馈已记录'})
+
+@app.route('/api/learning/train', methods=['POST'])
+def post_learning_train():
+    """触发模型重新训练"""
+    result = learning_engine.retrain()
+    # 同步学习数据到 data.json
+    data = load_data()
+    learning_engine._save_to_data(data)
+    save_data(data)
+    return jsonify(result)
 
 if __name__ == '__main__':
     init_data()
