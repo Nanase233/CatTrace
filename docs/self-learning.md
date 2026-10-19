@@ -147,23 +147,8 @@
 
 ---
 
-## 7. API 接口
+## 7. 相关文档
 
-| 路径 | 方法 | 说明 |
-|------|------|------|
-| /api/learning/cat-profile/{id} | GET | 获取猫咪行为画像 |
-| /api/learning/user-profile/{user_id} | GET | 获取用户偏好画像 |
-| /api/learning/anomalies | GET | 获取异常告警列表 |
-| /api/learning/health-report/{id} | GET | 获取猫咪健康评分报告 |
-| /api/learning/feedback | POST | 提交用户纠错反馈 |
-| /api/learning/insights | GET | 获取全局统计洞察 |
-| /api/learning/recommendations/{user_id} | GET | 获取个性化推荐 |
-| /api/learning/train | POST | 触发规则重新计算 |
-
----
-
-## 8. 相关文档
-
-- [user-guide.md](./user-guide.md) - 用户说明书，包含各功能的验收标准
-- [features.md](./features.md) - 三大核心功能详细说明
-- [architecture.md](./architecture.md) - 系统架构与硬件方案
+- [api.md](./api.md) - REST API 完整接口文档（含自学习接口）
+- [user-guide.md](./user-guide.md) - 用户说明书
+- [roadmap.md](./roadmap.md) - 项目路线图（含自学习演进）

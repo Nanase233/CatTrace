@@ -225,7 +225,7 @@ class SelfLearningEngine:
         if not pref:
             return [{
                 'type': 'welcome',
-                'message': '欢迎来到 MeowGuard！先去看看我们的猫咪吧 🐱',
+                'message': '欢迎来到 CatTrace！先去看看我们的猫咪吧 🐱',
                 'cat_id': None
             }]
 

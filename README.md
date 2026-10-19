@@ -1,105 +1,51 @@
-# 🐱 CatTrace
+# CatTrace
 
-> **看见每一只猫，守护每一个家。**
+> 看见每一只猫，守护每一个家。
 >
 > 基于 AIoT 的流浪猫科学救助与社区共治平台 MVP
 
 ---
 
-## 为什么做这件事
-
-中国有 5000–8000 万只流浪猫，而全职做一线救助的志愿者全国仅数千人。CatTrace 用技术连接爱心人士、物业、志愿者和领养人四方，让救助更高效、更透明。
-
-| 角色 | 痛点 | CatTrace 的解法 |
-|------|------|----------------|
-| 爱心人士 | 想喂猫找不到，不知道钱花哪了 | 远程投喂 + 透明记录 |
-| 物业/社区 | 猫扰民投诉多，左右为难 | 数据化治理工具 |
-| 志愿者 | 找猫靠蹲、领养靠运气 | 智能定位 + 高效匹配 |
-| 领养人 | 怕猫有病、怕"星期猫" | 真实档案 + 严选流程 |
-
 ## 三大核心功能
 
-| # | 功能 | 等级 | 状态 | 说明 |
-|---|------|------|------|------|
-| 1 | 📹 **实时直播与在线巡检** | P0 | 🔧 MVP 模拟 | 树莓派 / 香橙派边缘节点接入摄像头与环境传感器，支持远程实时查看与在线巡检 |
-| 2 | 🍖 **远程投喂与投喂追溯** | P0 | ✅ 已完成 | 一键投喂，全链路记录谁、何时、喂了哪只猫，数据透明可追溯 |
-| 3 | 📋 **AI 猫咪档案** | P0 | ✅ 已完成 | 为每只建档猫建立数字身份：基本信息、健康状态、绝育记录、互动数据 |
+| # | 功能 | 等级 | 状态 |
+|---|------|------|------|
+| 1 | 实时直播与在线巡检 | P0 | MVP 模拟 |
+| 2 | 远程投喂与投喂追溯 | P0 | 已完成 |
+| 3 | AI 猫咪档案 | P0 | 已完成 |
 
-### 自学习 AI 能力层
-
-自学习引擎（`self_learning.py`）作为贯穿三大功能的智能底座，让平台越用越聪明：
-
-| 赋能功能 | AI 能力 | 状态 |
-|---------|--------|------|
-| 实时直播 | 异常行为样本采集、低置信度样本人工标注 | 📋 待开发 |
-| 远程投喂 | 投喂规律学习、异常投喂提醒、阈值自校准 | ✅ 已完成 |
-| 猫咪档案 | 健康评分已完成；猫脸识别辅助建档 📋 规划中 | 🔧 部分完成 |
-
-## 辅助功能
-
-| 功能 | 等级 | 状态 |
-|------|------|------|
-| 用户认证（手机号 + 验证码） | P0 | ✅ 已完成 |
-| 猫咪日记 | P1 | ✅ 已完成 |
-| 领养申请 | P1 | ✅ 已完成 |
-| 举报与紧急求助 | P1 | ✅ 已完成 |
-| 位置脱敏（三级隐私） | P1 | ✅ 已完成 |
-| 财务透明看板 | P1 | ✅ 已完成 |
-| 志愿者管理 | P2 | ✅ 已完成 |
-| 通知系统 | P2 | ✅ 已完成 |
+自学习引擎（`self_learning.py`）作为贯穿三大功能的 AI 能力层，提供投喂规律学习、异常检测、健康评分等能力。详见 [docs/self-learning.md](./docs/self-learning.md)。
 
 ## 快速开始
 
-### Flask 完整版
+### Flask 完整版（推荐）
 
 ```bash
+python --version   # 需要 3.6+
 pip install -r requirements.txt
 python app.py
 # 浏览器打开 http://localhost:5000
 ```
 
+页面路由：`/`（首页直播）、`/cats`（猫咪档案）、`/diary`（日记）、`/adopt`（领养中心）。
+
 ### 静态演示页（零依赖）
 
-双击打开 `demo.html`，无需 Python、无需网络。
+双击打开 `demo.html`，无需 Python、无需网络。详见 [docs/demo-guide.md](./docs/demo-guide.md)。
 
 ---
-
-## 技术栈
-
-| 层级 | 技术 |
-|------|------|
-| 后端 | Python 3.6+ · Flask |
-| 前端 | HTML5 + CSS3 + JavaScript（原生，零框架） |
-| 数据 | JSON 文件存储（零数据库依赖） |
-| 智能 | 自学习引擎（纯 Python 标准库实现） |
-| 硬件 | 树莓派 / 香橙派（边缘节点）· ESP32（可选传感器扩展） |
-| PWA | Service Worker · Web App Manifest |
-
-## 项目结构
-
-```
-CatTrace/
-├── app.py                # Flask 后端（REST API + 自学习集成）
-├── self_learning.py      # 自学习引擎
-├── demo.html             # 独立静态演示页
-├── requirements.txt      # Python 依赖
-├── docs/                 # 详细文档（见下方索引）
-├── templates/            # Flask 前端模板
-└── static/               # 静态资源
-```
 
 ## 文档索引
 
 | 文档 | 内容 |
 |------|------|
-| [项目说明书](./项目说明书.md) | 项目全貌：功能详解、架构、部署指南、路线图 |
 | [docs/user-guide.md](./docs/user-guide.md) | 用户说明书（面向评审教师与使用者） |
-| [docs/features.md](./docs/features.md) | 三大核心功能与辅助功能详细说明 |
-| [docs/self-learning.md](./docs/self-learning.md) | 自学习引擎技术文档 |
 | [docs/api.md](./docs/api.md) | REST API 完整接口文档 |
-| [docs/architecture.md](./docs/architecture.md) | 系统架构与硬件方案 |
-| [docs/roadmap.md](./docs/roadmap.md) | 项目路线图与远期规划 |
+| [docs/self-learning.md](./docs/self-learning.md) | 自学习模块：目标、边界、数据闭环、评价指标 |
+| [docs/roadmap.md](./docs/roadmap.md) | P0-P3 路线图与远期规划 |
+| [docs/business-plan.md](./docs/business-plan.md) | 市场分析、技术方案、产品范围 |
+| [docs/demo-guide.md](./docs/demo-guide.md) | demo.html 静态演示页使用说明 |
 
 ---
 
-**CatTrace 项目组** · GitHub: [chenglian07/mao](https://github.com/chenglian07/mao)
+CatTrace 项目组 -- [chenglian07/mao](https://github.com/chenglian07/mao)

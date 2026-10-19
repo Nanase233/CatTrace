@@ -17,7 +17,7 @@
 
 当前三项核心功能均为 P0 等级。每项功能末尾标注了实际完成状态。
 
-本文档仅覆盖三项核心功能。辅助功能（用户认证、日记、领养、举报、财务看板等）请参阅 [features.md](./features.md)。
+本文档仅覆盖三项核心功能。辅助功能（用户认证、日记、领养、举报、财务看板等）请参阅 [business-plan.md](./business-plan.md) 第 3.2 节。
 
 ---
 
@@ -212,9 +212,9 @@
 
 | 文档 | 内容 |
 |------|------|
-| [README.md](../README.md) | 项目总览、快速开始 |
-| [features.md](./features.md) | 三大核心功能与辅助功能详细说明 |
-| [self-learning.md](./self-learning.md) | 自学习引擎技术文档 |
+| [README.md](../README.md) | 项目入口、快速开始 |
+| [self-learning.md](./self-learning.md) | 自学习模块：目标、边界、数据闭环、评价指标 |
 | [api.md](./api.md) | REST API 完整接口文档 |
-| [architecture.md](./architecture.md) | 系统架构与硬件方案 |
-| [roadmap.md](./roadmap.md) | 项目路线图与远期规划 |
+| [roadmap.md](./roadmap.md) | P0-P3 路线图与远期规划 |
+| [business-plan.md](./business-plan.md) | 市场分析、技术方案、产品范围 |
+| [demo-guide.md](./demo-guide.md) | demo.html 静态演示页使用说明 |
