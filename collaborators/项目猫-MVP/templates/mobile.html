@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MeowGuard 移动端</title>
+    <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <meta name="theme-color" content="#ff8fb0">
+    <style>
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #666;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .mobile-nav-item.active {
+            color: #ff8fb0;
+        }
+        .mobile-nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .mobile-content {
+            padding-bottom: 70px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-content">
+        <header class="mobile-header">
+            <h1>🐱 MeowGuard</h1>
+            <button id="darkModeToggle" class="nav-btn">🌙</button>
+        </header>
+
+        <!-- 首页 -->
+        <div id="homeTab" class="mobile-tab active">
+            <section class="quick-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="mTotalCats">4</span>
+                    <span class="stat-label">猫咪</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="mTotalFeeds">791</span>
+                    <span class="stat-label">投喂</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="mOnline">1234</span>
+                    <span class="stat-label">在线</span>
+                </div>
+            </section>
+
+            <section class="live-preview">
+                <h2>📹 云养猫直播</h2>
+                <div class="live-card" onclick="showCatDetail('cat1')">
+                    <div class="live-card-avatar" id="liveAvatar">🐱</div>
+                    <div class="live-card-info">
+                        <h3 id="liveName">咪咪</h3>
+                        <p id="liveLocation">📍 A 区 - 教学楼后</p>
+                    </div>
+                    <span class="live-badge">🟢 直播中</span>
+                </div>
+            </section>
+
+            <section class="recent-feeds">
+                <h2>📋 最近投喂</h2>
+                <div id="mobileFeedLogs" class="feed-logs">
+                    <!-- 动态生成 -->
+                </div>
+            </section>
+        </div>
+
+        <!-- 猫咪档案 -->
+        <div id="catsTab" class="mobile-tab">
+            <div class="search-bar">
+                <input type="text" id="mobileSearch" placeholder="搜索猫咪..." class="search-input">
+            </div>
+            <div id="mobileCatsGrid" class="cats-grid">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 识别 -->
+        <div id="recognizeTab" class="mobile-tab">
+            <div class="recognize-container">
+                <div class="camera-preview" id="cameraPreview">
+                    <video id="videoElement" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                </div>
+                <button id="captureBtn" class="btn btn-capture">📸 拍照识别</button>
+                <button id="uploadBtn" class="btn btn-secondary">📁 从相册选择</button>
+                <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                <div id="recognizeResult" class="recognize-result"></div>
+            </div>
+        </div>
+
+        <!-- 我的 -->
+        <div id="profileTab" class="mobile-tab">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <h2 id="profileName">未登录</h2>
+            </div>
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <span class="stat-value" id="myFeeds">0</span>
+                    <span class="stat-label">我的投喂</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="stat-value" id="myPoints">0</span>
+                    <span class="stat-label">爱心积分</span>
+                </div>
+            </div>
+            <div class="profile-menu">
+                <a href="#" class="menu-item">📋 我的申请</a>
+                <a href="#" class="menu-item">⚙️ 设置</a>
+                <a href="#" class="menu-item">ℹ️ 关于我们</a>
+                <button id="loginBtn" class="menu-item btn-login">🔑 登录/注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="mobile-nav">
+        <a href="#" class="mobile-nav-item active" data-tab="homeTab">
+            <span class="mobile-nav-icon">🏠</span>
+            <span>首页</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-tab="catsTab">
+            <span class="mobile-nav-icon">🐱</span>
+            <span>猫咪</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-tab="recognizeTab">
+            <span class="mobile-nav-icon">📷</span>
+            <span>识别</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-tab="profileTab">
+            <span class="mobile-nav-icon">👤</span>
+            <span>我的</span>
+        </a>
+    </nav>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/main.js?v={{ cache_bust }}"></script>
+    <script>
+        // 标签切换
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = item.dataset.tab;
+                
+                document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+                
+                item.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // 拍照识别
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                document.getElementById('videoElement').srcObject = stream;
+            } catch (error) {
+                showToast('无法访问摄像头', 'error');
+            }
+        }
+
+        document.getElementById('captureBtn').addEventListener('click', async () => {
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
+                
+                try {
+                    const response = await fetch('/api/recognize', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    displayRecognizeResult(data);
+                } catch (error) {
+                    showToast('识别失败', 'error');
+                }
+            });
+        });
+
+        // 文件上传识别
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                const response = await fetch('/api/recognize', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                displayRecognizeResult(data);
+            } catch (error) {
+                showToast('识别失败', 'error');
+            }
+        });
+
+        function displayRecognizeResult(data) {
+            const resultDiv = document.getElementById('recognizeResult');
+            if (data.confidence > 0.7) {
+                resultDiv.innerHTML = `
+                    <div class="result-success">
+                        <h3>🎉 识别成功！</h3>
+                        <p>这是 <strong>${data.cat_name}</strong></p>
+                        <p>置信度：${(data.confidence * 100).toFixed(1)}%</p>
+                        <button class="btn btn-feed" onclick="feedCat('${data.cat_id}')">🍖 投喂</button>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result-unknown">
+                        <h3>❓ 无法识别</h3>
+                        <p>这只猫咪不在我们的档案中</p>
+                        <button class="btn btn-primary" onclick="showUploadForm()">📝 登记新猫</button>
+                    </div>
+                `;
+            }
+        }
+
+        // 加载数据
+        async function loadMobileData() {
+            try {
+                const [catsRes, feedsRes] = await Promise.all([
+                    fetch('/api/cats'),
+                    fetch('/api/feed-logs?limit=5')
+                ]);
+                
+                const catsData = await catsRes.json();
+                const feedsData = await feedsRes.json();
+                
+                // 渲染猫咪列表
+                const catsGrid = document.getElementById('mobileCatsGrid');
+                catsGrid.innerHTML = catsData.cats.map(cat => `
+                    <div class="cat-card" onclick="showCatDetail('${cat.id}')">
+                        <div class="cat-card-avatar" style="background:${cat.color || '#ff8fb0'}">${cat.emoji || '🐱'}</div>
+                        <div class="cat-card-info">
+                            <h3>${cat.name}</h3>
+                            <p>📍 ${cat.location}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // 渲染投喂记录
+                const feedLogs = document.getElementById('mobileFeedLogs');
+                feedLogs.innerHTML = feedsData.logs.map(log => `
+                    <div class="log-item">
+                        <span class="log-time">${log.time}</span>
+                        <span class="log-user">${log.user}</span>
+                        <span class="log-action">投喂了${log.cat_name}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        // 页面加载
+        loadMobileData();
+        initCamera();
+    </script>
+</body>
+</html>

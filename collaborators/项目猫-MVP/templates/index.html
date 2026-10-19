@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeowGuard - 城市流浪猫生命共同体</title>
+    <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#ff8fb0">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🐱 MeowGuard</div>
+        <div class="nav-links">
+            <a href="/" class="nav-link active">首页</a>
+            <a href="/cats" class="nav-link">猫咪档案</a>
+            <a href="/adopt" class="nav-link">领养</a>
+        </div>
+        <div class="nav-actions">
+            <button id="darkModeToggle" class="nav-btn" aria-label="切换深色模式">🌙</button>
+            <button id="loginBtn" class="nav-btn login-btn">
+                <span class="nav-text">登录</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- 统计数据看板 -->
+        <section class="stats-section">
+            <div id="statsGrid" class="stats-grid">
+                <div class="stat-card primary">
+                    <span class="stat-icon">🐱</span>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalCats">4</span>
+                        <span class="stat-label">猫咪总数</span>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <span class="stat-icon">❤️</span>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalFeeds">791</span>
+                        <span class="stat-label">累计投喂</span>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <span class="stat-icon">👁️</span>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalViews">6156</span>
+                        <span class="stat-label">累计观看</span>
+                    </div>
+                </div>
+                <div class="stat-card info">
+                    <span class="stat-icon">🏠</span>
+                    <div class="stat-info">
+                        <span class="stat-value" id="adoptableCats">2</span>
+                        <span class="stat-label">可领养</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 猫咪日记 -->
+        <section class="diary-section">
+            <h2 class="section-title">📖 猫咪日记</h2>
+            <div id="diaryCards" class="diary-cards">
+                <div class="diary-card">
+                    <div class="diary-card-header">
+                        <span class="diary-cat-avatar" style="background:#ff8fb0;">🐱</span>
+                        <div>
+                            <span class="diary-cat-name">咪咪</span>
+                            <span class="diary-date">今天</span>
+                        </div>
+                    </div>
+                    <div class="diary-content">今天咪咪来了猫屋 3 次，最喜欢晚上 10 点那顿。吃得很安心，还对着摄像头打了个哈欠。</div>
+                    <div class="diary-stats">
+                        <span class="diary-stat-item">🐾 今日来访 3 次</span>
+                        <span class="diary-stat-item">⏱ 停留约 15 分钟</span>
+                    </div>
+                    <div class="diary-co-create">
+                        <p>🖼️ 发现这只猫咪？上传照片共创日记！</p>
+                        <button class="diary-upload-btn" onclick="uploadCatPhoto()">📸 上传照片</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 直播间 -->
+        <section class="live-section" id="liveSection">
+            <h2 class="section-title">📹 云养猫直播间</h2>
+            <div class="live-room">
+                <div class="live-camera">
+                    <div class="live-cat-avatar" id="liveCatEmoji">🐱</div>
+                    <div class="live-overlay">
+                        <span class="live-status">🟢 直播中</span>
+                        <span class="live-viewers" id="onlineViewers">1,234</span>
+                    </div>
+                </div>
+                <div class="live-info">
+                    <h3 class="live-cat-name" id="liveCatTitle">咪咪的直播间</h3>
+                    <p class="live-cat-location" id="liveCatLocation">📍 A 区 - 教学楼后</p>
+                    <div class="live-stats">
+                        <span>🍖 今日投喂：<strong id="todayFeeds">156</strong></span>
+                        <span>🌡️ 温度：<strong id="temperature">22.5</strong>°C</span>
+                        <span>💧 湿度：<strong id="humidity">55</strong>%</span>
+                    </div>
+                    <button id="feedBtn" class="btn btn-feed btn-large">🍖 远程投喂</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 投喂记录 -->
+        <section class="feed-logs-section">
+            <h3 class="section-subtitle">📋 最近投喂记录</h3>
+            <div id="feedLogs" class="feed-logs">
+                <div class="log-item">
+                    <span class="log-time">3 分钟前</span>
+                    <span class="log-user">爱心云养人</span>
+                    <span class="log-action">投喂了咪咪</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>🐱 MeowGuard - 用科技守护每一只流浪猫</p>
+        <p class="footer-links">
+            <a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">联系我们</a>
+        </p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/main.js?v={{ cache_bust }}"></script>
+</body>
+</html>

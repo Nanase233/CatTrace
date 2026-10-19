@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务看板 - MeowGuard · 城市流浪猫生命共同体</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=cache_bust) }}">
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#ff8fb0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MeowGuard">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-152.png') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div>🐱 MeowGuard</div>
+            <div class="nav-tagline">城市流浪猫生命共同体</div>
+        </div>
+        <div class="nav-links">
+            <a href="/">🏠 首页</a>
+            <a href="/cats">🐱 猫咪档案</a>
+            <a href="/diary">📖 日记</a>
+            <a href="/dashboard" class="active">💰 财务</a>
+            <a href="/adopt">🏡 领养</a>
+            <button id="loginBtn" class="nav-login-btn">
+                <span class="nav-text">登录</span>
+            </button>
+            <button id="darkModeToggle" class="dark-mode-toggle" title="切换深色模式">🌙</button>
+        </div>
+    </nav>
+
+    <main class="main-content dashboard-page">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>💰 透明财务看板</h1>
+            <p class="page-subtitle">每一分钱的去向，都清晰可见</p>
+        </div>
+
+        <!-- 财务概览卡片 -->
+        <div class="finance-overview">
+            <div class="finance-card finance-card-income">
+                <div class="finance-card-icon">💝</div>
+                <div class="finance-card-label">总收入</div>
+                <div class="finance-card-value" id="totalIncome">¥0</div>
+                <div class="finance-card-sub">本月 <span id="monthIncome">¥0</span></div>
+            </div>
+            <div class="finance-card finance-card-expense">
+                <div class="finance-card-icon">💸</div>
+                <div class="finance-card-label">总支出</div>
+                <div class="finance-card-value" id="totalExpense">¥0</div>
+                <div class="finance-card-sub">本月 <span id="monthExpense">¥0</span></div>
+            </div>
+            <div class="finance-card finance-card-balance">
+                <div class="finance-card-icon">💼</div>
+                <div class="finance-card-label">当前余额</div>
+                <div class="finance-card-value" id="balance">¥0</div>
+                <div class="finance-card-sub">共 <span id="transactionCount">0</span> 笔交易</div>
+            </div>
+        </div>
+
+        <!-- 收支分类统计 -->
+        <div class="finance-sections">
+            <div class="finance-section">
+                <h3 class="finance-section-title">📊 收入分类</h3>
+                <div class="finance-category-list" id="incomeCategoryList">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+            <div class="finance-section">
+                <h3 class="finance-section-title">📉 支出分类</h3>
+                <div class="finance-category-list" id="expenseCategoryList">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 月度趋势图 -->
+        <div class="finance-chart-section">
+            <h3 class="finance-section-title">📈 月度收支趋势</h3>
+            <div class="finance-chart" id="monthlyChart">
+                <!-- 动态填充 -->
+            </div>
+        </div>
+
+        <!-- 交易记录列表 -->
+        <div class="finance-transactions-section">
+            <div class="finance-transactions-header">
+                <h3 class="finance-section-title">📋 交易记录</h3>
+                <div class="finance-filter-group">
+                    <select id="transTypeFilter" class="finance-filter-select">
+                        <option value="">全部类型</option>
+                        <option value="income">收入</option>
+                        <option value="expense">支出</option>
+                    </select>
+                    <select id="transCategoryFilter" class="finance-filter-select">
+                        <option value="">全部分类</option>
+                    </select>
+                </div>
+            </div>
+            <div class="finance-transactions-list" id="transactionsList">
+                <!-- 动态填充 -->
+            </div>
+            <div class="finance-pagination" id="financePagination" style="display:none;">
+                <button class="btn btn-secondary btn-sm" id="prevPageBtn" onclick="DashboardPage.prevPage()">← 上一页</button>
+                <span class="finance-page-info" id="pageInfo">第 1 页</span>
+                <button class="btn btn-secondary btn-sm" id="nextPageBtn" onclick="DashboardPage.nextPage()">下一页 →</button>
+            </div>
+        </div>
+
+        <!-- 透明度声明 -->
+        <div class="finance-transparency">
+            <div class="transparency-badge">🔍</div>
+            <h4>透明度承诺</h4>
+            <p>MeowGuard 承诺所有捐赠和收入都用于猫咪福利。每一笔交易都公开透明，接受社区监督。</p>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js', v=cache_bust) }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js', v=cache_bust) }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof DashboardPage !== 'undefined') DashboardPage.init();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>猫咪详情 - MeowGuard</title>
+    <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <meta name="theme-color" content="#ff8fb0">
+    <style>
+        .detail-header {
+            position: relative;
+            height: 300px;
+            background: linear-gradient(135deg, #ff8fb0, #ffb3c1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .detail-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .detail-back {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .detail-content {
+            padding: 20px;
+        }
+        .detail-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .detail-location {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .detail-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .detail-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .detail-section h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            text-align: center;
+        }
+        .info-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-buttons .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-header">
+        <button class="detail-back" onclick="history.back()">←</button>
+        <div class="detail-avatar" id="detailAvatar">🐱</div>
+    </div>
+
+    <div class="detail-content">
+        <h1 class="detail-name" id="detailName">猫咪名字</h1>
+        <p class="detail-location" id="detailLocation">📍 位置信息</p>
+        <span class="detail-status" id="detailStatus">状态</span>
+
+        <div class="detail-section">
+            <h3>基本信息</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">性别</div>
+                    <div class="info-value" id="detailGender">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">年龄</div>
+                    <div class="info-value" id="detailAge">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">体重</div>
+                    <div class="info-value" id="detailWeight">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">性格</div>
+                    <div class="info-value" id="detailPersonality">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>健康记录</h3>
+            <div id="healthRecords">
+                <p style="color: #666;">暂无健康记录</p>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>投喂统计</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">今日投喂</div>
+                    <div class="info-value" id="todayFeeds">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">累计投喂</div>
+                    <div class="info-value" id="totalFeeds">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-feed" id="feedBtn">🍖 投喂</button>
+            <button class="btn btn-secondary" id="reportBtn">🚨 举报异常</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/main.js?v={{ cache_bust }}"></script>
+    <script>
+        // 获取猫咪 ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const catId = urlParams.get('id') || 'cat1';
+
+        // 加载猫咪详情
+        async function loadCatDetail() {
+            try {
+                const response = await fetch(`/api/cats/${catId}`);
+                const data = await response.json();
+                renderDetail(data.cat);
+            } catch (error) {
+                showToast('加载猫咪详情失败', 'error');
+            }
+        }
+
+        function renderDetail(cat) {
+            document.getElementById('detailAvatar').textContent = cat.emoji || '🐱';
+            document.getElementById('detailAvatar').style.background = cat.color || '#ff8fb0';
+            document.getElementById('detailName').textContent = cat.name;
+            document.getElementById('detailLocation').textContent = '📍 ' + cat.location;
+            
+            const statusMap = {
+                'adoptable': { text: '可领养', class: 'status-adoptable' },
+                'adopted': { text: '已领养', class: 'status-adopted' },
+                'monitoring': { text: '监控中', class: 'status-monitoring' }
+            };
+            const status = statusMap[cat.status] || { text: cat.status, class: '' };
+            const statusEl = document.getElementById('detailStatus');
+            statusEl.textContent = status.text;
+            statusEl.className = 'detail-status ' + status.class;
+
+            document.getElementById('detailGender').textContent = cat.gender || '-';
+            document.getElementById('detailAge').textContent = cat.age || '-';
+            document.getElementById('detailWeight').textContent = cat.weight || '-';
+            document.getElementById('detailPersonality').textContent = cat.personality || '-';
+            document.getElementById('todayFeeds').textContent = cat.today_feeds || 0;
+            document.getElementById('totalFeeds').textContent = cat.total_feeds || 0;
+        }
+
+        // 投喂按钮
+        document.getElementById('feedBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/feed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cat_id: catId })
+                });
+                
+                if (response.ok) {
+                    showToast('投喂成功！', 'success');
+                    loadCatDetail(); // 刷新数据
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || '投喂失败', 'error');
+                }
+            } catch (error) {
+                showToast('网络错误', 'error');
+            }
+        });
+
+        // 举报按钮
+        document.getElementById('reportBtn').addEventListener('click', async () => {
+            const reason = prompt('请输入异常原因：');
+            if (!reason) return;
+            
+            try {
+                const response = await fetch('/api/report-abuse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cat_id: catId, reason })
+                });
+                
+                if (response.ok) {
+                    showToast('举报已提交，感谢你的关注！', 'success');
+                } else {
+                    showToast('举报失败', 'error');
+                }
+            } catch (error) {
+                showToast('网络错误', 'error');
+            }
+        });
+
+        // 页面加载
+        loadCatDetail();
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Flask 后端框架
+Flask>=2.0.0
+Werkzeug>=2.0.0
+
+# 图像处理
+opencv-python>=4.5.0
+numpy>=1.19.0
+
+# 深度学习框架 (猫脸识别)
+tensorflow>=2.10.0
+scikit-learn>=1.0.0
+
+# 其他依赖
+Pillow>=9.0.0

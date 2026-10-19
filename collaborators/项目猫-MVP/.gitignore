@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+
+# 环境变量
+.env
+*.env
+
+# 数据文件（运行时生成，不上传）
+data.json
+*.db
+*.sqlite3
+*.sqlite
+
+# 日志
+*.log
+
+# Word 文档（可能包含作者元数据）
+*.docx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+
+# 虚拟环境
+*.egg
+
+# 项目特定
+static/images/
+static/cat*.jpg
+static/cat*.png

@@ -8,11 +8,11 @@
 
 ## 三大核心功能
 
-| # | 功能 | 等级 | 状态 |
+| # | 功能 | 等级 | 说明 |
 |---|------|------|------|
-| 1 | 实时直播与在线巡检 | P0 | MVP 模拟 |
-| 2 | 远程投喂与投喂追溯 | P0 | 已完成 |
-| 3 | AI 猫咪档案 | P0 | 已完成 |
+| 1 | 实时直播与在线巡检 | P0 | 树莓派/香橙派边缘节点推流，远程查看猫咪状态 |
+| 2 | 远程投喂与投喂追溯 | P0 | 一键投喂，全链路记录，数据透明可追溯 |
+| 3 | AI 猫咪档案 | P0 | 每只猫的数字身份：基本信息、健康、绝育、互动数据 |
 
 自学习引擎（`self_learning.py`）作为贯穿三大功能的 AI 能力层，提供投喂规律学习、异常检测、健康评分等能力。详见 [docs/self-learning.md](./docs/self-learning.md)。
 
@@ -45,6 +45,18 @@ python app.py
 | [docs/roadmap.md](./docs/roadmap.md) | P0-P3 路线图与远期规划 |
 | [docs/business-plan.md](./docs/business-plan.md) | 市场分析、技术方案、产品范围 |
 | [docs/demo-guide.md](./docs/demo-guide.md) | demo.html 静态演示页使用说明 |
+
+---
+
+## 协作者代码
+
+`collaborators/` 目录保留了各协作者的原始代码和文档，未经修改：
+
+| 目录 | 内容 |
+|------|------|
+| collaborators/mao-main | 主项目原始版本（含 MeowGuard 时期文档） |
+| collaborators/项目猫-MVP | MVP 原型版本（含猫脸识别等实验功能） |
+| collaborators/esp32s3_realtime_camera | ESP32-S3 摄像头固件（ESP-IDF 项目） |
 
 ---
 

@@ -1,0 +1,3117 @@
+/**
+ * MeowGuard - 项目猫前端核心模块
+ * 城市流浪猫生命共同体
+ */
+
+// ============================================
+// 工具函数模块
+// ============================================
+
+/**
+ * 防抖函数 - 减少频繁调用
+ */
+function debounce(func, wait = 300) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+/**
+ * 节流函数 - 限制调用频率
+ */
+function throttle(func, limit = 1000) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+/**
+ * API 请求封装层
+ */
+const API = {
+    BASE: '/api',
+    
+    _token() {
+        return localStorage.getItem('auth_token') || '';
+    },
+    
+    async _request(method, path, body = null, auth = true) {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = this._token();
+        if (auth && token) {
+            headers['Authorization'] = 'Bearer ' + token;
+        }
+        
+        const opts = { method, headers };
+        if (body && method !== 'GET') {
+            opts.body = JSON.stringify(body);
+        }
+        
+        try {
+            const res = await fetch(this.BASE + path, opts);
+            const data = await res.json();
+            // 检查是否需要登录
+            if (data.need_login) {
+                Auth.showLogin();
+                throw new Error(data.message || '请先登录');
+            }
+            if (!data.success && data.message) {
+                // 不在这里弹 toast，让调用方决定
+            }
+            return data;
+        } catch (err) {
+            if (err.message === 'Failed to fetch') {
+                Toast.show('网络异常，请检查连接', 3000, 'error');
+            }
+            throw err;
+        }
+    },
+    
+    get(path, auth = false) { return this._request('GET', path, null, auth); },
+    post(path, body, auth = false) { return this._request('POST', path, body, auth); },
+    put(path, body, auth = true) { return this._request('PUT', path, body, auth); },
+    delete(path, auth = true) { return this._request('DELETE', path, null, auth); }
+};
+
+/**
+ * 认证系统模块
+ */
+const Auth = {
+    user: null,
+    modal: null,
+    isGuest: true,
+    
+    init() {
+        // 尝试从本地恢复登录状态
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            this._fetchUser();
+        } else {
+            this.isGuest = true;
+            this._generateGuestId();
+        }
+        this._injectModal();
+        this._bindNavButton();
+    },
+    
+    async _fetchUser() {
+        try {
+            const data = await API.get('/auth/me', true);
+            if (data.success && data.user) {
+                this.user = data.user;
+                this.isGuest = false;
+                this._updateNavUI();
+            } else {
+                this._logoutLocal();
+            }
+        } catch {
+            this._logoutLocal();
+        }
+    },
+    
+    _logoutLocal() {
+        localStorage.removeItem('auth_token');
+        this.user = null;
+        this.isGuest = true;
+        this._generateGuestId();
+        this._updateNavUI();
+    },
+    
+    _generateGuestId() {
+        if (!localStorage.getItem('guest_id')) {
+            localStorage.setItem('guest_id', 'guest_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36));
+        }
+    },
+    
+    getGuestId() {
+        return localStorage.getItem('guest_id') || '';
+    },
+    
+    _injectModal() {
+        // 避免重复注入
+        if (document.getElementById('loginModal')) return;
+        
+        const html = `
+        <div id="loginModal" class="modal" style="display:none;">
+            <div class="modal-overlay" id="loginOverlay"></div>
+            <div class="modal-content login-modal-content">
+                <div class="modal-header">
+                    <h3>📱 登录 MeowGuard</h3>
+                    <button class="modal-close" id="loginClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="login-desc">登录后无限畅喂，记录你的爱心足迹</p>
+                    <div class="form-group">
+                        <label>📞 手机号</label>
+                        <input type="tel" id="loginPhone" placeholder="请输入手机号" maxlength="11" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>🔑 验证码</label>
+                        <div class="code-row">
+                            <input type="text" id="loginCode" placeholder="验证码" maxlength="6" class="form-input" style="flex:1;" />
+                            <button id="sendCodeBtn" class="btn btn-outline" style="width:120px;">发送验证码</button>
+                        </div>
+                        <span class="form-hint">测试验证码：8888</span>
+                    </div>
+                    <button id="loginSubmit" class="btn btn-primary btn-block">登 录</button>
+                    <p class="login-footer-text">登录即表示同意《用户协议》和《隐私政策》</p>
+                </div>
+            </div>
+        </div>`;
+        
+        document.body.insertAdjacentHTML('beforeend', html);
+        
+        // 绑定事件
+        document.getElementById('loginClose').addEventListener('click', () => this.hideLogin());
+        document.getElementById('loginOverlay').addEventListener('click', () => this.hideLogin());
+        document.getElementById('sendCodeBtn').addEventListener('click', () => this._sendCode());
+        document.getElementById('loginSubmit').addEventListener('click', () => this._doLogin());
+    },
+    
+    _bindNavButton() {
+        // 用事件委托在 init 时绑定，但按钮可能还没渲染
+        // 改用 MutationObserver 或直接在需要时查询
+        const tryBind = () => {
+            const btn = document.getElementById('loginBtn');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    if (this.isGuest) {
+                        this.showLogin();
+                    } else {
+                        this._doLogout();
+                    }
+                });
+                this._updateNavUI();
+            }
+        };
+        // 延迟绑定，等导航渲染完成
+        setTimeout(tryBind, 100);
+        // 也监听 DOM 变化
+        if (window.MutationObserver) {
+            const obs = new MutationObserver(() => {
+                const btn = document.getElementById('loginBtn');
+                if (btn && !btn._authBound) {
+                    btn._authBound = true;
+                    btn.addEventListener('click', () => {
+                        if (this.isGuest) {
+                            this.showLogin();
+                        } else {
+                            this._doLogout();
+                        }
+                    });
+                    this._updateNavUI();
+                }
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+        }
+    },
+    
+    _updateNavUI() {
+        const btn = document.getElementById('loginBtn');
+        if (!btn) return;
+        const textEl = btn.querySelector('.nav-text') || btn;
+        if (this.isGuest || !this.user) {
+            btn.classList.remove('logged-in');
+            textEl.textContent = '登录';
+            // 更新投喂按钮为游客模式
+            this._updateFeedButtons('guest');
+        } else {
+            btn.classList.add('logged-in');
+            textEl.textContent = this.user.nickname || '我的';
+            this._updateFeedButtons('user');
+        }
+    },
+    
+    _updateFeedButtons(mode) {
+        document.querySelectorAll('.feed-btn').forEach(btn => {
+            btn.dataset.feedMode = mode;
+        });
+    },
+    
+    showLogin() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.getElementById('loginPhone').value = '';
+            document.getElementById('loginCode').value = '';
+        }
+    },
+    
+    hideLogin() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    },
+    
+    _sendCode() {
+        const phone = document.getElementById('loginPhone').value.trim();
+        if (!phone || phone.length < 11) {
+            Toast.show('请输入正确的手机号', 2500, 'warning');
+            return;
+        }
+        // MVP 阶段：模拟发送验证码
+        const btn = document.getElementById('sendCodeBtn');
+        btn.disabled = true;
+        btn.textContent = '60s后重发';
+        let sec = 60;
+        const timer = setInterval(() => {
+            sec--;
+            btn.textContent = sec + 's后重发';
+            if (sec <= 0) {
+                clearInterval(timer);
+                btn.disabled = false;
+                btn.textContent = '发送验证码';
+            }
+        }, 1000);
+        Toast.show('验证码已发送（测试：8888）', 2500, 'info');
+    },
+    
+    async _doLogin() {
+        const phone = document.getElementById('loginPhone').value.trim();
+        const code = document.getElementById('loginCode').value.trim();
+        
+        if (!phone || phone.length < 11) {
+            Toast.show('请输入正确的手机号', 2500, 'warning');
+            return;
+        }
+        if (!code || code.length < 4) {
+            Toast.show('请输入验证码', 2500, 'warning');
+            return;
+        }
+        
+        const submitBtn = document.getElementById('loginSubmit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '登录中...';
+        
+        try {
+            const data = await API.post('/auth/login', { phone, code });
+            if (data.success) {
+                localStorage.setItem('auth_token', data.token);
+                this.user = data.user;
+                this.isGuest = false;
+                this._updateNavUI();
+                this.hideLogin();
+                Toast.show(`欢迎回来，${data.user.nickname}！🐱`, 3000, 'success');
+            } else {
+                Toast.show(data.message || '登录失败', 3000, 'error');
+            }
+        } catch {
+            Toast.show('登录失败，请重试', 3000, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '登 录';
+        }
+    },
+    
+    async _doLogout() {
+        try {
+            await API.post('/auth/logout', {});
+        } catch {}
+        this._logoutLocal();
+        Toast.show('已退出登录', 2000, 'info');
+    }
+};
+
+/**
+ * Toast 提示系统
+ */
+const Toast = {
+    element: null,
+    
+    init() {
+        this.element = document.getElementById('toast');
+    },
+    
+    show(message, duration = 3000, type = 'info') {
+        if (!this.element) this.init();
+        if (!this.element) return;
+        
+        // 设置样式类
+        this.element.className = 'toast show';
+        if (type !== 'info') {
+            this.element.classList.add(`toast-${type}`);
+        }
+        
+        this.element.innerHTML = `
+            <span class="toast-icon">${this.getIcon(type)}</span>
+            <span class="toast-message">${this.escapeHtml(message)}</span>
+        `;
+        
+        // 清除之前的定时器
+        if (this.timer) clearTimeout(this.timer);
+        
+        this.timer = setTimeout(() => {
+            this.element.classList.remove('show');
+        }, duration);
+    },
+    
+    getIcon(type) {
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        return icons[type] || icons.info;
+    },
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+    
+    success(message, duration) { this.show(message, duration, 'success'); },
+    error(message, duration) { this.show(message, duration, 'error'); },
+    warning(message, duration) { this.show(message, duration, 'warning'); }
+};
+
+/**
+ * 加载状态管理
+ */
+const Loading = {
+    elements: new Map(),
+    
+    show(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        this.elements.set(elementId, element.innerHTML);
+        element.innerHTML = `
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <span class="loading-text">加载中...</span>
+            </div>
+        `;
+        element.classList.add('loading');
+    },
+    
+    hide(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        const original = this.elements.get(elementId);
+        if (original) {
+            element.innerHTML = original;
+            this.elements.delete(elementId);
+        }
+        element.classList.remove('loading');
+    },
+    
+    toggleButton(button, isLoading) {
+        if (!button) return;
+        
+        const originalText = button.innerHTML;
+        const originalDisabled = button.disabled;
+        
+        if (isLoading) {
+            button.disabled = true;
+            button.innerHTML = `
+                <span class="button-loading">
+                    <span class="spinner-small"></span>
+                    <span>处理中...</span>
+                </span>
+            `;
+        } else {
+            button.disabled = originalDisabled;
+            button.innerHTML = originalText;
+        }
+    }
+};
+
+/**
+ * 格式化时间
+ */
+function formatTime(timeString) {
+    if (!timeString) return '';
+    
+    try {
+        const now = new Date();
+        const normalized = typeof timeString === 'string' 
+            ? timeString.replace(' ', 'T') 
+            : timeString;
+        const time = new Date(normalized);
+        
+        if (isNaN(time.getTime())) return '';
+        
+        const diff = now - time;
+        const minute = 60 * 1000;
+        const hour = 60 * minute;
+        const day = 24 * hour;
+        
+        if (diff < minute) return '刚刚';
+        if (diff < hour) return Math.floor(diff / minute) + '分钟前';
+        if (diff < day) return Math.floor(diff / hour) + '小时前';
+        if (diff < 7 * day) return Math.floor(diff / day) + '天前';
+        
+        return time.toLocaleDateString('zh-CN', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return '';
+    }
+}
+
+/**
+ * 格式化数字（添加千位分隔符）
+ */
+function formatNumber(num) {
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    return num.toLocaleString('zh-CN');
+}
+
+/**
+ * 深色模式切换
+ */
+const DarkMode = {
+    isDark: false,
+    
+    init() {
+        // 从 localStorage 读取用户偏好
+        const saved = localStorage.getItem('darkMode');
+        if (saved === 'true') {
+            this.enable();
+        } else if (saved === 'false') {
+            this.disable();
+        } else {
+            // 跟随系统偏好
+            this.isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (this.isDark) {
+                this.enable();
+            }
+        }
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (localStorage.getItem('darkMode') === null) {
+                if (e.matches) {
+                    this.enable();
+                } else {
+                    this.disable();
+                }
+            }
+        });
+    },
+    
+    enable() {
+        this.isDark = true;
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'true');
+        this.updateToggleIcon();
+    },
+    
+    disable() {
+        this.isDark = false;
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'false');
+        this.updateToggleIcon();
+    },
+    
+    toggle() {
+        if (this.isDark) {
+            this.disable();
+        } else {
+            this.enable();
+        }
+    },
+    
+    updateToggleIcon() {
+        const toggleBtn = document.getElementById('darkModeToggle');
+        if (toggleBtn) {
+            // 不要修改 innerHTML，因为 CSS 使用 ::before 伪元素显示图标
+            // 只需更新 aria-label 和 title 属性
+            toggleBtn.setAttribute('aria-label', this.isDark ? '切换到浅色模式' : '切换到深色模式');
+            toggleBtn.setAttribute('title', this.isDark ? '切换到浅色模式' : '切换到深色模式');
+        }
+    }
+};
+
+// ============================================
+// 猫咪数据模块 (使用新的 API 封装)
+// ============================================
+
+const CatStore = {
+    cats: [],
+    stats: {},
+    cacheTime: 0,
+    cacheDuration: 30000,
+    
+    async fetchCats() {
+        try {
+            this.cats = await API.get('/cats');
+            this.cacheTime = Date.now();
+            return this.cats;
+        } catch (error) {
+            console.error('获取猫咪数据失败:', error);
+            Toast.error('加载猫咪数据失败');
+            return [];
+        }
+    },
+    
+    async fetchStats() {
+        try {
+            this.stats = await API.get('/stats');
+            return this.stats;
+        } catch (error) {
+            console.error('获取统计数据失败:', error);
+            return {};
+        }
+    },
+    
+    getCats() {
+        const now = Date.now();
+        if (this.cats.length > 0 && now - this.cacheTime < this.cacheDuration) {
+            return Promise.resolve(this.cats);
+        }
+        return this.fetchCats();
+    },
+    
+    getCatById(id) {
+        return this.cats.find(cat => cat.id === id);
+    },
+    
+    getAdoptableCats() {
+        return this.cats.filter(cat => cat.adoption_ready);
+    }
+};
+
+// ============================================
+// 猫咪 UI 模块
+// ============================================
+
+const CatUI = {
+    emojiMap: {
+        '黑': '🐱',
+        '白': '🐱',
+        '橘': '🐱',
+        '灰': '🐱',
+        '花': '🐱',
+        '相间': '🐱'
+    },
+    
+    backgroundMap: {
+        '黑': 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        '白': 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #e0e0e0 100%)',
+        '橘': 'linear-gradient(135deg, #f6d365 0%, #fda085 50%, #ff6b6b 100%)',
+        '灰': 'linear-gradient(135deg, #4b6cb7 0%, #182848 50%, #0d1b2a 100%)',
+        '花': 'linear-gradient(135deg, #ffd89b 0%, #19547b 50%, #0d1b2a 100%)',
+        '相间': 'linear-gradient(135deg, #fff5e6 0%, #ffe0b2 50%, #ffcc80 100%)'
+    },
+    
+    getEmoji(color) {
+        if (!color) return '🐱';
+        for (const [key, emoji] of Object.entries(this.emojiMap)) {
+            if (color.includes(key)) return emoji;
+        }
+        return '🐱';
+    },
+    
+    getBackground(color) {
+        if (!color) return 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
+        for (const [key, bg] of Object.entries(this.backgroundMap)) {
+            if (color.includes(key)) return bg;
+        }
+        return 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
+    },
+    
+    getGenderText(gender) {
+        return gender === 'male' ? '♂ 公' : '♀ 母';
+    },
+    
+    getStatusBadge(cat) {
+        if (!cat) return '<span class="status-badge unavailable">暂不可领养</span>';
+        if (cat.adoption_ready) {
+            return '<span class="status-badge adoption">🏠 可领养</span>';
+        }
+        if (cat.adoption_note) {
+            return `<span class="status-badge unavailable" title="${cat.adoption_note}">⏸ ${cat.adoption_note}</span>`;
+        }
+        if (cat.health && cat.health !== '健康') {
+            return `<span class="status-badge warning">⚠️ 健康${cat.health}</span>`;
+        }
+        if (cat.neutered === false) {
+            return '<span class="status-badge warning">🔧 未绝育</span>';
+        }
+        return '<span class="status-badge unavailable">⏸ 暂未开放</span>';
+    },
+    
+    createCatCard(cat) {
+        const searchAttrs = [cat.name, cat.nickname, cat.location, cat.color]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+        
+        return `
+            <div class="cat-card" 
+                 data-id="${cat.id}" 
+                 data-adoption="${cat.adoption_ready}" 
+                 data-neutered="${cat.neutered}" 
+                 data-search="${this.escapeHtml(searchAttrs)}">
+                <div class="cat-card-image" style="background: ${this.getBackground(cat.color)}">
+                    <div class="cat-avatar large">${this.getEmoji(cat.color)}</div>
+                    <div class="cat-status-badge">${this.getStatusBadge(cat)}</div>
+                    ${cat.neutered ? '<div class="cat-ribbon">已绝育</div>' : ''}
+                </div>
+                <div class="cat-card-info">
+                    <h3 class="cat-name">${this.escapeHtml(cat.name)}</h3>
+                    <p class="cat-nickname">"${this.escapeHtml(cat.nickname || '')}"</p>
+                    <div class="cat-tags">
+                        <span class="tag">${this.getGenderText(cat.gender)} ${this.escapeHtml(cat.age)}</span>
+                        <span class="tag color">${this.escapeHtml(cat.color)}</span>
+                        ${cat.neutered ? '<span class="tag neutered">已绝育</span>' : ''}
+                        <span class="tag health ${cat.health === '健康' ? 'good' : 'warning'}">${this.escapeHtml(cat.health || '未知')}</span>
+                    </div>
+                    <p class="cat-location">📍 ${this.escapeHtml(cat.location)}</p>
+                    <div class="cat-stats">
+                        <span class="stat">❤️ ${formatNumber(cat.feed_count)} 次投喂</span>
+                        <span class="stat">👁️ ${formatNumber(cat.views)} 次观看</span>
+                        <span class="stat points">⭐ ${formatNumber(cat.points || 0)} 积分</span>
+                    </div>
+                    <button class="cat-detail-btn" onclick="CatUI.showDetail(${cat.id})">
+                        <span class="btn-text">查看详情</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                    <button class="cat-share-btn" onclick="ShareUI.shareCat(${cat.id})" title="分享">
+                        📤
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+    
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+    
+    async showDetail(catId) {
+        const modalBody = document.getElementById('modalBody');
+        if (!modalBody) return;
+        
+        Loading.show('modalBody');
+        
+        try {
+            const cat = await API.get(`/cat/${catId}`);
+            
+            modalBody.innerHTML = `
+                <div class="detail-header">
+                    <div class="detail-avatar" style="background: ${CatUI.getBackground(cat.color)}">
+                        ${CatUI.getEmoji(cat.color)}
+                    </div>
+                    <div class="detail-info">
+                        <h2>${CatUI.escapeHtml(cat.name)}</h2>
+                        <p class="nickname">"${CatUI.escapeHtml(cat.nickname || '')}"</p>
+                        <div class="detail-badges">
+                            ${CatUI.getStatusBadge(cat)}
+                            <span class="status-badge ${cat.health === '健康' ? 'healthy' : 'warning'}">${CatUI.escapeHtml(cat.health || '未知')}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4><span class="section-icon">📋</span> 基本信息</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">性别</span>
+                            <span class="value">${CatUI.getGenderText(cat.gender)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">年龄</span>
+                            <span class="value">${CatUI.escapeHtml(cat.age)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">毛色</span>
+                            <span class="value">${CatUI.escapeHtml(cat.color)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">绝育</span>
+                            <span class="value">${cat.neutered ? '✅ 已完成' : '❌ 未完成'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4><span class="section-icon">📍</span> 位置信息</h4>
+                    <p class="location-text">📍 ${CatUI.escapeHtml(cat.location)}</p>
+                    <p class="location-note">⚠️ 为保护猫咪安全，精确位置仅对认证志愿者可见</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4><span class="section-icon">📝</span> 喵生简介</h4>
+                    <p class="description">${CatUI.escapeHtml(cat.description || '暂无简介')}</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4><span class="section-icon">📊</span> 互动数据</h4>
+                    <div class="detail-stats">
+                        <div class="detail-stat">
+                            <span class="value">${formatNumber(cat.feed_count)}</span>
+                            <span class="label">累计投喂</span>
+                        </div>
+                        <div class="detail-stat">
+                            <span class="value">${formatNumber(cat.views)}</span>
+                            <span class="label">累计观看</span>
+                        </div>
+                        <div class="detail-stat">
+                            <span class="value">${cat.neutered ? '✅' : '⏳'}</span>
+                            <span class="label">${cat.neutered ? '已绝育' : '待绝育'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section detail-actions">
+                    ${cat.adoption_ready ? `
+                        <a href="/adopt?cat=${cat.id}" class="adopt-btn-large">
+                            <span class="btn-icon">🏠</span>
+                            <span>申请领养</span>
+                        </a>
+                    ` : `
+                        <p class="adopt-note">🐾 ${CatUI.getStatusBadge(cat)}</p>
+                    `}
+                </div>
+            `;
+            
+            document.getElementById('catDetailModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+        } catch (error) {
+            console.error('加载猫咪详情失败:', error);
+            Toast.error('加载详情失败，请稍后重试');
+            Loading.hide('modalBody');
+        }
+    },
+    
+    hideDetail() {
+        const modal = document.getElementById('catDetailModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+};
+
+// ============================================
+// 直播间模块
+// ============================================
+
+const LiveRoom = {
+    currentCatId: 1,
+    cats: [],
+    stats: {},
+    feedTimer: null,
+    viewerTimer: null,
+    envTimer: null,
+    
+    async init() {
+        const roomSelect = document.getElementById('roomSelect');
+        const feedBtn = document.getElementById('feedBtn');
+        
+        if (!roomSelect || !feedBtn) return;
+        
+        // 从 URL 获取初始猫咪
+        const urlParams = new URLSearchParams(window.location.search);
+        const catId = parseInt(urlParams.get('cat') || '', 10);
+        if (!isNaN(catId) && catId > 0) {
+            this.currentCatId = catId;
+        }
+        
+        // 加载数据
+        await this.loadData();
+        
+        // 渲染房间选择器
+        this.renderRoomSelect(roomSelect);
+        
+        // 设置初始猫咪
+        const initialCat = this.getCatById(this.currentCatId) || this.cats[0];
+        if (initialCat) {
+            this.currentCatId = initialCat.id;
+            roomSelect.value = String(this.currentCatId);
+            this.applyCat(initialCat);
+        }
+        
+        // 绑定事件
+        this.bindEvents(roomSelect, feedBtn);
+        
+        // 启动定时更新
+        this.startTimers();
+    },
+    
+    async loadData() {
+        try {
+            const [cats, stats] = await Promise.all([
+                API.get('/cats'),
+                API.get('/stats')
+            ]);
+            this.cats = Array.isArray(cats) ? cats : [];
+            this.stats = stats || {};
+            
+            // 更新总投喂数
+            const totalFeedsEl = document.getElementById('totalFeeds');
+            if (totalFeedsEl && this.stats.total_feeds !== undefined) {
+                totalFeedsEl.textContent = formatNumber(this.stats.total_feeds);
+            }
+        } catch (error) {
+            console.error('加载直播间数据失败:', error);
+        }
+    },
+    
+    renderRoomSelect(selectEl) {
+        selectEl.innerHTML = this.cats
+            .map(cat => `<option value="${cat.id}">🐱 ${CatUI.escapeHtml(cat.name)} · ${CatUI.escapeHtml(cat.location)}</option>`)
+            .join('');
+    },
+    
+    bindEvents(roomSelect, feedBtn) {
+        // 投喂按钮
+        feedBtn.addEventListener('click', () => this.feed());
+        
+        // 房间切换
+        roomSelect.addEventListener('change', (e) => {
+            const newId = parseInt(e.target.value, 10);
+            if (!isNaN(newId) && newId > 0 && newId !== this.currentCatId) {
+                this.switchRoom(newId);
+            }
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' && document.activeElement !== feedBtn) {
+                e.preventDefault();
+                this.feed();
+            }
+        });
+    },
+    
+    switchRoom(catId) {
+        this.currentCatId = catId;
+        const cat = this.getCatById(catId);
+        if (cat) {
+            this.currentCat = cat;
+            this.applyCat(cat);
+            this.loadFeedLogs(catId);
+            this.updateUrl(catId);
+        }
+    },
+
+    // 加载当前猫咪（被 switchLiveCat 全局函数调用）
+    async loadCurrentCat() {
+        await this.loadData();
+        const cat = this.getCatById(this.currentCatId) || this.cats[0];
+        if (cat) {
+            this.currentCat = cat;
+            this.currentCatId = cat.id;
+            this.applyCat(cat);
+            this.loadFeedLogs(cat.id);
+            this.updateUrl(cat.id);
+            const select = document.getElementById('roomSelect');
+            if (select) select.value = String(cat.id);
+        }
+    },
+    
+    applyCat(cat) {
+        // 更新主画面
+        const liveCatEmoji = document.getElementById('liveCatEmoji');
+        const liveCatTitle = document.getElementById('liveCatTitle');
+        const liveCatLocation = document.getElementById('liveCatLocation');
+        
+        if (liveCatEmoji) liveCatEmoji.textContent = CatUI.getEmoji(cat.color);
+        if (liveCatTitle) liveCatTitle.textContent = `${CatUI.escapeHtml(cat.name)}的直播间`;
+        if (liveCatLocation) liveCatLocation.textContent = `📍 ${CatUI.escapeHtml(cat.location)}`;
+        
+        // 更新侧边栏
+        const sidebarCatEmoji = document.getElementById('sidebarCatEmoji');
+        const sidebarCatName = document.getElementById('sidebarCatName');
+        const sidebarCatNickname = document.getElementById('sidebarCatNickname');
+        const sidebarCatBadges = document.getElementById('sidebarCatBadges');
+        
+        if (sidebarCatEmoji) sidebarCatEmoji.textContent = CatUI.getEmoji(cat.color);
+        if (sidebarCatName) sidebarCatName.textContent = CatUI.escapeHtml(cat.name);
+        if (sidebarCatNickname) sidebarCatNickname.textContent = CatUI.escapeHtml(cat.nickname || '');
+        if (sidebarCatBadges) {
+            sidebarCatBadges.innerHTML = `
+                <span class="status-badge ${cat.health === '健康' ? 'healthy' : 'warning'}">${CatUI.escapeHtml(cat.health || '未知')}</span>
+                ${cat.neutered ? '<span class="status-badge neutered">已绝育</span>' : '<span class="status-badge">未绝育</span>'}
+            `;
+        }
+        
+        // 更新投喂数
+        const todayFeeds = document.getElementById('todayFeeds');
+        if (todayFeeds && typeof cat.feed_count === 'number') {
+            todayFeeds.textContent = formatNumber(cat.feed_count);
+        }
+    },
+    
+    async feed() {
+        const feedBtn = document.getElementById('feedBtn');
+        if (!feedBtn || feedBtn.disabled) return;
+        
+        // 区分游客和登录用户
+        const isGuest = Auth.isGuest;
+        
+        feedBtn.disabled = true;
+        const originalHtml = feedBtn.innerHTML;
+        feedBtn.innerHTML = `
+            <span class="button-loading">
+                <span class="spinner-small"></span>
+                <span>投喂中...</span>
+            </span>
+        `;
+        
+        try {
+            let result;
+            if (isGuest) {
+                // 游客投喂
+                result = await API.post('/feed-as-guest', {
+                    cat_id: this.currentCatId,
+                    guest_id: Auth.getGuestId()
+                });
+            } else {
+                // 登录用户投喂
+                result = await API.post('/feed', {
+                    cat_id: this.currentCatId
+                }, true); // auth = true
+            }
+            
+            if (result.success) {
+                Toast.success(result.message);
+                this.triggerFeedAnimation();
+                
+                if (typeof result.feed_count === 'number') {
+                    const todayFeeds = document.getElementById('todayFeeds');
+                    if (todayFeeds) todayFeeds.textContent = formatNumber(result.feed_count);
+                    const cat = this.getCatById(this.currentCatId);
+                    if (cat) cat.feed_count = result.feed_count;
+                }
+                
+                this.loadFeedLogs(this.currentCatId);
+            } else {
+                Toast.error(result.message || '投喂失败');
+                // 如果需要登录，弹出登录框
+                if (result.need_login) {
+                    Auth.showLogin();
+                }
+            }
+        } catch (error) {
+            console.error('投喂失败:', error);
+            Toast.error('投喂失败，请检查网络连接');
+        } finally {
+            const btn = document.getElementById('feedBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+    },
+    
+    triggerFeedAnimation() {
+        const animation = document.getElementById('feedAnimation');
+        const liveCatEmoji = document.getElementById('liveCatEmoji');
+        
+        // 触发猫咪跳动动画
+        if (liveCatEmoji) {
+            liveCatEmoji.classList.remove('cat-bounce');
+            void liveCatEmoji.offsetWidth; // 触发重绘
+            liveCatEmoji.classList.add('cat-bounce');
+        }
+        
+        // 创建粒子特效
+        if (animation) {
+            const particles = ['🍖', '❤️', '✨', '🐟', '💕', '🎉', '⭐'];
+            const randomParticles = particles.sort(() => Math.random() - 0.5).slice(0, 5);
+            
+            animation.innerHTML = randomParticles.map((particle, index) => {
+                const tx = (index - 2) * 30; // 水平分散
+                const ty = -80 - Math.random() * 40; // 垂直向上
+                return `<div class="feed-particle" style="--tx: ${tx}px; --ty: ${ty}px; --delay: ${index * 0.05}s">${particle}</div>`;
+            }).join('');
+            
+            setTimeout(() => {
+                animation.innerHTML = '';
+            }, 1000);
+        }
+    },
+    
+    async loadFeedLogs(catId) {
+        try {
+            const logs = await API.get(`/feed-logs?cat_id=${catId}&limit=10`);
+            const feedLogsEl = document.getElementById('feedLogs');
+            
+            if (feedLogsEl && logs.length > 0) {
+                feedLogsEl.innerHTML = logs.map(log => `
+                    <div class="log-item">
+                        <span class="log-time">${formatTime(log.time)}</span>
+                        <span class="log-user">${CatUI.escapeHtml(log.user_name || '匿名用户')}</span>
+                        <span class="log-action">投喂了${CatUI.escapeHtml(this.getCatNameById(log.cat_id) || '猫咪')}</span>
+                    </div>
+                `).join('');
+            } else if (feedLogsEl) {
+                feedLogsEl.innerHTML = '<div class="log-empty">暂无投喂记录</div>';
+            }
+        } catch (error) {
+            console.error('加载投喂记录失败:', error);
+        }
+    },
+    
+    getCatById(id) {
+        return this.cats.find(cat => cat.id === id);
+    },
+    
+    getCatNameById(id) {
+        const cat = this.getCatById(id);
+        return cat ? cat.name : '';
+    },
+    
+    updateUrl(catId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('cat', String(catId));
+        window.history.replaceState({}, '', url.toString());
+    },
+    
+    startTimers() {
+        // 在线观众模拟
+        this.viewerTimer = setInterval(() => {
+            const onlineViewers = document.getElementById('onlineViewers');
+            if (onlineViewers) {
+                let viewers = parseInt(onlineViewers.textContent.replace(/,/g, '')) || 1234;
+                const change = Math.floor(Math.random() * 21) - 10;
+                viewers = Math.max(100, viewers + change);
+                onlineViewers.textContent = formatNumber(viewers);
+            }
+        }, 5000);
+        
+        // 环境监测模拟
+        this.envTimer = setInterval(() => {
+            const temperature = document.getElementById('temperature');
+            const humidity = document.getElementById('humidity');
+            
+            if (temperature) {
+                const temp = (20 + Math.random() * 4 - 2).toFixed(1);
+                temperature.textContent = `${temp}°C`;
+            }
+            
+            if (humidity) {
+                const hum = Math.floor(55 + Math.random() * 10 - 5);
+                humidity.textContent = `${hum}%`;
+            }
+        }, 10000);
+    },
+    
+    destroy() {
+        if (this.viewerTimer) clearInterval(this.viewerTimer);
+        if (this.envTimer) clearInterval(this.envTimer);
+    }
+};
+
+// ============================================
+// 猫咪档案页模块
+// ============================================
+
+const CatsPage = {
+    currentFilter: 'all',
+    searchQuery: '',
+    cats: [],
+    
+    async init() {
+        this.cats = await CatStore.getCats();
+        this.renderLeaderboard();
+        this.render();
+        this.bindEvents();
+    },
+    
+    renderLeaderboard() {
+        const leaderboardList = document.getElementById('leaderboardList');
+        if (!leaderboardList) return;
+        
+        // 按积分排序，取前 10 名
+        const sortedCats = [...this.cats]
+            .sort((a, b) => (b.points || 0) - (a.points || 0))
+            .slice(0, 10);
+        
+        if (sortedCats.length === 0) {
+            leaderboardList.innerHTML = '<div class="leaderboard-empty">暂无积分数据</div>';
+            return;
+        }
+        
+        leaderboardList.innerHTML = sortedCats.map((cat, index) => {
+            const rank = index + 1;
+            const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+            const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+            
+            return `
+                <div class="leaderboard-item ${rankClass}">
+                    <div class="leaderboard-rank">${rankIcon}</div>
+                    <div class="leaderboard-cat-info">
+                        <span class="leaderboard-cat-name">${CatUI.escapeHtml(cat.name)}</span>
+                        <span class="leaderboard-cat-location">📍 ${CatUI.escapeHtml(cat.location)}</span>
+                    </div>
+                    <div class="leaderboard-points">
+                        <span class="points-value">${formatNumber(cat.points || 0)}</span>
+                        <span class="points-label">积分</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+    
+    render() {
+        const grid = document.getElementById('catsGrid');
+        if (!grid) return;
+        
+        const filtered = this.filterCats();
+        grid.innerHTML = filtered.map(cat => CatUI.createCatCard(cat)).join('');
+        
+        // 显示/隐藏空状态
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🐱</div>
+                    <p class="empty-text">没有找到匹配的猫咪</p>
+                    <button class="empty-btn" onclick="CatsPage.resetFilter()">重置筛选</button>
+                </div>
+            `;
+        }
+    },
+    
+    filterCats() {
+        return this.cats.filter(cat => {
+            // 状态筛选
+            const matchesFilter = this.currentFilter === 'all'
+                || (this.currentFilter === 'adoption' && cat.adoption_ready)
+                || (this.currentFilter === 'neutered' && cat.neutered);
+            
+            // 搜索筛选
+            const searchAttrs = [cat.name, cat.nickname, cat.location, cat.color]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            const matchesSearch = !this.searchQuery || searchAttrs.includes(this.searchQuery.toLowerCase());
+            
+            return matchesFilter && matchesSearch;
+        });
+    },
+    
+    bindEvents() {
+        // 筛选按钮
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentFilter = btn.dataset.filter;
+                this.render();
+            });
+        });
+        
+        // 搜索框（带防抖）
+        const searchInput = document.getElementById('catsSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce((e) => {
+                this.searchQuery = e.target.value;
+                this.render();
+            }, 300));
+        }
+        
+        // 模态框关闭
+        const modalClose = document.getElementById('modalClose');
+        const modal = document.getElementById('catDetailModal');
+        
+        if (modalClose) {
+            modalClose.addEventListener('click', () => CatUI.hideDetail());
+        }
+        
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) CatUI.hideDetail();
+            });
+            
+            // ESC 键关闭
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') CatUI.hideDetail();
+            });
+        }
+    },
+    
+    resetFilter() {
+        this.currentFilter = 'all';
+        this.searchQuery = '';
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.filter-btn[data-filter="all"]')?.classList.add('active');
+        const searchInput = document.getElementById('catsSearch');
+        if (searchInput) searchInput.value = '';
+        this.render();
+    }
+};
+
+// ============================================
+// 领养页面模块
+// ============================================
+
+const AdoptPage = {
+    selectedCatId: null,
+    
+    async init() {
+        const cats = await CatStore.getCats();
+        const adoptableCats = cats.filter(cat => cat.adoption_ready);
+        this.renderCats(adoptableCats);
+        this.bindEvents();
+        
+        // 检查 URL 参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const catId = parseInt(urlParams.get('cat') || '', 10);
+        if (!isNaN(catId) && catId > 0) {
+            const cat = cats.find(c => c.id === catId);
+            if (cat && cat.adoption_ready) {
+                this.openForm(catId);
+            }
+        }
+    },
+    
+    renderCats(cats) {
+        const grid = document.getElementById('adoptCatsGrid');
+        if (!grid) return;
+        
+        if (cats.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🏠</div>
+                    <p class="empty-text">暂无可领养的猫咪</p>
+                    <p class="empty-subtext">请关注后续更新，或考虑通过投喂支持它们</p>
+                </div>
+            `;
+            return;
+        }
+        
+        grid.innerHTML = cats.map(cat => `
+            <div class="cat-card adopt-card">
+                <div class="cat-card-image" style="background: ${CatUI.getBackground(cat.color)}">
+                    <div class="cat-avatar large">${CatUI.getEmoji(cat.color)}</div>
+                    <div class="cat-status-badge adoption">🏠 可领养</div>
+                </div>
+                <div class="cat-card-info">
+                    <h3 class="cat-name">${CatUI.escapeHtml(cat.name)}</h3>
+                    <p class="cat-nickname">"${CatUI.escapeHtml(cat.nickname || '')}"</p>
+                    <div class="cat-tags">
+                        <span class="tag">${CatUI.getGenderText(cat.gender)} ${CatUI.escapeHtml(cat.age)}</span>
+                        <span class="tag color">${CatUI.escapeHtml(cat.color)}</span>
+                        ${cat.neutered ? '<span class="tag neutered">已绝育</span>' : ''}
+                    </div>
+                    <p class="cat-description">${CatUI.escapeHtml(cat.description || '')}</p>
+                    <button class="adopt-apply-btn" onclick="AdoptPage.openForm(${cat.id})">
+                        <span class="btn-icon">🏠</span>
+                        <span>申请领养</span>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    },
+    
+    openForm(catId) {
+        this.selectedCatId = catId;
+        const formSection = document.getElementById('formSection');
+        if (formSection) {
+            formSection.classList.add('show');
+            // 阻止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+    },
+    
+    closeForm() {
+        const formSection = document.getElementById('formSection');
+        if (formSection) {
+            formSection.classList.remove('show');
+            // 恢复背景滚动
+            document.body.style.overflow = '';
+        }
+        document.getElementById('adoptForm')?.reset();
+        this.selectedCatId = null;
+    },
+    
+    bindEvents() {
+        const form = document.getElementById('adoptForm');
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleSubmit(e));
+        }
+        
+        const cancelBtn = document.getElementById('cancelBtn');
+        const formClose = document.getElementById('formClose');
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.closeForm());
+        }
+        
+        if (formClose) {
+            formClose.addEventListener('click', () => this.closeForm());
+        }
+    },
+    
+    async handleSubmit(e) {
+        e.preventDefault();
+        
+        const submitBtn = form.querySelector('.btn-submit');
+        if (!submitBtn || submitBtn.disabled) return;
+        
+        const formData = {
+            cat_id: this.selectedCatId,
+            applicant: {
+                name: document.getElementById('applicantName').value.trim(),
+                age: parseInt(document.getElementById('applicantAge').value, 10),
+                phone: document.getElementById('applicantPhone').value.trim(),
+                email: document.getElementById('applicantEmail').value.trim(),
+                housingType: document.getElementById('housingType').value,
+                housingSize: document.getElementById('housingSize').value,
+                familyAgree: document.getElementById('familyAgree').value,
+                petExperience: document.getElementById('petExperience').value,
+                previousPets: document.getElementById('previousPets').value.trim(),
+                adoptionReason: document.getElementById('adoptionReason').value.trim()
+            }
+        };
+        
+        // 验证必填字段
+        if (!formData.applicant.name || !formData.applicant.phone || !formData.applicant.adoptionReason) {
+            Toast.warning('请填写姓名、电话与领养动机');
+            return;
+        }
+        
+        if (formData.applicant.age < 18 || formData.applicant.age > 120) {
+            Toast.warning('年龄必须在 18-120 岁之间');
+            return;
+        }
+        
+        // 显示加载状态
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="button-loading"><span class="spinner-small"></span><span>提交中...</span></span>';
+        
+        try {
+            const result = await API.post('/adopt/apply', formData);
+            
+            if (result.success) {
+                Toast.success('申请已提交，我们会尽快联系您！', 5000);
+                this.closeForm();
+            } else {
+                Toast.error(result.message || '提交失败，请稍后重试');
+            }
+        } catch (error) {
+            console.error('提交领养申请失败:', error);
+            Toast.error('网络异常，请稍后重试');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="btn-icon">📮</span><span>提交申请</span>';
+        }
+    }
+};
+
+// ============================================
+// 分享功能模块
+// ============================================
+
+const ShareUI = {
+    currentCat: null,
+    modal: null,
+    
+    init() {
+        // 创建分享弹窗
+        this.createModal();
+        
+        // 绑定关闭事件
+        this.bindEvents();
+    },
+    
+    createModal() {
+        const modalHtml = `
+            <div class="share-modal" id="shareModal">
+                <div class="share-modal-content">
+                    <button class="share-modal-close" onclick="ShareUI.close()">&times;</button>
+                    <div class="share-modal-header">
+                        <h3>分享猫咪档案</h3>
+                        <p>邀请更多人关注这只可爱的猫咪</p>
+                    </div>
+                    <div class="share-cat-preview">
+                        <div class="share-cat-avatar" id="shareCatAvatar">🐱</div>
+                        <div class="share-cat-name" id="shareCatName">猫咪名字</div>
+                        <div class="share-cat-nickname" id="shareCatNickname">"昵称"</div>
+                        <div class="share-cat-info">
+                            <span id="shareCatGender">♂ 公</span>
+                            <span id="shareCatAge">2 岁</span>
+                            <span id="shareCatColor">橘色</span>
+                        </div>
+                    </div>
+                    <div class="share-options">
+                        <div class="share-option" onclick="ShareUI.shareWechat()">
+                            <span class="share-option-icon">💬</span>
+                            <span class="share-option-label">微信</span>
+                        </div>
+                        <div class="share-option" onclick="ShareUI.shareWeibo()">
+                            <span class="share-option-icon">🌸</span>
+                            <span class="share-option-label">微博</span>
+                        </div>
+                        <div class="share-option" onclick="ShareUI.shareQQ()">
+                            <span class="share-option-icon">🐧</span>
+                            <span class="share-option-label">QQ</span>
+                        </div>
+                        <div class="share-option" onclick="ShareUI.copyLink()">
+                            <span class="share-option-icon">🔗</span>
+                            <span class="share-option-label">复制链接</span>
+                        </div>
+                    </div>
+                    <div class="share-link-section">
+                        <label class="share-link-label">分享链接</label>
+                        <div class="share-link-container">
+                            <input type="text" class="share-link-input" id="shareLinkInput" readonly>
+                            <button class="share-link-btn" onclick="ShareUI.copyLink()">复制</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        this.modal = document.getElementById('shareModal');
+    },
+    
+    bindEvents() {
+        if (!this.modal) return;
+        
+        // 点击背景关闭
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) this.close();
+        });
+        
+        // ESC 键关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.modal?.classList.contains('show')) {
+                this.close();
+            }
+        });
+    },
+    
+    async shareCat(catId) {
+        try {
+            const cat = await API.get(`/cat/${catId}`);
+            this.currentCat = cat;
+            
+            // 更新弹窗内容
+            this.updatePreview(cat);
+            this.updateLink(catId);
+            
+            // 显示弹窗
+            this.modal?.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error('加载猫咪数据失败:', error);
+            Toast.error('加载猫咪信息失败');
+        }
+    },
+    
+    updatePreview(cat) {
+        if (!cat) return;
+        
+        document.getElementById('shareCatAvatar').textContent = CatUI.getEmoji(cat.color);
+        document.getElementById('shareCatName').textContent = CatUI.escapeHtml(cat.name);
+        document.getElementById('shareCatNickname').textContent = `"${CatUI.escapeHtml(cat.nickname || '')}"`;
+        document.getElementById('shareCatGender').textContent = CatUI.getGenderText(cat.gender);
+        document.getElementById('shareCatAge').textContent = CatUI.escapeHtml(cat.age);
+        document.getElementById('shareCatColor').textContent = CatUI.escapeHtml(cat.color);
+    },
+    
+    updateLink(catId) {
+        const link = `${window.location.origin}/cats?cat=${catId}`;
+        const input = document.getElementById('shareLinkInput');
+        if (input) input.value = link;
+    },
+    
+    close() {
+        this.modal?.classList.remove('show');
+        document.body.style.overflow = '';
+        this.currentCat = null;
+    },
+    
+    async copyLink() {
+        const input = document.getElementById('shareLinkInput');
+        if (!input) return;
+        
+        try {
+            await navigator.clipboard.writeText(input.value);
+            Toast.success('链接已复制到剪贴板');
+        } catch (error) {
+            // 降级方案
+            input.select();
+            document.execCommand('copy');
+            Toast.success('链接已复制到剪贴板');
+        }
+    },
+    
+    shareWechat() {
+        Toast.warning('微信分享需在移动端使用');
+        // 实际实现可以使用微信 JS-SDK
+    },
+    
+    shareWeibo() {
+        if (!this.currentCat) return;
+        const text = `快来看看这只可爱的猫咪：${this.currentCat.name}！${this.currentCat.nickname ? `"${this.currentCat.nickname}"` : ''} 在 项目猫 等你来看~`;
+        const url = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    },
+    
+    shareQQ() {
+        if (!this.currentCat) return;
+        const title = `可爱的猫咪：${this.currentCat.name}`;
+        const url = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(title)}`;
+        window.open(url, '_blank');
+    }
+};
+
+// ============================================
+// 数据统计可视化模块
+// ============================================
+
+const StatsDashboard = {
+    charts: {},
+    
+    init() {
+        this.renderStatsCards();
+        this.renderCharts();
+        this.bindEvents();
+    },
+    
+    async renderStatsCards() {
+        const statsGrid = document.getElementById('statsGrid');
+        if (!statsGrid) return;
+        
+        try {
+            const stats = await API.get('/stats');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card primary">
+                    <span class="stat-icon">🐱</span>
+                    <div class="stat-info">
+                        <span class="stat-value">${formatNumber(stats.total_cats || 0)}</span>
+                        <span class="stat-label">猫咪总数</span>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <span class="stat-icon">❤️</span>
+                    <div class="stat-info">
+                        <span class="stat-value">${formatNumber(stats.total_feeds || 0)}</span>
+                        <span class="stat-label">累计投喂</span>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <span class="stat-icon">👁️</span>
+                    <div class="stat-info">
+                        <span class="stat-value">${formatNumber(stats.total_views || 0)}</span>
+                        <span class="stat-label">累计观看</span>
+                    </div>
+                </div>
+                <div class="stat-card info">
+                    <span class="stat-icon">🏠</span>
+                    <div class="stat-info">
+                        <span class="stat-value">${formatNumber(stats.adoptable_cats || 0)}</span>
+                        <span class="stat-label">可领养</span>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('加载统计数据失败:', error);
+            statsGrid.innerHTML = '<div class="stat-card"><span class="stat-icon">❌</span><div class="stat-info"><span class="stat-value">-</span><span class="stat-label">数据加载失败</span></div></div>';
+        }
+    },
+    
+    async renderCharts() {
+        const feedChartCanvas = document.getElementById('feedChart');
+        const pointsChartCanvas = document.getElementById('pointsChart');
+        
+        if (!feedChartCanvas && !pointsChartCanvas) return;
+        
+        try {
+            // 获取历史数据
+            const feedData = await API.get('/stats/feed-history');
+            const pointsData = await API.get('/stats/points-history');
+            
+            // 渲染投喂趋势图
+            if (feedChartCanvas && typeof Chart !== 'undefined') {
+                this.renderFeedChart(feedChartCanvas, feedData);
+            }
+            
+            // 渲染积分趋势图
+            if (pointsChartCanvas && typeof Chart !== 'undefined') {
+                this.renderPointsChart(pointsChartCanvas, pointsData);
+            }
+        } catch (error) {
+            console.error('加载图表数据失败:', error);
+            // 使用模拟数据展示
+            this.renderChartsWithMockData();
+        }
+    },
+    
+    renderFeedChart(canvas, data) {
+        const ctx = canvas.getContext('2d');
+        
+        // 销毁旧图表
+        if (this.charts.feedChart) {
+            this.charts.feedChart.destroy();
+        }
+        
+        const labels = data?.labels || ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        const values = data?.values || [120, 150, 180, 140, 200, 250, 220];
+        
+        this.charts.feedChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '投喂次数',
+                    data: values,
+                    borderColor: '#ff8fb0',
+                    backgroundColor: 'rgba(255, 143, 176, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#ff8fb0',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 },
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#8e8e8e',
+                            font: { size: 12 }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#8e8e8e',
+                            font: { size: 12 },
+                            beginAtZero: true
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    },
+    
+    renderPointsChart(canvas, data) {
+        const ctx = canvas.getContext('2d');
+        
+        // 销毁旧图表
+        if (this.charts.pointsChart) {
+            this.charts.pointsChart.destroy();
+        }
+        
+        // 修复：默认数据只有 4 只猫，与 data.json 一致
+        const labels = data?.labels || ['咪咪', '小黑', '雪球', '大橘'];
+        const values = data?.values || [193, 90, 237, 314];
+        
+        this.charts.pointsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '积分',
+                    data: values,
+                    backgroundColor: [
+                        'rgba(255, 143, 176, 0.8)',
+                        'rgba(135, 206, 250, 0.8)',
+                        'rgba(255, 215, 0, 0.8)',
+                        'rgba(139, 225, 219, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 143, 176, 1)',
+                        'rgba(135, 206, 250, 1)',
+                        'rgba(255, 215, 0, 1)',
+                        'rgba(139, 225, 219, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 },
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#8e8e8e',
+                            font: { size: 12 }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#8e8e8e',
+                            font: { size: 12 },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            }
+        });
+    },
+    
+    renderChartsWithMockData() {
+        const feedChartCanvas = document.getElementById('feedChart');
+        const pointsChartCanvas = document.getElementById('pointsChart');
+        
+        // 模拟数据
+        const mockFeedData = {
+            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+            values: [120, 150, 180, 140, 200, 250, 220]
+        };
+        
+        // 修复：只有 4 只猫，对应 4 个数据
+        const mockPointsData = {
+            labels: ['咪咪', '小黑', '雪球', '大橘'],
+            values: [193, 90, 237, 314]
+        };
+        
+        if (feedChartCanvas && typeof Chart !== 'undefined') {
+            this.renderFeedChart(feedChartCanvas, mockFeedData);
+        }
+        
+        if (pointsChartCanvas && typeof Chart !== 'undefined') {
+            this.renderPointsChart(pointsChartCanvas, mockPointsData);
+        }
+    },
+    
+    bindEvents() {
+        // 时间段切换按钮
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const period = btn.dataset.period;
+                this.updateChartData(period);
+            });
+        });
+    },
+    
+    async updateChartData(period) {
+        try {
+            const feedData = await API.get(`/stats/feed-history?period=${period}`);
+            const pointsData = await API.get(`/stats/points-history?period=${period}`);
+            
+            const feedChartCanvas = document.getElementById('feedChart');
+            const pointsChartCanvas = document.getElementById('pointsChart');
+            
+            if (feedChartCanvas && typeof Chart !== 'undefined') {
+                this.renderFeedChart(feedChartCanvas, feedData);
+            }
+            
+            if (pointsChartCanvas && typeof Chart !== 'undefined') {
+                this.renderPointsChart(pointsChartCanvas, pointsData);
+            }
+        } catch (error) {
+            console.error('更新图表数据失败:', error);
+        }
+    }
+};
+
+// ============================================
+// 消息通知系统模块
+// ============================================
+
+const NotificationCenter = {
+    notifications: [],
+    unreadCount: 0,
+    currentTab: 'all',
+    
+    init() {
+        this.renderNotifications();
+        this.bindEvents();
+        this.startPolling();
+    },
+    
+    async renderNotifications() {
+        const notificationList = document.getElementById('notificationList');
+        if (!notificationList) return;
+        
+        try {
+            this.notifications = await API.get('/notifications');
+            this.updateUnreadCount();
+        } catch (error) {
+            console.error('加载通知失败:', error);
+            this.notifications = this.getMockNotifications();
+        }
+        
+        this.displayNotifications();
+    },
+    
+    getMockNotifications() {
+        return [
+            {
+                id: 1,
+                type: 'activity',
+                title: '新投喂记录',
+                message: '用户"爱猫人"刚刚给小黑猫投喂了美食',
+                time: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+                unread: true
+            },
+            {
+                id: 2,
+                type: 'system',
+                title: '系统通知',
+                message: '猫咪档案系统已升级，新增积分功能',
+                time: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+                unread: true
+            },
+            {
+                id: 3,
+                type: 'reminder',
+                title: '绝育提醒',
+                message: '小白猫距离绝育手术还有 3 天',
+                time: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+                unread: false
+            },
+            {
+                id: 4,
+                type: 'activity',
+                title: '领养进展',
+                message: '小花猫的领养申请已进入审核阶段',
+                time: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+                unread: false
+            },
+            {
+                id: 5,
+                type: 'system',
+                title: '维护通知',
+                message: '系统将于本周日凌晨 2 点进行例行维护',
+                time: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+                unread: false
+            }
+        ];
+    },
+    
+    updateUnreadCount() {
+        this.unreadCount = this.notifications.filter(n => n.unread).length;
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+            badge.textContent = this.unreadCount > 0 ? String(this.unreadCount) : '';
+            badge.style.display = this.unreadCount > 0 ? 'flex' : 'none';
+        }
+    },
+    
+    displayNotifications() {
+        const notificationList = document.getElementById('notificationList');
+        if (!notificationList) return;
+        
+        const filtered = this.currentTab === 'all' 
+            ? this.notifications 
+            : this.notifications.filter(n => n.type === this.currentTab);
+        
+        if (filtered.length === 0) {
+            notificationList.innerHTML = `
+                <div class="notification-empty">
+                    <div class="notification-empty-icon">🔔</div>
+                    <p>暂无通知</p>
+                </div>
+            `;
+            return;
+        }
+        
+        notificationList.innerHTML = filtered.map(notification => `
+            <div class="notification-item ${notification.unread ? 'unread' : ''}" onclick="NotificationCenter.markAsRead(${notification.id})">
+                <div class="notification-icon-badge ${notification.type}">
+                    ${this.getIconByType(notification.type)}
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${this.escapeHtml(notification.title)}</div>
+                    <div class="notification-message">${this.escapeHtml(notification.message)}</div>
+                    <div class="notification-time">${formatTime(notification.time)}</div>
+                </div>
+                ${notification.unread ? '<div class="notification-dot"></div>' : ''}
+            </div>
+        `).join('');
+    },
+    
+    getIconByType(type) {
+        const icons = {
+            system: '⚙️',
+            activity: '❤️',
+            reminder: '⏰'
+        };
+        return icons[type] || 'ℹ️';
+    },
+    
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+    
+    bindEvents() {
+        // 通知标签切换
+        document.querySelectorAll('.notification-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.currentTab = tab.dataset.type;
+                this.displayNotifications();
+            });
+        });
+        
+        // 标记已读按钮
+        const markReadBtn = document.getElementById('markAllRead');
+        if (markReadBtn) {
+            markReadBtn.addEventListener('click', () => this.markAllAsRead());
+        }
+    },
+    
+    async markAsRead(id) {
+        const notification = this.notifications.find(n => n.id === id);
+        if (notification && notification.unread) {
+            notification.unread = false;
+            this.updateUnreadCount();
+            this.displayNotifications();
+            
+            try {
+                await API.post('/notifications/read', { id });
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
+        }
+    },
+    
+    async markAllAsRead() {
+        this.notifications.forEach(n => n.unread = false);
+        this.updateUnreadCount();
+        this.displayNotifications();
+        
+        try {
+            await API.post('/notifications/read-all');
+            Toast.success('所有通知已标记为已读');
+        } catch (error) {
+            console.error('批量标记已读失败:', error);
+        }
+    },
+    
+    startPolling() {
+        // 每 30 秒轮询一次新通知
+        setInterval(async () => {
+            try {
+                const newNotifications = await API.get('/notifications/unread-count');
+                if (newNotifications.count > this.unreadCount) {
+                    this.notifications = await API.get('/notifications');
+                    this.updateUnreadCount();
+                    
+                    // 显示新通知提示
+                    if (newNotifications.count - this.unreadCount > 0) {
+                        Toast.success(`收到 ${newNotifications.count - this.unreadCount} 条新通知`);
+                    }
+                }
+            } catch (error) {
+                console.error('轮询通知失败:', error);
+            }
+        }, 30000);
+    },
+    
+    showNotification(title, message, type = 'system') {
+        // 显示浏览器通知
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, {
+                body: message,
+                icon: '/static/icons/logo.png',
+                badge: '/static/icons/badge.png'
+            });
+        }
+        
+        // 同时显示 Toast
+        Toast.show(`${title}: ${message}`, 5000, type === 'reminder' ? 'warning' : 'info');
+    },
+    
+    requestPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+};
+
+// ============================================
+// 举报系统模块
+// ============================================
+
+const ReportSystem = {
+    modal: null,
+    currentCatId: null,
+    
+    init() {
+        this.modal = document.getElementById('reportModal');
+        this.bindEvents();
+    },
+    
+    bindEvents() {
+        // 关闭模态框
+        if (this.modal) {
+            const closeBtn = this.modal.querySelector('.modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => this.close());
+            }
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    this.close();
+                }
+            });
+        }
+    },
+    
+    open(catId, catName = '') {
+        this.currentCatId = catId;
+        const modalTitle = this.modal?.querySelector('.modal-title');
+        if (modalTitle) {
+            modalTitle.textContent = `举报 - ${catName || '猫咪'}`;
+        }
+        this.modal?.classList.add('active');
+    },
+    
+    close() {
+        this.modal?.classList.remove('active');
+        this.currentCatId = null;
+        // 重置表单
+        const form = document.getElementById('reportForm');
+        if (form) form.reset();
+    },
+    
+    async submit(formData) {
+        if (!this.currentCatId) {
+            Toast.error('举报对象无效');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cat_id: this.currentCatId,
+                    report_type: formData.reportType,
+                    description: formData.description,
+                    reporter_name: formData.reporterName,
+                    reporter_contact: formData.reporterContact,
+                    is_emergency: formData.isEmergency
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                Toast.success(result.message);
+                this.close();
+                // 如果是紧急事件，刷新紧急警报
+                if (formData.isEmergency && typeof EmergencyAlerts !== 'undefined') {
+                    EmergencyAlerts.fetchAlerts();
+                }
+            } else {
+                Toast.error(result.message || '举报失败');
+            }
+        } catch (error) {
+            console.error('提交举报失败:', error);
+            Toast.error('网络错误，请稍后重试');
+        }
+    }
+};
+
+// ============================================
+// 志愿者认证模块
+// ============================================
+
+const VolunteerAuth = {
+    modal: null,
+    currentVolunteer: null,
+    
+    init() {
+        this.modal = document.getElementById('volunteerModal');
+        this.bindEvents();
+    },
+    
+    bindEvents() {
+        if (this.modal) {
+            const closeBtn = this.modal.querySelector('.modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => this.close());
+            }
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    this.close();
+                }
+            });
+        }
+    },
+    
+    open() {
+        this.modal?.classList.add('active');
+    },
+    
+    close() {
+        this.modal?.classList.remove('active');
+        const form = document.getElementById('volunteerForm');
+        if (form) form.reset();
+    },
+    
+    async submit(formData) {
+        try {
+            const response = await fetch('/api/volunteer/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                Toast.success(result.message);
+                this.close();
+            } else {
+                Toast.error(result.message || '申请失败');
+            }
+        } catch (error) {
+            console.error('提交志愿者申请失败:', error);
+            Toast.error('网络错误，请稍后重试');
+        }
+    },
+    
+    async fetchVolunteers() {
+        try {
+            const response = await fetch('/api/volunteers');
+            const volunteers = await response.json();
+            return volunteers;
+        } catch (error) {
+            console.error('获取志愿者列表失败:', error);
+            return [];
+        }
+    }
+};
+
+// ============================================
+// 紧急求助模块
+// ============================================
+
+const EmergencyAlerts = {
+    alerts: [],
+    pollingInterval: null,
+    
+    init() {
+        this.fetchAlerts();
+        // 每 30 秒轮询一次紧急求助
+        this.pollingInterval = setInterval(() => this.fetchAlerts(), 30000);
+    },
+    
+    destroy() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+    },
+    
+    async fetchAlerts() {
+        try {
+            const response = await fetch('/api/emergency/alerts?status=active');
+            this.alerts = await response.json();
+            this.render();
+        } catch (error) {
+            console.error('获取紧急求助失败:', error);
+        }
+    },
+    
+    render() {
+        const container = document.getElementById('emergencyAlerts');
+        if (!container) return;
+        
+        if (this.alerts.length === 0) {
+            container.innerHTML = '<div class="no-alerts">暂无紧急求助</div>';
+            return;
+        }
+        
+        container.innerHTML = this.alerts.map(alert => `
+            <div class="emergency-alert ${alert.type === 'injury' ? 'injury' : alert.type === 'abuse' ? 'abuse' : ''}">
+                <div class="alert-header">
+                    <span class="alert-icon">${alert.type === 'injury' ? '🚨' : alert.type === 'abuse' ? '😡' : '⚠️'}</span>
+                    <span class="alert-cat">${this.escapeHtml(alert.cat_name || '未知猫咪')}</span>
+                    <span class="alert-location">📍 ${this.escapeHtml(alert.location || '位置未知')}</span>
+                </div>
+                <div class="alert-body">
+                    ${this.escapeHtml(alert.description || '')}
+                </div>
+                <div class="alert-footer">
+                    <span class="alert-time">${this.formatTime(alert.time)}</span>
+                    <button class="alert-respond-btn" onclick="EmergencyAlerts.respond(${alert.id})">
+                        前往救助
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    },
+    
+    formatTime(timeString) {
+        if (!timeString) return '';
+        try {
+            const now = new Date();
+            const normalized = typeof timeString === 'string' 
+                ? timeString.replace(' ', 'T') 
+                : timeString;
+            const time = new Date(normalized);
+            if (isNaN(time.getTime())) return '';
+            const diff = now - time;
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
+            if (diff < minute) return '刚刚';
+            if (diff < hour) return Math.floor(diff / minute) + '分钟前';
+            if (diff < day) return Math.floor(diff / hour) + '小时前';
+            return time.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return '';
+        }
+    },
+    
+    respond(alertId) {
+        Toast.success('已记录您的响应，请尽快前往救助！');
+        // 可以进一步实现导航到猫咪位置等功能
+    }
+};
+
+// ============================================
+// 表单验证工具模块
+// ============================================
+
+const FormValidator = {
+    // 手机号验证
+    validatePhone(phone) {
+        const regex = /^1[3-9]\d{9}$/;
+        return regex.test(phone);
+    },
+    
+    // 邮箱验证
+    validateEmail(email) {
+        if (!email) return true; // 邮箱非必填
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    },
+    
+    // 年龄验证
+    validateAge(age) {
+        return age >= 18 && age <= 120;
+    },
+    
+    // 显示验证错误
+    showError(input, message) {
+        const formGroup = input.closest('.form-group');
+        if (!formGroup) return;
+        
+        // 移除已有的错误提示
+        this.clearError(input);
+        
+        // 创建错误提示元素
+        const errorEl = document.createElement('div');
+        errorEl.className = 'form-error';
+        errorEl.textContent = message;
+        formGroup.appendChild(errorEl);
+        
+        // 添加错误样式
+        input.classList.add('input-error');
+    },
+    
+    // 显示验证成功
+    showSuccess(input, message) {
+        const formGroup = input.closest('.form-group');
+        if (!formGroup) return;
+        
+        // 移除已有的错误提示
+        this.clearError(input);
+        
+        // 创建成功提示元素
+        const successEl = document.createElement('div');
+        successEl.className = 'form-success';
+        successEl.textContent = message || '✓';
+        formGroup.appendChild(successEl);
+    },
+    
+    // 清除验证提示
+    clearError(input) {
+        const formGroup = input.closest('.form-group');
+        if (!formGroup) return;
+        
+        const existingError = formGroup.querySelector('.form-error');
+        const existingSuccess = formGroup.querySelector('.form-success');
+        
+        if (existingError) existingError.remove();
+        if (existingSuccess) existingSuccess.remove();
+        
+        input.classList.remove('input-error');
+    },
+    
+    // 绑定实时验证
+    bindValidation(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        
+        // 手机号验证
+        const phoneInput = form.querySelector('#applicantPhone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', (e) => {
+                const value = e.target.value.trim();
+                if (!value) {
+                    this.clearError(phoneInput);
+                    return;
+                }
+                if (this.validatePhone(value)) {
+                    this.showSuccess(phoneInput, '✓ 手机号格式正确');
+                } else if (value.length >= 11) {
+                    this.showError(phoneInput, '✗ 手机号格式不正确');
+                }
+            });
+            
+            phoneInput.addEventListener('blur', (e) => {
+                const value = e.target.value.trim();
+                if (value && !this.validatePhone(value)) {
+                    this.showError(phoneInput, '✗ 请输入正确的手机号');
+                }
+            });
+        }
+        
+        // 邮箱验证
+        const emailInput = form.querySelector('#applicantEmail');
+        if (emailInput) {
+            emailInput.addEventListener('blur', (e) => {
+                const value = e.target.value.trim();
+                if (!value) {
+                    this.clearError(emailInput);
+                    return;
+                }
+                if (!this.validateEmail(value)) {
+                    this.showError(emailInput, '✗ 邮箱格式不正确');
+                } else {
+                    this.showSuccess(emailInput, '✓');
+                }
+            });
+        }
+        
+        // 年龄验证
+        const ageInput = form.querySelector('#applicantAge');
+        if (ageInput) {
+            ageInput.addEventListener('blur', (e) => {
+                const value = parseInt(e.target.value, 10);
+                if (isNaN(value)) {
+                    this.clearError(ageInput);
+                    return;
+                }
+                if (!this.validateAge(value)) {
+                    this.showError(ageInput, '✗ 年龄必须在 18-120 之间');
+                } else {
+                    this.showSuccess(ageInput, '✓');
+                }
+            });
+        }
+        
+        // 姓名验证
+        const nameInput = form.querySelector('#applicantName');
+        if (nameInput) {
+            nameInput.addEventListener('blur', (e) => {
+                const value = e.target.value.trim();
+                if (!value) {
+                    this.clearError(nameInput);
+                    return;
+                }
+                if (value.length < 2) {
+                    this.showError(nameInput, '✗ 姓名至少 2 个字符');
+                } else {
+                    this.showSuccess(nameInput, '✓');
+                }
+            });
+        }
+    }
+};
+
+// ============================================
+// 滚动动画观察器模块
+// ============================================
+
+const ScrollAnimations = {
+    observer: null,
+    
+    init() {
+        // 创建 IntersectionObserver
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // 只触发一次
+                    this.observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+        
+        // 观察所有带动画类的元素
+        this.observeElements();
+    },
+    
+    observeElements() {
+        // 观察淡入元素
+        document.querySelectorAll('.fade-in, .slide-in-left, .slide-in-right, .scale-in').forEach(el => {
+            this.observer.observe(el);
+        });
+    },
+    
+    // 添加新的观察元素
+    observe(el) {
+        if (el) {
+            this.observer.observe(el);
+        }
+    },
+    
+    // 销毁观察器
+    destroy() {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
+    }
+};
+
+// ============================================
+// 猫咪日记生成模块
+// ============================================
+
+const CatDiary = {
+    templates: {
+        day: [
+            '今天{name}来了{cnt}次，最喜欢{prefer}那顿。它吃得很安心，还对着摄像头{action}。',
+            '{name}今天特别活跃，在猫屋周围{action}了几圈。来的时候{weather_desc}，它{emotion}地蹭了蹭猫屋。',
+            '{name}今天似乎有些{emotion}，在猫屋待了{time}分钟。它{action}，可能是在等它的猫朋友。',
+            '清晨{time}，{name}第一个来到猫屋。它{action}，开启了元气满满的一天。',
+            '{name}今天来了{cnt}次，每次停留约{time}分钟。它最喜欢的{prefer}似乎胃口很好，吃得干干净净。'
+        ],
+        action: ['打了个哈欠', '伸了个懒腰', '甩了甩尾巴', '舔了舔爪子', '眯了眯眼睛', '轻轻叫了一声'],
+        weather: ['阳光很好', '微风习习', '有些凉意', '刚下过雨', '天气暖和', '夜幕降临'],
+        emotion: ['开心', '慵懒', '警惕', '放松', '好奇', '温柔'],
+        prefer: ['早上', '中午', '下午', '晚上', '深夜']
+    },
+
+    generate(cat, visits) {
+        const tpl = this._pick(this.templates.day);
+        const action = this._pick(this.templates.action);
+        const weather = this._pick(this.templates.weather);
+        const emotion = this._pick(this.templates.emotion);
+        const prefer = this._pick(this.templates.prefer);
+        const cnt = visits?.count || Math.floor(Math.random() * 4) + 1;
+        const time = visits?.avg_duration || Math.floor(Math.random() * 20) + 5;
+        
+        return tpl
+            .replace(/\{name\}/g, cat.name || '猫咪')
+            .replace(/\{cnt\}/g, cnt)
+            .replace(/\{action\}/g, action)
+            .replace(/\{weather_desc\}/g, weather)
+            .replace(/\{emotion\}/g, emotion)
+            .replace(/\{prefer\}/g, prefer)
+            .replace(/\{time\}/g, time);
+    },
+
+    _pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    },
+
+    // 生成当天日期标题
+    today() {
+        const d = new Date();
+        const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        return `${d.getMonth() + 1}月${d.getDate()}日 ${weekdays[d.getDay()]}`;
+    }
+};
+
+// ============================================
+// 失踪猫咪追踪模块
+// ============================================
+
+const MissingCatTracker = {
+    LEVELS: {
+        warning: { days: 5, label: '预警', icon: '🟡', push: false },
+        response: { days: 7, label: '正式响应', icon: '🟠', push: true },
+        escalated: { days: 14, label: '升级响应', icon: '🔴', push: true }
+    },
+
+    // 根据连续未出现天数判断级别
+    getLevel(daysAbsent) {
+        if (daysAbsent >= 14) return 'escalated';
+        if (daysAbsent >= 7) return 'response';
+        if (daysAbsent >= 5) return 'warning';
+        return null;
+    },
+
+    // 获取状态文本
+    getStatus(daysAbsent) {
+        const level = this.getLevel(daysAbsent);
+        if (!level) return { text: '活跃', icon: '🟢', action: null };
+        const cfg = this.LEVELS[level];
+        return {
+            text: cfg.label + `（${daysAbsent}天未出现）`,
+            icon: cfg.icon,
+            action: cfg.push ? '推送寻猫消息' : '内部标记'
+        };
+    },
+
+    // 生成推送文案
+    pushText(cat) {
+        const name = cat.name || '猫咪';
+        return `🐾 【猫咪失踪提醒】您身边的"${name}"已7天未出现。如果您在小区看到它，请点击上报位置或照片。无需主动搜索，路过时留意即可。`;
+    },
+
+    // 生成回归推送
+    returnText(cat) {
+        const name = cat.name || '猫咪';
+        return `🎉 【回归通知】好消息！消失了一段时间的"${name}"刚刚回到猫屋啦！它看起来状态不错，欢迎继续关注它~`;
+    }
+};
+
+// ============================================
+// 社区共治调解模块
+// ============================================
+
+const CommunityMediation = {
+    // 禁止清单
+    forbiddenActions: [
+        '私自捕捉猫咪',
+        '擅自转移或遗弃猫咪',
+        '破坏猫屋设备',
+        '投喂有害食物',
+        '驱赶或虐待猫咪'
+    ],
+
+    // 无害替代方案
+    alternatives: [
+        { problem: '夜间猫叫声', solutions: ['加强绝育（减少发情叫声）', '迁移猫屋至远离居民楼的位置', '分时段投喂（避免深夜聚集）', '安装超声波驱避器（人道驱离）'] },
+        { problem: '猫咪聚集', solutions: ['分散设置多个投喂点', '控制单次投喂量', '引导至非居民区活动', 'TNR（诱捕-绝育-放归）计划'] },
+        { problem: '粪便问题', solutions: ['设置固定猫砂盆区域', '定期清理维护', '引导猫咪至绿化带活动', '与物业协商指定活动区域'] },
+        { problem: '过敏/卫生担忧', solutions: ['保持猫屋周边清洁', '定期消毒设备', '设置远离居民楼的投喂点', '提供科普资料说明科学管理方法'] }
+    ],
+
+    // 生成治理建议报告
+    generateReport(complaint) {
+        const problem = complaint?.problem || '猫咪相关问题';
+        const matched = this.alternatives.find(a => problem.includes(a.problem)) || this.alternatives[0];
+
+        return {
+            forbidden: this.forbiddenActions,
+            alternatives: matched.solutions,
+            plan: {
+                week1: '评估现状，制定调整方案',
+                week2: '实施方案，监测效果'
+            }
+        };
+    },
+
+    // 获取禁止清单HTML
+    getForbiddenHTML() {
+        return this.forbiddenActions.map(a => `<li>❌ ${a}</li>`).join('');
+    },
+
+    // 获取替代方案HTML
+    getAlternativesHTML(problem) {
+        const matched = this.alternatives.find(a => problem && problem.includes(a.problem)) || this.alternatives[0];
+        return matched.solutions.map(s => `<li>✅ ${s}</li>`).join('');
+    }
+};
+
+// ============================================
+// 资源分配可视化模块
+// ============================================
+
+const ResourceAllocation = {
+    // 计算资源分配比例
+    calculate(cats) {
+        const total = cats.length;
+        const neutered = cats.filter(c => c.neutered).length;
+        const unneutered = total - neutered;
+        const neuteredPct = total > 0 ? Math.round((neutered / total) * 100) : 0;
+        const unneuteredPct = 100 - neuteredPct;
+
+        // 投喂优先级：未绝育猫获得更多资源
+        return {
+            unneuteredPct: Math.max(unneuteredPct, 30), // 至少30%
+            neuteredPct: Math.min(neuteredPct, 70), // 最多70%
+            totalCats: total,
+            neuteredCount: neutered,
+            unneuteredCount: unneutered,
+            month: (new Date().getMonth() + 1) + '月'
+        };
+    },
+
+    // 生成说明文案
+    getExplanation() {
+        return '已绝育猫已无繁殖压力，适当减少投喂可鼓励其保留自然捕食能力，更健康、更有野性。如果你想专门投喂某只已绝育猫，可使用"爱心加餐"功能（消耗积分或小额支付）。';
+    },
+
+    // 渲染资源分配条形图 HTML
+    renderHTML(data) {
+        const unPct = data.unneuteredPct || 50;
+        const neuPct = data.neuteredPct || 50;
+        return `
+            <div class="resource-bar">
+                <div class="resource-bar-segment unneutered" style="width:${unPct}%">
+                    <span>未绝育猫 ${unPct}%</span>
+                </div>
+                <div class="resource-bar-segment neutered" style="width:${neuPct}%">
+                    <span>已绝育猫 ${neuPct}%</span>
+                </div>
+            </div>
+            <p class="resource-explanation">${this.getExplanation()}</p>
+        `;
+    }
+};
+
+// ============================================
+// Service Worker 注册
+// ===========================================
+
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js')
+            .then(registration => {
+                console.log('Service Worker 注册成功:', registration.scope);
+            })
+            .catch(error => {
+                console.log('Service Worker 注册失败:', error);
+            });
+    }
+}
+
+// ============================================
+// 全局辅助函数（HTML onclick 调用）
+// ============================================
+
+// --- 治理报告弹窗 ---
+function openGovReport() {
+    const modal = document.getElementById('govReportModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeGovReport() {
+    const modal = document.getElementById('govReportModal');
+    if (modal) modal.style.display = 'none';
+    document.getElementById('govReportText').value = '';
+}
+
+function submitGovReport() {
+    const text = document.getElementById('govReportText').value.trim();
+    if (!text) {
+        Toast.warning('请填写投诉或建议内容', 2500);
+        return;
+    }
+    // 收集投诉基本信息
+    const report = {
+        problem: text,
+        time: new Date().toISOString(),
+        catName: LiveRoom.currentCat?.name || null
+    };
+    const generated = CommunityMediation.generateReport(report);
+    // 显示生成的治理建议
+    const forbiddenHTML = generated.forbidden.map(a => '<li>❌ ' + a + '</li>').join('');
+    const altHTML = generated.alternatives.map(s => '<li>✅ ' + s + '</li>').join('');
+    const planHTML = '<li>📅 第1周：' + generated.plan.week1 + '</li><li>📅 第2周：' + generated.plan.week2 + '</li>';
+    
+    const modal = document.getElementById('govReportModal');
+    if (modal) {
+        modal.querySelector('.gov-report-content').innerHTML = `
+            <h3>📋 治理建议报告已生成</h3>
+            <div style="text-align:left;padding:1rem;max-height:60vh;overflow-y:auto;">
+                <h4>🚫 禁止清单</h4>
+                <ul style="list-style:none;padding:0;">${forbiddenHTML}</ul>
+                <h4>💡 无害替代方案</h4>
+                <ul style="list-style:none;padding:0;">${altHTML}</ul>
+                <h4>📋 两周闭环执行计划</h4>
+                <ul style="list-style:none;padding:0;">${planHTML}</ul>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="closeGovReport()">关闭</button>
+                <button class="btn btn-primary" onclick="Toast.success('报告已提交，物业将在24小时内响应');closeGovReport();">确认并提交</button>
+            </div>
+        `;
+    }
+}
+
+// --- 面板折叠切换 ---
+function togglePanel(panelId) {
+    const content = document.getElementById(panelId + 'Content');
+    const header = document.querySelector('#' + panelId + ' .panel-toggle');
+    if (!content) return;
+    
+    if (content.style.display === 'none' || !content.style.display) {
+        content.style.display = 'block';
+        if (header) header.textContent = '▲';
+    } else {
+        content.style.display = 'none';
+        if (header) header.textContent = '▼';
+    }
+    
+    // 打开排行榜时填充数据
+    if (panelId === 'panelLeaderboard' && content.style.display !== 'none') {
+        renderLeaderboard();
+    }
+    // 打开通知面板时刷新
+    if (panelId === 'panelNotifications' && content.style.display !== 'none') {
+        NotificationCenter.displayNotifications();
+    }
+}
+
+// --- 猫咪人气排行榜渲染 ---
+async function renderLeaderboard() {
+    const list = document.getElementById('leaderboardList');
+    if (!list) return;
+    
+    let cats = [];
+    try {
+        const cache = sessionStorage.getItem('leaderboard_cats');
+        if (cache) {
+            cats = JSON.parse(cache);
+        } else {
+            const resp = await fetch('/api/cats');
+            const data = await resp.json();
+            cats = data.cats || data || [];
+            sessionStorage.setItem('leaderboard_cats', JSON.stringify(cats));
+        }
+    } catch (e) {
+        cats = [];
+    }
+    
+    if (cats.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">🏆 暂无排名数据</div>';
+        return;
+    }
+    
+    // 按积分排序（模拟数据 - 实际应从API获取）
+    const sorted = cats.map(c => ({
+        ...c,
+        score: c.points || Math.floor(Math.random() * 200) + 50
+    })).sort((a, b) => b.score - a.score);
+    
+    const medals = ['🥇', '🥈', '🥉'];
+    list.innerHTML = sorted.map((cat, i) => `
+        <div class="leaderboard-item" onclick="switchLiveCat(${cat.id})" style="cursor:pointer;">
+            <span class="leaderboard-rank">${i < 3 ? medals[i] : (i + 1)}</span>
+            <span class="leaderboard-avatar">🐱</span>
+            <span class="leaderboard-name">${cat.name || '猫咪'}</span>
+            <span class="leaderboard-score">${cat.score} 分</span>
+        </div>
+    `).join('');
+}
+
+// --- 直播切换猫咪 ---
+function switchLiveCat(catId) {
+    LiveRoom.currentCatId = catId;
+    LiveRoom.loadCurrentCat();
+    Toast.success('已切换到猫咪 ' + catId, 2000);
+}
+
+// --- 导航辅助函数 ---
+function scrollToLive() {
+    const el = document.getElementById('liveSection');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function scrollToDiary() {
+    const el = document.getElementById('diarySection');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function bounceCat() {
+    const emoji = document.getElementById('liveCatEmoji');
+    if (emoji) {
+        emoji.style.transform = 'scale(1.3)';
+        emoji.style.transition = 'transform 0.2s ease';
+        setTimeout(() => { emoji.style.transform = 'scale(1)'; }, 300);
+    }
+}
+
+function showCatInfo() {
+    if (LiveRoom.currentCat) {
+        const cat = LiveRoom.currentCat;
+        Toast.show(`当前：${cat.name || '猫咪'} | ${cat.neutered ? '已绝育 ✅' : '待绝育 ⚠️'} | ${cat.color || '花色未知'}`, 4000, 'info');
+    } else {
+        Toast.show('暂无猫咪信息', 2000, 'warning');
+    }
+}
+
+function shareLive() {
+    const modal = document.getElementById('shareModal');
+    if (modal) {
+        const preview = modal.querySelector('.share-cat-name');
+        if (preview && LiveRoom.currentCat) {
+            preview.textContent = LiveRoom.currentCat.name || '猫咪';
+        }
+        modal.style.display = 'flex';
+    }
+}
+
+function closeShareModal() {
+    const modal = document.getElementById('shareModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function shareTo(platform) {
+    const url = window.location.href;
+    if (platform === 'copy') {
+        navigator.clipboard.writeText(url).then(() => {
+            Toast.success('链接已复制到剪贴板！', 2000);
+        }).catch(() => {
+            Toast.show('复制失败，请手动复制', 2000, 'warning');
+        });
+    } else if (platform === 'wechat') {
+        Toast.show('请截图分享到微信好友或朋友圈', 3000, 'info');
+    } else if (platform === 'weibo') {
+        window.open('https://service.weibo.com/share/share.php?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent('来看可爱的猫咪！'), '_blank');
+    }
+    closeShareModal();
+}
+
+function uploadCatPhoto() {
+    Toast.show('请在弹出窗口中选择猫咪照片上传（AI将自动识别匹配猫咪档案）', 4000, 'info');
+    // MVP 阶段展示模拟上传
+    setTimeout(() => {
+        Toast.success('照片已上传！AI正在识别...预计10秒内完成匹配', 3000);
+    }, 1500);
+}
+
+function remoteFeed() {
+    if (LiveRoom.currentCatId) {
+        LiveRoom.feed();
+    } else {
+        Toast.warning('请先选择一只猫咪进行投喂', 2500);
+    }
+}
+
+// --- 集中更新所有统计数字 ---
+async function updateAllStats() {
+    try {
+        const resp = await fetch('/api/stats');
+        const stats = await resp.json();
+        if (stats) {
+            document.querySelectorAll('#totalCats, #statCats').forEach(el => { if (el) el.textContent = stats.total_cats || 4; });
+            document.querySelectorAll('#neuteredCount').forEach(el => { if (el) el.textContent = stats.neutered || 2; });
+            document.querySelectorAll('#unnuteredCount').forEach(el => { if (el) el.textContent = stats.unnutered || 2; });
+            document.querySelectorAll('#adoptedCount').forEach(el => { if (el) el.textContent = stats.adopted || 1; });
+            if (document.getElementById('statFeedings')) {
+                document.getElementById('statFeedings').textContent = (stats.total_feedings || 3427).toLocaleString();
+            }
+            if (document.getElementById('statAdoptions')) {
+                document.getElementById('statAdoptions').textContent = stats.adopted || 1;
+            }
+        }
+    } catch (e) {
+        console.error('更新统计数据失败:', e);
+    }
+}
+
+// --- 猫咪日记渲染 ---
+function renderCatDiaries() {
+    const container = document.getElementById('diaryCards');
+    if (!container) return;
+    
+    // 获取猫咪列表
+    fetch('/api/cats')
+        .then(r => r.json())
+        .then(data => {
+            const cats = data.cats || data || [];
+            if (cats.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">📖 暂无猫咪日记数据</div>';
+                return;
+            }
+            container.innerHTML = cats.slice(0, 4).map(cat => {
+                const diary = CatDiary.generate(cat, null);
+                return `
+                    <div class="diary-card">
+                        <div class="diary-card-header">
+                            <span class="diary-cat-avatar">🐱</span>
+                            <span class="diary-cat-name">${cat.name || '猫咪'}</span>
+                            <span class="diary-date">${new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
+                        </div>
+                        <div class="diary-card-body">${diary}</div>
+                        <div class="diary-card-footer">
+                            <span>🐾 今日来访 ${Math.floor(Math.random() * 4) + 1} 次</span>
+                            <span>⏱ 停留约 ${Math.floor(Math.random() * 15) + 5} 分钟</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        })
+        .catch(() => {
+            container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">⚠️ 日记加载失败，请稍后重试</div>';
+        });
+}
+
+// --- 深色模式切换（导航栏按钮） ---
+function toggleDarkMode() {
+    DarkMode.toggle();
+}
+
+// --- 登录弹窗（导航栏按钮） ---
+function showLogin() {
+    Auth.showLogin();
+}
+
+// ============================================
+// ESP32-S3-EYE 实时摄像头集成
+// ============================================
+const ESP32_CAMERA_IP = '192.168.1.100';  // ← 改成你的 ESP32 IP
+const ESP32_CAMERA_PORT = 8080;
+
+function initESP32Stream() {
+    const streamImg = document.getElementById('esp32Stream');
+    const liveBadge = document.querySelector('.live-badge');
+    if (!streamImg) return;
+    
+    streamImg.src = `http://${ESP32_CAMERA_IP}:${ESP32_CAMERA_PORT}/stream`;
+    
+    streamImg.addEventListener('load', () => {
+        console.log('[ESP32] Stream connected');
+        if (liveBadge) { liveBadge.textContent = '🟢 直播中'; liveBadge.style.opacity = '1'; }
+    });
+    streamImg.addEventListener('error', () => {
+        console.warn('[ESP32] Stream failed');
+        streamImg.style.display = 'none';
+        const emoji = document.getElementById('liveCatEmoji');
+        if (emoji) emoji.style.display = 'block';
+        if (liveBadge) liveBadge.textContent = '⚪ 离线';
+    });
+    setInterval(async () => {
+        try {
+            const r = await fetch(`http://${ESP32_CAMERA_IP}:${ESP32_CAMERA_PORT}/api/status`,
+                { signal: AbortSignal.timeout(3000) });
+            if (r.ok && liveBadge) liveBadge.textContent = '🟢 直播中';
+        } catch { if (liveBadge) liveBadge.textContent = '🔴 离线'; }
+    }, 15000);
+}
+
+// ============================================
+// 页面初始化
+// ============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Service Worker 注册
+    registerServiceWorker();
+    // Toast 初始化
+    Toast.init();
+    
+    // 认证系统初始化
+    Auth.init();
+    
+    // 深色模式初始化
+    DarkMode.init();
+    
+    // 绑定深色模式切换按钮事件
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', () => DarkMode.toggle());
+    }
+    
+    // 分享功能初始化
+    ShareUI.init();
+    
+    // 数据统计初始化（在首页显示）
+    const path = window.location.pathname;
+    if (path === '/' || path === '/index.html') {
+        StatsDashboard.init();
+        // 首页额外初始化
+        renderCatDiaries();           // 猫咪日记
+        updateAllStats();             // 修正硬编码的统计数字
+        renderLeaderboard();          // 人气排行榜
+        
+        // ESP32-S3-EYE 实时摄像头初始化
+        initESP32Stream();
+    }
+    
+    // 通知中心初始化（在所有页面）
+    NotificationCenter.init();
+    NotificationCenter.requestPermission();
+    
+    // 表单验证初始化（在领养页面）
+    if (path === '/adopt' || path === '/adopt.html' || path === '/adopt/') {
+        FormValidator.bindValidation('adoptForm');
+    }
+    
+    // 滚动动画初始化（在所有页面）
+    ScrollAnimations.init();
+    
+    // 根据页面初始化对应模块
+    if (path === '/' || path === '/index.html') {
+        // 直播间页面
+        LiveRoom.init();
+    } else if (path === '/cats' || path === '/cats.html' || path === '/cats/') {
+        // 猫咪档案页面
+        CatsPage.init();
+    } else if (path === '/adopt' || path === '/adopt.html' || path === '/adopt/') {
+        // 领养页面
+        AdoptPage.init();
+    }
+    
+    // 全局错误处理
+    window.addEventListener('error', (e) => {
+        console.error('全局错误:', e.error);
+    });
+    
+    // 未处理的 Promise 拒绝
+    window.addEventListener('unhandledrejection', (e) => {
+        console.error('未处理的 Promise 拒绝:', e.reason);
+    });
+});

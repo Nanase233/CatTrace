@@ -51,3 +51,11 @@ desktop.ini
 static/images/
 static/cat*.jpg
 static/cat*.png
+
+# ESP32 编译产物
+**/build/
+*.bin
+*.elf
+*.map
+*.o
+*.a

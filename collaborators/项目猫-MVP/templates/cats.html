@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫咪档案 - MeowGuard</title>
+    <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#ff8fb0">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🐱 MeowGuard</div>
+        <div class="nav-links">
+            <a href="/" class="nav-link">首页</a>
+            <a href="/cats" class="nav-link active">猫咪档案</a>
+            <a href="/adopt" class="nav-link">领养</a>
+        </div>
+        <div class="nav-actions">
+            <button id="darkModeToggle" class="nav-btn" aria-label="切换深色模式">🌙</button>
+            <button id="loginBtn" class="nav-btn login-btn">
+                <span class="nav-text">登录</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <h1 class="page-title">🐱 猫咪档案</h1>
+        
+        <!-- 搜索和筛选 -->
+        <div class="cats-filter">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索猫咪名字...">
+            <select id="statusFilter" class="filter-select">
+                <option value="all">所有状态</option>
+                <option value="adoptable">可领养</option>
+                <option value="adopted">已领养</option>
+                <option value="monitoring">监控中</option>
+            </select>
+        </div>
+
+        <!-- 猫咪卡片列表 -->
+        <div id="catsGrid" class="cats-grid">
+            <!-- 动态生成猫咪卡片 -->
+        </div>
+    </main>
+
+    <!-- 猫咪详情弹窗 -->
+    <div id="catDetailModal" class="modal">
+        <div class="modal-content cat-detail-modal">
+            <span class="modal-close" onclick="closeCatDetail()">&times;</span>
+            <div class="cat-detail-header">
+                <div class="cat-detail-avatar" id="detailAvatar">🐱</div>
+                <div class="cat-detail-info">
+                    <h2 id="detailName">猫咪名字</h2>
+                    <p id="detailLocation">📍 位置</p>
+                    <span id="detailStatus" class="status-badge">状态</span>
+                </div>
+            </div>
+            <div class="cat-detail-body">
+                <div class="cat-detail-section">
+                    <h3>基本信息</h3>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-label">性别</span>
+                            <span class="detail-value" id="detailGender">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">年龄</span>
+                            <span class="detail-value" id="detailAge">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">体重</span>
+                            <span class="detail-value" id="detailWeight">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">性格</span>
+                            <span class="detail-value" id="detailPersonality">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cat-detail-section">
+                    <h3>健康记录</h3>
+                    <div id="healthRecords" class="health-records">
+                        <!-- 动态生成健康记录 -->
+                    </div>
+                </div>
+                <div class="cat-detail-section">
+                    <h3>投喂历史</h3>
+                    <div id="feedHistory" class="feed-history">
+                        <!-- 动态生成投喂历史 -->
+                    </div>
+                </div>
+            </div>
+            <div class="cat-detail-actions">
+                <button id="detailFeedBtn" class="btn btn-feed">🍖 投喂</button>
+                <button id="detailReportBtn" class="btn btn-secondary">🚨 举报异常</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/main.js?v={{ cache_bust }}"></script>
+    <script>
+        // 加载猫咪列表
+        async function loadCats() {
+            try {
+                const response = await fetch('/api/cats');
+                const data = await response.json();
+                renderCatsGrid(data.cats);
+            } catch (error) {
+                showToast('加载猫咪列表失败', 'error');
+            }
+        }
+
+        function renderCatsGrid(cats) {
+            const grid = document.getElementById('catsGrid');
+            grid.innerHTML = cats.map(cat => `
+                <div class="cat-card" onclick="showCatDetail('${cat.id}')">
+                    <div class="cat-card-avatar" style="background:${cat.color || '#ff8fb0'}">${cat.emoji || '🐱'}</div>
+                    <div class="cat-card-info">
+                        <h3>${cat.name}</h3>
+                        <p>📍 ${cat.location}</p>
+                        <span class="status-badge ${cat.status}">${getStatusText(cat.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'adoptable': '可领养',
+                'adopted': '已领养',
+                'monitoring': '监控中'
+            };
+            return statusMap[status] || status;
+        }
+
+        function showCatDetail(catId) {
+            // 打开详情弹窗
+            document.getElementById('catDetailModal').style.display = 'flex';
+        }
+
+        function closeCatDetail() {
+            document.getElementById('catDetailModal').style.display = 'none';
+        }
+
+        // 搜索和筛选
+        document.getElementById('searchInput').addEventListener('input', filterCats);
+        document.getElementById('statusFilter').addEventListener('change', filterCats);
+
+        function filterCats() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            fetch('/api/cats')
+                .then(r => r.json())
+                .then(data => {
+                    let filtered = data.cats;
+                    if (search) {
+                        filtered = filtered.filter(cat => cat.name.toLowerCase().includes(search));
+                    }
+                    if (status !== 'all') {
+                        filtered = filtered.filter(cat => cat.status === status);
+                    }
+                    renderCatsGrid(filtered);
+                });
+        }
+
+        // 页面加载时获取猫咪列表
+        loadCats();
+    </script>
+</body>
+</html>
