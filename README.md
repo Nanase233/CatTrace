@@ -93,6 +93,7 @@ CatTrace/
 | 文档 | 内容 |
 |------|------|
 | [项目说明书](./项目说明书.md) | 项目全貌：功能详解、架构、部署指南、路线图 |
+| [docs/user-guide.md](./docs/user-guide.md) | 用户说明书（面向评审教师与使用者） |
 | [docs/features.md](./docs/features.md) | 三大核心功能与辅助功能详细说明 |
 | [docs/self-learning.md](./docs/self-learning.md) | 自学习引擎技术文档 |
 | [docs/api.md](./docs/api.md) | REST API 完整接口文档 |

@@ -82,6 +82,7 @@ CatTrace/
 ├── README.md               # 快速上手说明
 ├── 项目说明书.md            # 项目全貌
 ├── docs/                   # 详细文档
+│   ├── user-guide.md       # 用户说明书（面向评审教师与使用者）
 │   ├── features.md         # 功能详细说明
 │   ├── self-learning.md    # 自学习引擎技术文档
 │   ├── api.md              # API 完整接口文档
