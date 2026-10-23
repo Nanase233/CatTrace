@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "catvision"
+version = "0.1.0"
+description = "CatTrace 树莓派边缘节点：猫脸识别 + 剪耳识别原型"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.5",
+    "Pillow>=10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "jsonschema>=4.20",
+    "ruff>=0.4",
+]
+pi = [
+    "numpy",
+    "opencv-python-headless",
+    "onnxruntime",
+    "fastapi",
+    "uvicorn",
+]
+
+[tool.setuptools]
+packages = [
+    "catvision_contracts",
+    "modules",
+    "modules.camera",
+    "modules.camera.sources",
+    "modules.catface",
+    "modules.earnotch",
+    "mocks",
+    "pipeline",
+]
+
+[tool.setuptools.package-dir]
+catvision_contracts = "contracts/python/catvision_contracts"
+modules = "modules"
+mocks = "mocks"
+pipeline = "pipeline"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+# 不 lint TNR 网页部分（app.py / self_learning.py / collaborators 等），只 lint catvision 模块
+extend-exclude = ["collaborators", "templates", "static", "app.py", "self_learning.py"]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

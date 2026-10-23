@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://catvision.local/schemas/v1/cat_face.schema.json",
+  "title": "CatFace",
+  "description": "猫脸模块产出的单只猫的脸部结果。耳标模块依赖 landmarks 裁耳部 ROI，因此 7 个关键点必须全部输出（耳尖不可见时为 null）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "packet_id", "track_id", "bbox", "det_score", "landmarks", "head_pose", "identity", "quality"],
+  "properties": {
+    "schema": { "const": "catvision.cat_face/1.0" },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "track_id": { "type": "string", "minLength": 1 },
+    "bbox": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": { "type": "number" },
+      "description": "[x, y, w, h] 像素，左上角 + 宽高"
+    },
+    "det_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "landmarks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left_eye", "right_eye", "nose", "left_ear_base", "right_ear_base", "left_ear_tip", "right_ear_tip"],
+      "properties": {
+        "left_eye": { "$ref": "#/$defs/point" },
+        "right_eye": { "$ref": "#/$defs/point" },
+        "nose": { "$ref": "#/$defs/point" },
+        "left_ear_base": { "$ref": "#/$defs/point" },
+        "right_ear_base": { "$ref": "#/$defs/point" },
+        "left_ear_tip": { "$ref": "#/$defs/nullablePoint" },
+        "right_ear_tip": { "$ref": "#/$defs/nullablePoint" }
+      }
+    },
+    "head_pose": {
+      "type": "object", "additionalProperties": false,
+      "required": ["yaw", "pitch", "roll"],
+      "properties": {
+        "yaw": { "type": "number" },
+        "pitch": { "type": "number" },
+        "roll": { "type": "number" }
+      }
+    },
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cat_id", "name", "similarity", "decision", "gallery_version"],
+      "properties": {
+        "cat_id": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "similarity": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+        "decision": { "enum": ["matched", "unknown", "ambiguous"] },
+        "gallery_version": { "type": "string" }
+      }
+    },
+    "quality": {
+      "type": "object", "additionalProperties": false,
+      "required": ["blur", "brightness", "is_usable"],
+      "properties": {
+        "blur": { "type": "number" },
+        "brightness": { "type": "number" },
+        "is_usable": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "point": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+    "nullablePoint": {
+      "oneOf": [ { "$ref": "#/$defs/point" }, { "type": "null" } ]
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://catvision.local/schemas/v1/detection_event.schema.json",
+  "title": "DetectionEvent",
+  "description": "决策层聚合投票后对外发布的事件。单帧结果不对外。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "event_id", "emitted_at", "camera_id", "track_id", "cat", "neutered", "votes", "evidence"],
+  "properties": {
+    "schema": { "const": "catvision.detection_event/1.0" },
+    "event_id": { "type": "string", "minLength": 1 },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "camera_id": { "type": "string" },
+    "track_id": { "type": "string" },
+    "cat": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cat_id", "name", "similarity", "decision"],
+      "properties": {
+        "cat_id": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "similarity": { "type": ["number", "null"] },
+        "decision": { "enum": ["matched", "unknown", "ambiguous"] }
+      }
+    },
+    "neutered": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "confidence"],
+      "properties": {
+        "value": { "type": ["boolean", "null"] },
+        "confidence": { "type": ["number", "null"] }
+      }
+    },
+    "votes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["identity", "ear"],
+      "properties": {
+        "identity": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "ear": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+      }
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frames_seen", "concurrent_tracks", "first_seen", "last_seen"],
+      "properties": {
+        "frames_seen": { "type": "integer", "minimum": 0 },
+        "concurrent_tracks": { "type": "integer", "minimum": 0 },
+        "first_seen": { "type": "string", "format": "date-time" },
+        "last_seen": { "type": "string", "format": "date-time" },
+        "best_frame_path": { "type": ["string", "null"] },
+        "snapshot_url": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

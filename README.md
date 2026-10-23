@@ -56,7 +56,33 @@ python app.py
 |------|------|
 | collaborators/mao-main | 主项目原始版本（含 MeowGuard 时期文档） |
 | collaborators/项目猫-MVP | MVP 原型版本（含猫脸识别等实验功能） |
-| collaborators/esp32s3_realtime_camera | ESP32-S3 摄像头固件（ESP-IDF 项目） |
+
+---
+
+## 树莓派 AI 识别模块（CatVision）
+
+树莓派 4B 上的猫脸识别 + 剪耳识别原型代码已并入本仓库根目录，与 Flask 网页共用同一个仓库：
+
+| 目录 | 内容 |
+|------|------|
+| `contracts/` | ⭐ 接口契约（JSON Schema + pydantic 绑定），三个模块共管 |
+| `modules/camera/` | 摄像头接入：CSI / USB / RTSP / 文件回放 / 合成源 |
+| `modules/catface/` | 猫脸识别（个体 ID + 关键点），待实现 |
+| `modules/earnotch/` | 剪耳（绝育）识别，待实现 |
+| `pipeline/` | 抽帧 → 识别 → 投票聚合 → 决策（投粮 / TNR）→ 事件总线 |
+| `mocks/` | 各模块 Mock，保证各模块能并行开发 |
+| `tests/` | 契约测试 + 全链路单测 |
+
+接手分工与目录说明见 [README-catvision.md](./README-catvision.md)，
+字段级接口见 [docs/接口规范.md](./docs/接口规范.md)。
+
+没有摄像头也能跑通全链路：
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+python -m pipeline.runner --source synthetic:60 --mock-all   # 看到 PIPELINE OK 即通过
+```
 
 ---
 

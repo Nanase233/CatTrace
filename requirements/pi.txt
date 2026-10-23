@@ -1,0 +1,10 @@
+-r base.txt
+
+# 树莓派上的 AI 推理。已实测这些在 Pi4 + Debian13 + Python3.13 aarch64 上都有 wheel。
+onnxruntime>=1.31
+opencv-python-headless>=5.0
+numpy>=2
+
+# 下面几个是 apt 装的系统包，venv 必须 --system-site-packages 才看得见：
+#   sudo apt install -y python3-picamera2 python3-numpy python3-pil
+# 注意：不要用 tflite-runtime —— 实测 Py3.13 aarch64 没有任何匹配的 wheel。

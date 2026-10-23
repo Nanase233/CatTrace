@@ -1,0 +1,6 @@
+-r base.txt
+
+# 开发 / CI
+pytest>=8
+jsonschema>=4.20
+ruff>=0.4

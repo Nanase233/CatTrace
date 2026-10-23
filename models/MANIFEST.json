@@ -1,0 +1,18 @@
+{
+  "_comment": "模型登记表。每个人加模型必须来这里登记，联调时按这个版本对齐。模型文件本身不进 Git（见 .gitignore）。",
+  "contract_version": "1.0",
+  "models": {
+    "catface": {
+      "owner": "猫脸模块",
+      "path": "models/catface/",
+      "current": null,
+      "note": "猫脸检测 + 个体识别 + 关键点，必须输出 7 个关键点"
+    },
+    "earnotch": {
+      "owner": "耳标模块",
+      "path": "models/earnotch/",
+      "current": null,
+      "note": "剪耳识别，输入是 landmarks 裁出的耳部 ROI，不自己检测猫脸"
+    }
+  }
+}

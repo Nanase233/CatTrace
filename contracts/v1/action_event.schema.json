@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://catvision.local/schemas/v1/action_event.schema.json",
+  "title": "ActionEvent",
+  "description": "决策引擎产出的动作事件：投粮 / TNR 待办 / 告警。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "event_id", "emitted_at", "type", "track_id", "cat_id", "reason", "payload", "status"],
+  "properties": {
+    "schema": { "const": "catvision.action_event/1.0" },
+    "event_id": { "type": "string", "minLength": 1 },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "type": { "enum": ["FEED_DISPENSE", "TNR_TASK_CREATED", "ALERT"] },
+    "track_id": { "type": ["string", "null"] },
+    "cat_id": { "type": ["string", "null"] },
+    "reason": { "type": "string" },
+    "payload": { "type": "object" },
+    "status": { "enum": ["queued", "executed", "failed", "skipped"] }
+  }
+}

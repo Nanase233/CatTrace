@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://catvision.local/schemas/v1/ear_notch.schema.json",
+  "title": "EarNotch",
+  "description": "耳标模块产出的绝育耳标结果。剪耳=已绝育/已TNR；未剪耳=疑似未绝育。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "packet_id", "track_id", "left", "right", "neutered", "model_version"],
+  "properties": {
+    "schema": { "const": "catvision.ear_notch/1.0" },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "track_id": { "type": "string", "minLength": 1 },
+    "left": { "$ref": "#/$defs/earSide" },
+    "right": { "$ref": "#/$defs/earSide" },
+    "neutered": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "source", "confidence", "rule"],
+      "properties": {
+        "value": { "type": ["boolean", "null"] },
+        "source": { "const": "ear_notch" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "rule": { "enum": ["any_ear_notched", "both_ears_notched", "left_only", "right_only"] }
+      }
+    },
+    "model_version": { "type": "string" }
+  },
+  "$defs": {
+    "earSide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visible", "notched", "score", "bbox"],
+      "properties": {
+        "visible": { "type": "boolean" },
+        "notched": { "type": ["boolean", "null"] },
+        "score": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "bbox": {
+          "oneOf": [
+            { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "comment": "看不见耳朵时禁止输出结论",
+          "if": { "properties": { "visible": { "const": false } }, "required": ["visible"] },
+          "then": { "properties": { "notched": { "type": "null" }, "score": { "type": "null" } } }
+        }
+      ]
+    }
+  }
+}

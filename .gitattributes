@@ -1,0 +1,13 @@
+# catvision（树莓派模块）统一换行符：仓库内一律 LF，避免 Windows / 树莓派 diff 噪音
+contracts/** text eol=lf
+modules/** text eol=lf
+mocks/** text eol=lf
+pipeline/** text eol=lf
+scripts/** text eol=lf
+tests/** text eol=lf
+requirements/** text eol=lf
+models/MANIFEST.json text eol=lf
+pyproject.toml text eol=lf
+README-catvision.md text eol=lf
+*.onnx binary
+*.db binary

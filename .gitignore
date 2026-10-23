@@ -52,10 +52,19 @@ static/images/
 static/cat*.jpg
 static/cat*.png
 
-# ESP32 编译产物
-**/build/
-*.bin
-*.elf
-*.map
-*.o
-*.a
+# catvision（树莓派模块）运行时产物与大文件
+.venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+runtime/
+*.db-journal
+*.jsonl
+frames/
+datasets/*
+!datasets/README.md
+models/*.onnx
+models/*.pt
+models/*.tflite
+models/*.param

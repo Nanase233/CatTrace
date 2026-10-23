@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 安装（含 dev 依赖，契约校验需要 jsonschema）
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff 静态检查
+        run: ruff check .
+
+      - name: 契约测试（schema 与 pydantic 对齐）
+        run: pytest tests/contract -q
+
+      - name: 全部单测
+        run: pytest -q
+
+      - name: D0 验收（无摄像头、无模型，纯 Mock 跑通全链路）
+        run: python -m pipeline.runner --source synthetic:30 --mock-all
+
+      - name: D0 断言（必须真的产出 DetectionEvent）
+        run: |
+          python -m pipeline.runner --source synthetic:30 --mock-all --quiet | tee /tmp/d0.txt
+          grep -q "PIPELINE OK" /tmp/d0.txt
+          grep -q "t-0001" /tmp/d0.txt
+          grep -q "FEED_DISPENSE" /tmp/d0.txt
+
+  contract-guard:
+    # 改了契约文件但没改 CHANGELOG 就拦下来
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 检查契约改动是否同步更新 CHANGELOG
+        run: |
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          echo "$changed"
+          if echo "$changed" | grep -qE "^contracts/v1/"; then
+            if ! echo "$changed" | grep -q "^contracts/CHANGELOG.md"; then
+              echo "::error::改了 contracts/v1/ 下的 schema，但没有更新 contracts/CHANGELOG.md"
+              exit 1
+            fi
+          fi

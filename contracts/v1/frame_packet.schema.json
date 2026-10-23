@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://catvision.local/schemas/v1/frame_packet.schema.json",
+  "title": "FramePacket",
+  "description": "摄像头模块产出的帧包。只给图片路径，不内联图像数据。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "packet_id", "camera_id", "captured_at", "seq", "width", "height", "format", "image_path", "source"],
+  "properties": {
+    "schema": { "const": "catvision.frame_packet/1.0" },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "camera_id": { "type": "string", "minLength": 1 },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "width": { "type": "integer", "minimum": 1 },
+    "height": { "type": "integer", "minimum": 1 },
+    "format": { "enum": ["jpeg", "png"] },
+    "image_path": { "type": "string", "minLength": 1 },
+    "image_sha1": { "type": ["string", "null"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "uri"],
+      "properties": {
+        "kind": { "enum": ["csi", "usb", "rtsp", "file", "synthetic"] },
+        "uri": { "type": "string" }
+      }
+    }
+  }
+}
