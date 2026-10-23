@@ -45,6 +45,7 @@ python app.py
 | [docs/roadmap.md](./docs/roadmap.md) | P0-P3 路线图与远期规划 |
 | [docs/business-plan.md](./docs/business-plan.md) | 市场分析、技术方案、产品范围 |
 | [docs/demo-guide.md](./docs/demo-guide.md) | demo.html 静态演示页使用说明 |
+| [docs/验证指南.md](./docs/验证指南.md) | ⭐ 怎么证明摄像头接入 + 模块联调真的实现（五层验证 + 自证脚本） |
 
 ---
 
@@ -83,6 +84,15 @@ pip install -e ".[dev]"
 pytest -q
 python -m pipeline.runner --source synthetic:60 --mock-all   # 看到 PIPELINE OK 即通过
 ```
+
+一条命令自证「摄像头接入 + 模块联调」是否真的打通（五层验证，逐项 PASS/FAIL）：
+
+```bash
+python scripts/verify_catvision.py
+```
+
+没有摄像头的开发机 L1~L4 全绿、L5 自动 `[SKIP]`；树莓派插着 CSI 摄像头时 L1~L5 全绿。
+判据、反造假检查表、本轮实测记录见 [docs/验证指南.md](./docs/验证指南.md)。
 
 ---
 
