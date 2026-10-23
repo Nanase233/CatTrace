@@ -46,6 +46,7 @@ python app.py
 | [docs/business-plan.md](./docs/business-plan.md) | 市场分析、技术方案、产品范围 |
 | [docs/demo-guide.md](./docs/demo-guide.md) | demo.html 静态演示页使用说明 |
 | [docs/验证指南.md](./docs/验证指南.md) | ⭐ 怎么证明摄像头接入 + 模块联调真的实现（五层验证 + 自证脚本） |
+| [docs/接手流程.md](./docs/接手流程.md) | 新成员必读：要装哪些软件、怎么拉代码、怎么分工提 PR |
 
 ---
 

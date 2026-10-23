@@ -2,6 +2,9 @@
 
 团队协作的 AI 识别原型：**摄像头 → 猫脸识别（个体ID）→ 剪耳识别（绝育状态）→ 决策（投粮 / TNR）→ 网页展示**。
 
+> **新成员先看 [docs/接手流程.md](./docs/接手流程.md)**：要装哪些软件、怎么拉代码、
+> 怎么分工、提 PR 前必做哪些检查，一条条列好了。
+
 运行平台：Raspberry Pi 4 Model B（`pi4-cat` / `192.168.31.252`，Debian 13，Python 3.13）
 
 ---
@@ -19,6 +22,12 @@ python -m pipeline.runner --source synthetic:60 --mock-all
 ```
 
 看到 `PIPELINE OK` 和 `DetectionEvent` / `ActionEvent` 就算通过。
+
+完整自证（L1~L5 五层，逐项 PASS/FAIL）：
+
+```bash
+python scripts/verify_catvision.py
+```
 
 > **D0 通过之前，谁都不许开始写模型。**
 > 第一周唯一的交付物是「契约 + Mock + 数据管道」。模型晚一天不致命，接口对不上会让三个模块互相卡死。
