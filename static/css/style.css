@@ -1,54 +1,88 @@
 /* ============================================
    猫迹 CatTrace · 城市流浪猫生命共同体
    全局样式表 (融合版)
+   
+   文件说明：
+   本文件是「猫迹 CatTrace」项目的全局 CSS 样式表，
+   定义了网站所有页面共用的视觉风格与组件样式。
+   主要包含以下功能模块：
+   1. CSS 变量与浏览器重置
+   2. 顶部导航栏
+   3. 主内容区与通用卡片
+   4. Toast 消息提示
+   5. Hero 展示区域
+   6. 实时直播区（含猫咪摄像头、投喂动画）
+   7. AI 防作弊指示器
+   8. 按钮组件
+   9. 统计数据卡片
+   10. 猫咪日记模块
+   11. 资源流向可视化
+   12. 社区共治模块
+   13. 猫咪失踪响应
+   14. 领养追踪
+   15. 猫咪档案页（cats.html）
+   16. 领养页（adopt.html）
+   17. 分享弹窗
+   18. 首页专属布局与组件
+   19. 响应式适配（平板/手机）
+   20. 暗黑模式适配
    ============================================ */
 
-/* === 基础变量与重置 === */
+/* ============================================
+   基础变量与重置
+   定义全局 CSS 自定义属性（颜色、阴影、圆角、字体等），
+   并重置浏览器默认样式
+   ============================================ */
+
+/* 全局 CSS 变量定义 —— 主题色、背景色、文字色、阴影、圆角、过渡动画、字体族 */
 :root {
-  --primary: #D68DA2;
-  --primary-dark: #c8708b;
-  --primary-light: #f5dce4;
-  --secondary: #9fb59d;
-  --success: #9fb59d;
-  --warning: #e8c97a;
-  --danger: #d63031;
-  --info: #74b9ff;
-  --bg: #fbf7f3;
-  --bg-card: rgba(255, 255, 255, 0.88);
-  --text: #4f4749;
-  --text-secondary: #7a7072;
-  --text-muted: #b5adae;
-  --border: #efe1d2;
-  --shadow: 0 4px 20px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
-  --container-max: 1280px;
-  --radius-lg: 24px;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-pill: 999px;
-  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --primary: #D68DA2;          /* 主色调：粉色 */
+  --primary-dark: #c8708b;     /* 主色调深色（悬停/激活态） */
+  --primary-light: #f5dce4;    /* 主色调浅色（背景/高亮） */
+  --secondary: #9fb59d;        /* 辅助色：灰绿色 */
+  --success: #9fb59d;          /* 成功状态色 */
+  --warning: #e8c97a;          /* 警告状态色 */
+  --danger: #d63031;           /* 危险/错误状态色 */
+  --info: #74b9ff;             /* 信息提示色 */
+  --bg: #fbf7f3;               /* 页面背景色（暖白） */
+  --bg-card: rgba(255, 255, 255, 0.88); /* 卡片背景色（半透明白色） */
+  --text: #4f4749;             /* 主文字颜色 */
+  --text-secondary: #7a7072;   /* 次要文字颜色 */
+  --text-muted: #b5adae;       /* 弱化文字颜色（提示/标签） */
+  --border: #efe1d2;           /* 边框颜色 */
+  --shadow: 0 4px 20px rgba(0,0,0,0.06);   /* 默认阴影 */
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10); /* 大号阴影（悬停/弹窗） */
+  --container-max: 1280px;     /* 内容区最大宽度 */
+  --radius-lg: 24px;           /* 大圆角 */
+  --radius: 16px;              /* 默认圆角 */
+  --radius-sm: 10px;           /* 小圆角 */
+  --radius-pill: 999px;        /* 药丸形圆角（按钮/标签） */
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* 默认过渡动画 */
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; /* 全局字体族 */
 }
 
+/* 暗黑模式下的 CSS 变量覆盖 */
 [data-theme="dark"] {
-  --bg: #2a2528;
-  --bg-card: rgba(50, 45, 48, 0.92);
-  --text: #e8e0e2;
-  --text-secondary: #b0a8aa;
-  --text-muted: #70686a;
-  --border: #4a4042;
-  --shadow: 0 4px 20px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
-  --primary-light: #3d2d30;
+  --bg: #2a2528;                          /* 暗黑背景色 */
+  --bg-card: rgba(50, 45, 48, 0.92);      /* 暗黑卡片背景 */
+  --text: #e8e0e2;                        /* 暗黑主文字色 */
+  --text-secondary: #b0a8aa;              /* 暗黑次要文字色 */
+  --text-muted: #70686a;                  /* 暗黑弱化文字色 */
+  --border: #4a4042;                      /* 暗黑边框色 */
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);   /* 暗黑默认阴影 */
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4); /* 暗黑大号阴影 */
+  --primary-light: #3d2d30;               /* 暗黑主色浅色 */
 }
 
-/* 暗黑模式过渡动画 */
+/* 暗黑模式过渡动画 —— 让背景、文字、边框、阴影切换时平滑过渡 */
 *, *::before, *::after {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* 浏览器默认样式重置：清除所有元素的外边距、内边距，统一盒模型 */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* 页面主体样式：设置字体、背景、文字颜色、行高和最小高度 */
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -58,10 +92,17 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
+/* 链接样式：使用主色调，无下划线，悬停时变深 */
 a { color: var(--primary); text-decoration: none; transition: color var(--transition); }
 a:hover { color: var(--primary-dark); }
 
-/* === 统一顶部导航栏（topbar 风格）=== */
+/* ============================================
+   统一顶部导航栏（topbar 风格）
+   固定在页面顶部的毛玻璃效果导航栏，
+   包含品牌标识、菜单按钮和操作按钮
+   ============================================ */
+
+/* 顶部导航栏容器：粘性定位、毛玻璃背景、圆角边框 */
 .topbar {
   position: sticky; top: 0; z-index: 50;
   margin-bottom: 16px;
@@ -71,11 +112,14 @@ a:hover { color: var(--primary-dark); }
   border-radius: 26px;
   box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
 }
+/* 导航栏内部布局：弹性排列，垂直居中 */
 .topbar-inner {
   min-height: 76px; padding: 0 22px;
   display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
 }
+/* 品牌区域：Logo + 文字的组合 */
 .brand { display: flex; align-items: center; gap: 12px; }
+/* 品牌图标：圆角方形，渐变背景，居中显示 emoji */
 .brand-mark {
   width: 52px; height: 52px; border-radius: 18px;
   background: linear-gradient(145deg, #fff7f9, var(--primary-light));
@@ -84,18 +128,22 @@ a:hover { color: var(--primary-dark); }
   font-size: 28px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
 }
+/* 品牌文字 - 名称（如"猫迹"） */
 .brand-text strong {
   display: block; font-size: 1.9rem; line-height: 1;
   color: var(--primary); font-weight: 700;
 }
+/* 品牌文字 - 副标题/标语 */
 .brand-text span {
   display: block; font-size: 0.82rem; color: var(--text-muted);
   margin-top: 5px;
 }
+/* 导航菜单容器：水平排列菜单项 */
 .menu {
   display: flex; align-items: center; justify-content: center;
   gap: 8px; flex-wrap: wrap;
 }
+/* 菜单按钮/链接：药丸形按钮，透明背景，悬停高亮 */
 .menu button, .menu .menu-link {
   border: none; background: transparent; color: var(--text);
   padding: 12px 16px; border-radius: 999px;
@@ -103,12 +151,15 @@ a:hover { color: var(--primary-dark); }
   transition: 0.25s ease; text-decoration: none;
   display: inline-block; font-family: var(--font); font-size: inherit;
 }
+/* 菜单按钮悬停/激活状态：渐变背景 + 主色文字 */
 .menu button:hover, .menu button.active,
 .menu .menu-link:hover, .menu .menu-link.active {
   background: linear-gradient(135deg, var(--primary-light), #fff6f8);
   color: var(--primary-dark);
 }
+/* 导航右侧操作区：靠右对齐 */
 .nav-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+/* 图标按钮：圆形按钮，用于主题切换等 */
 .icon-btn {
   height: 46px; width: 46px; border-radius: 999px;
   border: 1px solid var(--border);
@@ -117,6 +168,7 @@ a:hover { color: var(--primary-dark); }
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   font-size: 1.1rem;
 }
+/* 用户信息芯片：显示头像和用户名的胶囊形按钮 */
 .user-chip {
   height: 46px; border-radius: 999px;
   border: 1px solid var(--border);
@@ -125,6 +177,7 @@ a:hover { color: var(--primary-dark); }
   padding: 0 14px; display: flex; align-items: center; gap: 10px;
   color: var(--text); cursor: pointer; font-family: var(--font);
 }
+/* 用户头像：圆形渐变背景，居中显示首字母 */
 .avatar {
   width: 30px; height: 30px; border-radius: 50%;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -132,18 +185,33 @@ a:hover { color: var(--primary-dark); }
   font-size: 14px; font-weight: 700;
 }
 
-/* === 主内容区 === */
+/* ============================================
+   主内容区
+   限制最大宽度并居中，提供统一的页面内边距
+   ============================================ */
+/* 主内容区域容器：限宽、居中、带底部内边距 */
 .main-content { max-width: var(--container-max); margin: 0 auto; padding: 24px 20px 60px; }
 
-/* === 通用卡片 === */
+/* ============================================
+   通用卡片组件
+   所有页面共用的卡片容器样式，
+   带圆角、阴影和悬停动效
+   ============================================ */
+/* 通用卡片：半透明背景、圆角、阴影，悬停时上浮 */
 .card {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px;
   transition: all var(--transition);
 }
+/* 卡片悬停效果：加深阴影并向上偏移 */
 .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 
-/* === Toast === */
+/* ============================================
+   Toast 消息提示
+   固定在页面底部中央的轻量级消息提示，
+   自动淡入/淡出
+   ============================================ */
+/* Toast 容器：固定定位，默认隐藏（透明 + 不可点击） */
 .toast {
   position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
   background: #2d3436; color: #fff; padding: 12px 28px; border-radius: 24px;
@@ -151,59 +219,88 @@ a:hover { color: var(--primary-dark); }
   transition: opacity 0.3s ease, transform 0.3s ease;
   white-space: nowrap;
 }
+/* Toast 显示状态：不透明 + 向上偏移 */
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); pointer-events: auto; }
 
-/* === Hero 区域 === */
+/* ============================================
+   Hero 区域
+   页面顶部的英雄展示区，包含标题、标语和统计数据，
+   使用渐变背景增强视觉吸引力
+   ============================================ */
+/* Hero 容器：居中文字、渐变背景、圆角 */
 .hero {
   text-align: center; padding: 40px 20px 30px;
   background: linear-gradient(135deg, #f5dce4 0%, #fbf7f3 40%, #dde9db 100%);
   border-radius: var(--radius); margin-bottom: 24px;
 }
+/* Hero 暗黑模式背景覆盖 */
 [data-theme="dark"] .hero { background: linear-gradient(135deg, #3d2d30 0%, #2f3025 60%, #2a3528 100%); }
+/* Hero 主标题 */
 .hero h1 { font-size: 2rem; color: var(--primary); margin-bottom: 8px; }
+/* Hero 标语/副标题 */
 .hero .slogan { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 20px; }
+/* Hero 统计数据行：水平居中排列 */
 .hero-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+/* 单个 Hero 统计项 */
 .hero-stat { text-align: center; }
+/* Hero 统计数值：大号加粗数字 */
 .hero-stat .value { font-size: 1.6rem; font-weight: 700; color: var(--secondary); }
+/* Hero 统计标签：小号灰色文字 */
 .hero-stat .label { font-size: 0.82rem; color: var(--text-muted); }
 
-/* === 实时直播区 === */
+/* ============================================
+   实时直播区
+   猫咪实时监控画面展示区域，包含直播标志、
+   观看人数、房间选择器、猫咪信息和控制按钮
+   ============================================ */
+/* 直播区域容器：卡片样式，隐藏溢出内容 */
 .live-feed {
   background: var(--bg-card); border-radius: var(--radius);
   box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px;
   position: relative;
 }
+/* 直播中标志（LIVE 角标）：左上角红色闪烁标签 */
 .live-badge {
   position: absolute; top: 16px; left: 16px; z-index: 10;
   background: #d63031; color: #fff; padding: 4px 12px; border-radius: 12px;
   font-size: 0.78rem; font-weight: 600; animation: livePulse 1.8s infinite;
 }
+/* 直播标志脉冲动画：透明度在 1 和 0.6 之间循环 */
 @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+/* 观看人数显示：右上角半透明黑色标签 */
 .live-viewer-count {
   position: absolute; top: 16px; right: 16px; z-index: 10;
   background: rgba(0,0,0,0.55); color: #fff; padding: 4px 12px; border-radius: 12px;
   font-size: 0.78rem;
 }
+/* 直播间选择器：顶部居中的半透明下拉选择区 */
 .live-room-selector {
   position: absolute; top: 50px; left: 50%; transform: translateX(-50%); z-index: 10;
   display: flex; align-items: center; gap: 8px;
   background: rgba(0,0,0,0.65); padding: 6px 14px; border-radius: 20px;
   color: #fff; font-size: 0.82rem;
 }
+/* 直播间选择器标签 */
 .live-room-selector label { white-space: nowrap; font-weight: 500; }
+/* 房间下拉选择框：半透明背景，白色文字 */
 .room-select {
   background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.25);
   border-radius: 14px; padding: 5px 10px; font-size: 0.82rem;
   cursor: pointer; outline: none; min-width: 100px;
 }
+/* 下拉选项的深色背景 */
 .room-select option { background: #252540; color: #fff; }
+/* 下拉框聚焦时的边框高亮 */
 .room-select:focus { border-color: var(--primary); }
+/* 猫咪信息栏：直播画面下方的信息条 */
 .live-cat-info-bar {
   display: flex; justify-content: center; gap: 16px; padding: 10px 20px;
   font-size: 0.84rem; flex-wrap: wrap;
   background: var(--primary-light); border-top: 1px solid var(--border);
 }
+/* 猫咪信息栏暗黑模式适配 */
 [data-theme="dark"] .live-cat-info-bar { background: #3d2d30; }
+/* 直播摄像头画面：16:9 比例，渐变背景模拟夜景 */
 .live-camera {
   width: 100%; min-height: 220px; aspect-ratio: 16 / 9; max-height: 400px;
   background: linear-gradient(180deg, #3d3530 0%, #2f3025 40%, #3a3530 100%);
@@ -211,101 +308,163 @@ a:hover { color: var(--primary-dark); }
   position: relative; overflow: hidden;
   border-radius: var(--radius) var(--radius) 0 0;
 }
+/* 直播中的猫咪 emoji 图标：大号显示，可点击交互 */
 .live-cat-emoji {
   font-size: 120px; transition: transform 0.4s ease; cursor: pointer;
   user-select: none; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.2));
 }
+/* 猫咪图标悬停放大效果 */
 .live-cat-emoji:hover { transform: scale(1.08); }
+/* 猫咪弹跳动画类（投喂时触发） */
 .cat-bounce { animation: catBounce 0.5s ease; }
+/* 猫咪弹跳关键帧：先放大再缩小再恢复 */
 @keyframes catBounce { 0%,100%{transform:scale(1)} 30%{transform:scale(1.2)} 60%{transform:scale(0.92)} }
+/* 环境信息栏：温度/湿度等信息展示条 */
 .live-env-bar {
   display: flex; justify-content: center; gap: 20px; padding: 12px 20px;
   background: rgba(0,0,0,0.04); font-size: 0.82rem; color: var(--text-secondary);
 }
+/* 直播控制按钮区域 */
 .live-controls {
   display: flex; gap: 12px; padding: 16px 20px; justify-content: center; flex-wrap: wrap;
 }
 
-/* === AI 防作弊指示器 === */
+/* ============================================
+   AI 防作弊指示器
+   显示 AI 验证状态的徽章，带有脉冲动画，
+   用于标识投喂等操作的真实性验证
+   ============================================ */
+/* AI 验证徽章：行内弹性布局，绿色背景表示已开启 */
 .ai-verify-badge {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 12px; border-radius: 20px;
   background: var(--success); color: #fff; font-size: 0.75rem; font-weight: 600;
   margin-left: 8px;
 }
+/* AI 验证关闭状态：灰色背景 */
 .ai-verify-badge.off { background: var(--text-muted); }
+/* AI 验证脉冲圆点：白色小圆点持续闪烁 */
 .ai-verify-pulse {
   width: 8px; height: 8px; border-radius: 50%; background: #fff;
   animation: aiPulse 1.2s infinite;
 }
+/* AI 脉冲动画：透明度循环变化 */
 @keyframes aiPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* === 投喂粒子动画 === */
+/* ============================================
+   投喂粒子动画
+   投喂猫咪时飞出的食物粒子特效，
+   使用 CSS 自定义属性控制飞行方向
+   ============================================ */
+/* 投喂粒子：绝对定位，从中心向四周飞散 */
 .feed-particle {
   position: absolute; top: 50%; left: 50%; font-size: 24px; pointer-events: none;
   animation: particleFly 0.8s ease-out both;
   --tx: 0px; --ty: -100px; --delay: 0s;
   animation-delay: var(--delay);
 }
+/* 粒子飞行关键帧：从中心飞出并逐渐消失缩小 */
 @keyframes particleFly {
   0% { opacity: 1; transform: translate(0, 0) scale(1); }
   100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.3); }
 }
 
-/* === 按钮 === */
+/* ============================================
+   按钮组件
+   统一的按钮样式系统，包含主要、次要、
+   投喂、详情等多种变体和尺寸
+   ============================================ */
+/* 按钮基础样式：弹性布局、圆角、无框、过渡动画 */
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 20px; border-radius: 24px; font-size: 0.9rem; font-weight: 600;
   border: none; cursor: pointer; transition: all var(--transition);
   font-family: var(--font);
 }
+/* 主要按钮：主色调背景，白色文字 */
 .btn-primary { background: var(--primary); color: #fff; }
+/* 主要按钮悬停：变深 + 上浮 + 阴影 */
 .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(216,141,163,0.4); }
+/* 次要按钮：背景色底色，带边框 */
 .btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+/* 次要按钮悬停：边框变主色 */
 .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+/* 投喂按钮：粉色边框和文字，悬停反转为填充 */
 .btn-feed { background: #fdf0f3; color: var(--primary); border: 1.5px solid var(--primary); }
 .btn-feed:hover { background: var(--primary); color: #fff; }
+/* 详情按钮：灰色边框，悬停变辅助色 */
 .btn-detail { background: var(--bg); color: var(--text-secondary); border: 1.5px solid var(--border); }
 .btn-detail:hover { border-color: var(--secondary); color: var(--secondary); }
+/* 小号按钮：减少内边距和字号 */
 .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+/* 按钮禁用状态：半透明 + 禁止光标 + 取消动画 */
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-/* === 快速操作 === */
+/* ============================================
+   快速操作区
+   页面中部的快捷操作按钮组（如投喂、领养等）
+   ============================================ */
+/* 快速操作容器：居中排列，自动换行 */
 .quick-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+/* 快速操作按钮：稍大的尺寸 */
 .quick-actions .btn { font-size: 0.95rem; padding: 12px 24px; }
 
-/* === 统计卡片 === */
+/* ============================================
+   统计卡片
+   网格布局的数据统计卡片，展示关键指标，
+   带图标、数值、标签和左侧色条
+   ============================================ */
+/* 统计卡片网格：自适应列数，最小 200px */
 .stats-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px; margin-bottom: 24px;
 }
+/* 单个统计卡片：弹性布局，图标 + 信息并排 */
 .stat-card {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 20px; box-shadow: var(--shadow);
   display: flex; align-items: center; gap: 14px;
   transition: all var(--transition);
 }
+/* 统计卡片悬停效果 */
 .stat-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+/* 统计图标：大号 emoji */
 .stat-icon { font-size: 2rem; }
+/* 统计信息区域：纵向排列数值和标签 */
 .stat-info { display: flex; flex-direction: column; }
+/* 统计数值：大号加粗 */
 .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+/* 统计标签：小号灰色 */
 .stat-label { font-size: 0.82rem; color: var(--text-muted); }
+/* 统计卡片左侧色条变体 - 主色（粉色） */
 .stat-card.primary { border-left: 4px solid var(--primary); }
+/* 统计卡片左侧色条变体 - 成功色（绿色） */
 .stat-card.success { border-left: 4px solid var(--success); }
+/* 统计卡片左侧色条变体 - 警告色（黄色） */
 .stat-card.warning { border-left: 4px solid var(--warning); }
+/* 统计卡片左侧色条变体 - 信息色（蓝色） */
 .stat-card.info { border-left: 4px solid var(--info); }
 
-/* === 区段标题 === */
+/* ============================================
+   区段标题
+   各功能模块的标题样式，带图标
+   ============================================ */
+/* 区段标题：加粗，与图标并排 */
 .section-title {
   font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;
   display: flex; align-items: center; gap: 8px;
 }
 
 /* ============================================
-   【新增】猫咪日记 (Cat Diary) 模块样式
+   猫咪日记 (Cat Diary) 模块
+   展示猫咪日常记录的卡片网格，
+   包含猫咪头像、日记内容、统计数据和共创区域
    ============================================ */
+/* 日记模块容器 */
 .diary-section { margin-bottom: 24px; }
+/* 日记卡片网格：自适应列数，最小 300px */
 .diary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+/* 日记卡片：带边框和悬停高亮效果 */
 .diary-card {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 20px; box-shadow: var(--shadow);
@@ -313,27 +472,36 @@ a:hover { color: var(--primary-dark); }
   transition: all var(--transition); cursor: pointer;
   position: relative; overflow: hidden;
 }
+/* 日记卡片悬停：阴影加深 + 上浮 + 边框变主色 */
 .diary-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--primary); }
+/* 日记卡片头部：猫咪头像 + 名称 + 日期 */
 .diary-card-header {
   display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
 }
+/* 日记中的猫咪头像：圆形彩色背景 */
 .diary-cat-avatar {
   width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 1.6rem; color: #fff; font-weight: 700;
   flex-shrink: 0;
 }
+/* 日记中的猫咪名称 */
 .diary-cat-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+/* 日记日期 */
 .diary-date { font-size: 0.78rem; color: var(--text-muted); }
+/* 日记正文内容：左侧带主色竖线引用样式 */
 .diary-content {
   font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;
   position: relative; padding-left: 12px; border-left: 3px solid var(--primary-light);
   margin-bottom: 12px;
 }
+/* 日记统计数据行（如喂食次数、体重等） */
 .diary-stats {
   display: flex; gap: 14px; font-size: 0.78rem; color: var(--text-muted);
   padding-top: 10px; border-top: 1px solid var(--border);
 }
+/* 单个日记统计项 */
 .diary-stat-item { display: flex; align-items: center; gap: 4px; }
+/* 日记共创区域：渐变背景的互动区域 */
 .diary-co-create {
   margin-top: 16px; padding: 12px 16px;
   background: linear-gradient(135deg, var(--primary-light), var(--sage-green-light, #dde9db));
@@ -341,116 +509,164 @@ a:hover { color: var(--primary-dark); }
   font-size: 0.85rem; color: var(--text-secondary);
   text-align: center;
 }
+/* 日记共创区暗黑模式适配 */
 [data-theme="dark"] .diary-co-create { background: linear-gradient(135deg, #3d2d30, #2f3025); }
+/* 日记上传按钮：辅助色背景 */
 .diary-upload-btn {
   display: inline-flex; align-items: center; gap: 6px;
   margin-top: 8px; padding: 8px 16px;
   background: var(--secondary); color: #fff; border: none; border-radius: 20px;
   font-size: 0.82rem; cursor: pointer; transition: all var(--transition);
 }
+/* 上传按钮悬停效果 */
 .diary-upload-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
 /* ============================================
-   【新增】资源流向可视化 (Resource Flow) 模块样式
+   资源流向可视化 (Resource Flow) 模块
+   以堆叠条形图展示未绝育/已绝育猫咪的
+   资源分配比例，包含图例和说明信息
    ============================================ */
+/* 资源流向模块容器 */
 .resource-flow { margin-bottom: 24px; }
+/* 资源流向条形图：圆角横向堆叠条 */
 .resource-flow-bar {
   height: 32px; border-radius: 16px; overflow: hidden;
   display: flex; background: var(--border);
   margin-bottom: 10px;
 }
+/* 条形图中的单个分段 */
 .resource-flow-segment {
   display: flex; align-items: center; justify-content: center;
   font-size: 0.72rem; font-weight: 700; color: #fff;
   transition: width 0.6s ease;
 }
+/* 未绝育猫咪分段：粉色渐变 */
 .resource-flow-segment.unneutered { background: linear-gradient(90deg, #d88da3, #c8708b); }
+/* 已绝育猫咪分段：绿色渐变 */
 .resource-flow-segment.neutered { background: linear-gradient(90deg, #9fb59d, #7fa37d); }
+/* 图例行：居中标签 + 圆点 */
 .resource-flow-legend { display: flex; gap: 20px; font-size: 0.8rem; color: var(--text-secondary); justify-content: center; }
 .resource-flow-legend span { display: flex; align-items: center; gap: 6px; }
-.resource-flow-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+/* 图例圆点 - 未绝育（粉色） */
 .resource-flow-dot.unneutered { background: #d88da3; }
+/* 图例圆点 - 已绝育（绿色） */
 .resource-flow-dot.neutered { background: #9fb59d; }
+/* 资源流向说明信息框 */
 .resource-flow-info {
   background: #f5f0eb; border-radius: var(--radius-sm); padding: 14px 18px;
   margin-top: 12px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6;
 }
+/* 说明信息框暗黑模式适配 */
 [data-theme="dark"] .resource-flow-info { background: #2f3025; }
 
 /* ============================================
-   【新增】社区共治 (Community Governance) 模块样式
+   社区共治 (Community Governance) 模块
+   展示社区治理事项（如 TNR 计划、投诉处理等），
+   包含治理报告按钮和弹窗
    ============================================ */
+/* 社区共治模块容器 */
 .gov-section { margin-bottom: 24px; }
+/* 共治卡片：带边框的容器 */
 .gov-card {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 24px; box-shadow: var(--shadow);
   border: 1px solid var(--border);
 }
+/* 共治卡片头部：标题和报告按钮两端对齐 */
 .gov-card-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 16px;
 }
+/* 共治卡片标题 */
 .gov-card-header h3 { font-size: 1.1rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
+/* 治理报告按钮：警告色背景 */
 .gov-report-btn {
   background: var(--warning); color: #2d3436; border: none;
   padding: 8px 16px; border-radius: 20px; font-size: 0.82rem;
   cursor: pointer; font-weight: 600; transition: all var(--transition);
 }
+/* 报告按钮悬停效果 */
 .gov-report-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(253,203,110,0.4); }
+/* 治理事项列表容器 */
 .gov-items { display: flex; flex-direction: column; gap: 12px; }
+/* 单个治理事项：左侧带绿色成功色条 */
 .gov-item {
   display: flex; align-items: flex-start; gap: 12px;
   padding: 12px 16px; background: var(--bg); border-radius: var(--radius-sm);
   border-left: 3px solid var(--success);
 }
+/* 治理事项警告状态：左侧色条变为警告色 */
 .gov-item.warning { border-left-color: var(--warning); }
+/* 治理事项图标 */
 .gov-item-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+/* 治理事项内容区 */
 .gov-item-content { flex: 1; }
+/* 治理事项标题 */
 .gov-item-title { font-weight: 600; font-size: 0.92rem; color: var(--text); margin-bottom: 4px; }
+/* 治理事项描述 */
 .gov-item-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
 
-/* === 治理报告弹窗 === */
+/* --- 治理报告弹窗 --- */
+/* 弹窗遮罩层：全屏半透明黑色背景 */
 .gov-report-modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
   z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
 }
+/* 弹窗显示状态 */
 .gov-report-modal.show { opacity: 1; pointer-events: all; }
+/* 弹窗内容区：白色卡片，可滚动 */
 .gov-report-content {
   background: var(--bg-card); border-radius: var(--radius); padding: 28px;
   max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
   box-shadow: var(--shadow-lg);
 }
+/* 弹窗标题 */
 .gov-report-content h3 { font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+/* 弹窗内的文本输入框 */
 .gov-report-content textarea {
   width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   font-family: var(--font); font-size: 0.9rem; resize: vertical; min-height: 100px;
   background: var(--bg); color: var(--text);
 }
+/* 弹窗按钮行：靠右对齐 */
 .gov-report-content .btn-row { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
 
 /* ============================================
-   【新增】猫咪失踪响应 (Missing Cat) 模块样式
+   猫咪失踪响应 (Missing Cat) 模块
+   显示失踪猫咪的警告标志和提醒卡片，
+   根据紧急程度分为不同等级
    ============================================ */
+/* 失踪状态徽章基础样式 */
 .missing-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 12px;
   font-size: 0.72rem; font-weight: 600;
 }
+/* 失踪徽章 - 警告级别（黄色） */
 .missing-badge.warning { background: #f5edd6; color: #8a7530; }
+/* 失踪徽章 - 危险级别（红色） */
 .missing-badge.danger { background: #f5dce4; color: #c8708b; }
+/* 失踪徽章 - 不活跃状态（灰色） */
 .missing-badge.inactive { background: #e8e4e0; color: #888; }
+/* 失踪警告卡片：渐变背景 + 醒目边框 */
 .missing-alert-card {
   background: linear-gradient(135deg, #f5edd6, #f5dce4);
   border: 2px solid var(--warning); border-radius: var(--radius);
   padding: 18px 22px; margin-bottom: 16px;
   display: flex; align-items: center; gap: 14px;
 }
+/* 失踪卡片暗黑模式适配 */
 [data-theme="dark"] .missing-alert-card { background: linear-gradient(135deg, #3d3528, #3d2d30); }
+/* 失踪警告图标 */
 .missing-alert-icon { font-size: 2rem; }
+/* 失踪警告信息区 */
 .missing-alert-info { flex: 1; }
+/* 失踪警告标题 */
 .missing-alert-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+/* 失踪警告描述 */
 .missing-alert-desc { font-size: 0.85rem; color: var(--text-secondary); }
+/* 失踪警告操作按钮 */
 .missing-alert-btn {
   background: var(--warning); color: #2d3436; border: none;
   padding: 8px 16px; border-radius: 20px; font-size: 0.82rem;
@@ -458,111 +674,169 @@ a:hover { color: var(--primary-dark); }
 }
 
 /* ============================================
-   【新增】分阶段领养追踪 (Adoption Tracker) 模块样式
+   分阶段领养追踪 (Adoption Tracker) 模块
+   以步骤条形式展示领养流程的各个阶段，
+   包含已完成、当前和待完成状态
    ============================================ */
+/* 领养追踪容器：水平排列，可横向滚动 */
 .adopt-tracker {
   display: flex; gap: 0; align-items: flex-start;
   overflow-x: auto; padding: 12px 0; margin-bottom: 20px;
 }
+/* 单个领养阶段：纵向排列圆点和标签 */
 .adopt-phase {
   display: flex; flex-direction: column; align-items: center;
   min-width: 80px; flex: 1; text-align: center; position: relative;
 }
+/* 阶段圆点：圆形图标 */
 .adopt-phase-dot {
   width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 1rem; background: var(--border); color: var(--text-muted);
   transition: all var(--transition); z-index: 1;
 }
+/* 当前阶段圆点：主色背景 + 外发光 */
 .adopt-phase.active .adopt-phase-dot { background: var(--primary); color: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+/* 已完成阶段圆点：绿色背景 */
 .adopt-phase.done .adopt-phase-dot { background: var(--success); color: #fff; }
+/* 阶段标签文字 */
 .adopt-phase-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; font-weight: 600; }
+/* 当前阶段标签：主色文字 */
 .adopt-phase.active .adopt-phase-label { color: var(--primary); }
+/* 已完成阶段标签：绿色文字 */
 .adopt-phase.done .adopt-phase-label { color: var(--success); }
+/* 阶段之间的连接线 */
 .adopt-phase-line {
   position: absolute; top: 18px; left: 55%; width: 100%; height: 3px;
   background: var(--border); z-index: 0;
 }
+/* 最后一个阶段不显示连接线 */
 .adopt-phase:last-child .adopt-phase-line { display: none; }
+/* 已完成阶段的连接线：绿色 */
 .adopt-phase.done .adopt-phase-line { background: var(--success); }
 
-/* === 匹配度评分 === */
+/* ============================================
+   匹配度评分
+   显示领养人与猫咪的匹配程度，
+   根据分数高低显示不同颜色
+   ============================================ */
+/* 匹配度徽章基础样式：绿色渐变背景 */
 .match-score {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 16px; border-radius: 20px;
   background: linear-gradient(135deg, #dde9db, #c8ddc6);
   font-weight: 700; font-size: 1.1rem; color: #5a7d5a;
 }
+/* 匹配度暗黑模式适配 */
 [data-theme="dark"] .match-score { background: linear-gradient(135deg, #2a3528, #3d4a3b); color: #a5c8a3; }
+/* 高匹配度：深绿色 */
 .match-score.high { background: linear-gradient(135deg, #dde9db, #b8d4b6); }
+/* 中等匹配度：黄色 */
 .match-score.medium { background: linear-gradient(135deg, #f5edd6, #e8ddb8); color: #8a7530; }
+/* 低匹配度：粉色 */
 .match-score.low { background: linear-gradient(135deg, #f5dce4, #edd0d8); color: #c8708b; }
 
-/* === 保障金说明 === */
+/* ============================================
+   保障金说明
+   领养时需要缴纳保障金的提示信息框
+   ============================================ */
+/* 保障金提示框：浅绿色背景，带图标 */
 .deposit-notice {
   background: #f0f5ee; border: 1px solid #c8ddc6; border-radius: var(--radius-sm);
   padding: 14px 18px; margin-top: 16px; font-size: 0.85rem; color: var(--text-secondary);
   display: flex; align-items: flex-start; gap: 10px; line-height: 1.6;
 }
+/* 保障金提示暗黑模式适配 */
 [data-theme="dark"] .deposit-notice { background: #2a3528; border-color: #4a6a48; }
+/* 保障金提示图标 */
 .deposit-notice-icon { font-size: 1.3rem; flex-shrink: 0; }
 
-/* === 区块链存证徽章 === */
+/* ============================================
+   区块链存证徽章
+   标识领养记录已上链存证的徽章
+   ============================================ */
+/* 区块链徽章：深色背景，浅色文字 */
 .blockchain-badge {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px; border-radius: 20px;
   background: linear-gradient(135deg, #4f4749, #3d3530); color: #dde9db;
   font-size: 0.78rem; font-weight: 600; border: 1px solid #5a5052;
 }
+/* 区块链徽章暗黑模式适配 */
 [data-theme="dark"] .blockchain-badge { background: linear-gradient(135deg, #2a2528, #3d3530); }
 
-/* ============================================ */
-/* === 猫咪档案页 (cats.html) === */
-/* ============================================ */
+/* ============================================
+   猫咪档案页 (cats.html)
+   猫咪列表页面的专属样式，包含页面头部、
+   筛选栏、猫咪卡片网格和详情弹窗
+   ============================================ */
+
+/* --- 页面头部 --- */
+/* 页面头部：居中文字 */
 .page-header { text-align: center; padding: 20px 0 10px; }
+/* 页面主标题 */
 .page-header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+/* 页面副标题 */
 .page-subtitle { color: var(--text-secondary); font-size: 0.95rem; }
 
+/* --- 筛选栏 --- */
+/* 筛选栏容器：弹性排列，自动换行 */
 .filter-bar {
   display: flex; align-items: center; gap: 12px;
   margin-bottom: 20px; flex-wrap: wrap;
 }
+/* 搜索/筛选输入框：圆角，聚焦时边框高亮 */
 .filter-input {
   flex: 1; min-width: min(100%, 180px); padding: 10px 16px;
   border: 1.5px solid var(--border); border-radius: 24px;
   font-size: 0.9rem; background: var(--bg-card); color: var(--text);
   transition: border-color var(--transition);
 }
+/* 输入框聚焦时去掉默认轮廓，边框变主色 */
 .filter-input:focus { outline: none; border-color: var(--primary); }
+/* 筛选按钮组容器 */
 .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+/* 筛选按钮：圆角药丸形，悬停/激活时高亮 */
 .filter-btn {
   padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--border);
   background: var(--bg-card); color: var(--text-secondary);
   cursor: pointer; font-size: 0.85rem; transition: all var(--transition);
 }
+/* 筛选按钮悬停 */
 .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+/* 筛选按钮激活状态：主色填充 */
 .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
+/* --- 猫咪列表网格 --- */
+/* 猫咪卡片网格：自适应列数，最小 280px */
 .cats-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
 
+/* --- 猫咪卡片 --- */
+/* 猫咪卡片容器：带阴影和悬停动效 */
 .cat-card {
   background: var(--bg-card); border-radius: var(--radius);
   box-shadow: var(--shadow); overflow: hidden;
   transition: all var(--transition); cursor: pointer;
   position: relative;
 }
+/* 猫咪卡片悬停效果 */
 .cat-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+/* 猫咪卡片图片区域：渐变背景，居中显示头像 */
 .cat-card-image {
   height: 140px; display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, #f5dce4, #fbf7f3);
   position: relative;
 }
+/* 猫咪图片区暗黑模式适配 */
 [data-theme="dark"] .cat-card-image { background: linear-gradient(135deg, #3d2d30, #2f3025); }
+/* 猫咪头像：圆形渐变背景 */
 .cat-avatar {
   width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 2.5rem; color: #fff; font-weight: 700;
 }
+/* 大号猫咪头像（详情页使用） */
 .cat-avatar.large { width: 100px; height: 100px; font-size: 3rem; }
+/* 排名徽章：左上角的金/银/铜色圆形标记 */
 .rank-badge {
   position: absolute; top: 10px; left: 10px;
   width: 30px; height: 30px; border-radius: 50%;
@@ -571,49 +845,71 @@ a:hover { color: var(--primary-dark); }
   background: linear-gradient(135deg, #d88da3, #c8708b);
   box-shadow: 0 2px 8px rgba(216,141,163,0.4);
 }
+/* 第一名：金色 */
 .rank-badge.rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); }
+/* 第二名：银色 */
 .rank-badge.rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); }
+/* 第三名：铜色 */
 .rank-badge.rank-3 { background: linear-gradient(135deg, #cd7f32, #b8860b); }
 
+/* 猫咪状态徽章：右上角标签 */
 .cat-status-badge {
   position: absolute; top: 10px; right: 10px;
   padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;
 }
+/* 待领养状态：绿色背景 */
 .cat-status-badge.adoption { background: var(--success); color: #fff; }
 
+/* 猫咪卡片信息区域 */
 .cat-card-info { padding: 16px; }
+/* 卡片信息头部：名称和积分两端对齐 */
 .cat-card-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 4px;
 }
+/* 猫咪名称 */
 .cat-card-name { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+/* 猫咪积分 */
 .cat-card-points { font-size: 0.82rem; font-weight: 600; color: var(--primary); }
+/* 猫咪昵称 */
 .cat-card-nickname { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+/* 猫咪位置信息 */
 .cat-card-location { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; }
+/* 猫咪标签行 */
 .cat-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+/* 通用标签样式：小圆角药丸形 */
 .tag {
   padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;
   background: var(--bg); color: var(--text-secondary);
   border: 1px solid var(--border);
 }
+/* 雌性标签：粉色 */
 .tag.tag-female { background: #f5dce4; color: #c8708b; border-color: #edd0d8; }
+/* 雄性标签：绿色 */
 .tag.tag-male { background: #dde9db; color: #6b8f6b; border-color: #c8ddc6; }
+/* 成功状态标签：深绿色 */
 .tag.tag-success { background: #dde9db; color: #5a7d5a; border-color: #c8ddc6; }
+/* 警告状态标签：黄色 */
 .tag.tag-warning { background: #f5edd6; color: #8a7530; border-color: #e8ddb8; }
+/* 卡片底部操作按钮区 */
 .cat-card-actions { display: flex; gap: 8px; padding: 0 16px 16px; }
 
-/* === 详情弹窗 === */
+/* --- 猫咪详情弹窗 --- */
+/* 详情弹窗遮罩层 */
 .cat-detail-modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
   z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
 }
+/* 详情弹窗显示状态 */
 .cat-detail-modal.show { opacity: 1; pointer-events: all; }
+/* 弹窗内容卡片：可滚动 */
 .modal-content {
   background: var(--bg-card); border-radius: var(--radius);
   max-width: 540px; width: 90%; max-height: 85vh; overflow-y: auto;
   box-shadow: var(--shadow-lg); position: relative;
 }
+/* 弹窗关闭按钮：右上角圆形按钮 */
 .modal-close {
   position: sticky; top: 10px; right: 16px; float: right; z-index: 10;
   background: rgba(0,0,0,0.08); border: none; border-radius: 50%;
@@ -621,360 +917,536 @@ a:hover { color: var(--primary-dark); }
   display: flex; align-items: center; justify-content: center;
   color: var(--text-secondary); transition: all var(--transition);
 }
+/* 关闭按钮悬停效果 */
 .modal-close:hover { background: rgba(0,0,0,0.15); color: var(--text); }
+/* 弹窗内容区 */
 .modal-body { padding: 24px; }
 
+/* 弹窗头部：居中显示头像和名称 */
 .detail-header { text-align: center; margin-bottom: 20px; }
+/* 详情弹窗中的头像 */
 .detail-avatar {
   width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 2.5rem; color: #fff; font-weight: 700;
 }
+/* 详情弹窗中的猫咪名称 */
 .detail-header h2 { font-size: 1.5rem; color: var(--text); }
+/* 详情弹窗中的昵称 */
 .detail-nickname { color: var(--text-muted); font-size: 0.9rem; }
+/* 详情信息列表 */
 .detail-info { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+/* 信息行：标签和值两端对齐，底部边框分隔 */
 .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+/* 全宽信息行：纵向排列（标签在上，值在下） */
 .info-row.full-width { flex-direction: column; }
+/* 信息标签 */
 .info-label { font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); }
+/* 信息值 */
 .info-value { font-size: 0.9rem; color: var(--text); text-align: right; }
+/* 全宽行的值左对齐 */
 .info-row.full-width .info-value { text-align: left; margin-top: 4px; }
+/* 详情操作按钮行 */
 .detail-actions { display: flex; gap: 10px; justify-content: center; }
 
-/* === 详情页日记标签 === */
+/* --- 详情页日记标签页 --- */
+/* 日记标签导航：底部边框分隔 */
 .detail-diary-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+/* 日记标签按钮 */
 .detail-diary-tab {
   padding: 10px 18px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
   color: var(--text-muted); border-bottom: 2px solid transparent;
   margin-bottom: -2px; transition: all var(--transition);
 }
+/* 日记标签激活状态：主色文字 + 底部主色线 */
 .detail-diary-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+/* 日记条目：带左侧引用线的背景卡片 */
 .detail-diary-entry {
   padding: 12px 16px; background: var(--bg); border-radius: var(--radius-sm);
   margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);
   border-left: 3px solid var(--primary-light); line-height: 1.6;
 }
 
-/* === 信息面板（可折叠）=== */
+/* --- 信息面板（可折叠） --- */
+/* 信息面板容器 */
 .info-panels { display: flex; flex-direction: column; gap: 16px; }
+/* 单个可折叠面板 */
 .info-panel {
   background: var(--bg-card); border-radius: var(--radius);
   box-shadow: var(--shadow); overflow: hidden;
 }
+/* 面板头部：可点击展开/收起 */
 .panel-header {
   padding: 14px 20px; cursor: pointer; display: flex; align-items: center;
   justify-content: space-between; transition: background var(--transition);
 }
+/* 面板头部悬停效果 */
 .panel-header:hover { background: rgba(0,0,0,0.02); }
+/* 面板标题 */
 .panel-header h3 { font-size: 1rem; margin: 0; }
+/* 面板展开/收起箭头图标 */
 .panel-toggle { font-size: 0.8rem; color: var(--text-muted); transition: transform 0.3s; }
+/* 面板内容区：默认收起（max-height: 0），展开时过渡动画 */
 .panel-content {
   padding: 0 20px; max-height: 0; overflow: hidden;
   transition: max-height 0.4s ease, padding 0.4s ease;
 }
+/* 面板内容底部间距 */
 .panel-content > * { padding-bottom: 16px; }
+/* 面板副标题 */
 .panel-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
 
+/* --- 排行榜 --- */
+/* 排行榜列表项 */
 .leaderboard-item {
   display: flex; align-items: center; gap: 12px; padding: 10px 12px;
   border-radius: var(--radius-sm); margin-bottom: 6px;
   transition: background var(--transition);
 }
+/* 排行榜项悬停效果 */
 .leaderboard-item:hover { background: var(--bg); }
+/* 前三名特殊背景：金色渐变 */
 .leaderboard-item.top-3 { background: linear-gradient(90deg, #f5edd6, transparent); }
+/* 前三名暗黑模式适配 */
 [data-theme="dark"] .leaderboard-item.top-3 { background: linear-gradient(90deg, #3d3528, transparent); }
+/* 排名数字 */
 .leaderboard-rank { font-size: 1.1rem; width: 30px; text-align: center; }
+/* 排行榜信息区 */
 .leaderboard-info { flex: 1; }
+/* 排行榜用户名 */
 .leaderboard-name { font-weight: 600; font-size: 0.92rem; }
+/* 排行榜用户位置 */
 .leaderboard-location { font-size: 0.76rem; color: var(--text-muted); }
+/* 排行榜积分 */
 .leaderboard-points { font-weight: 700; color: var(--primary); font-size: 0.9rem; }
 
+/* --- 迷你统计 --- */
+/* 迷你统计行 */
 .stats-mini { display: flex; gap: 16px; flex-wrap: wrap; }
+/* 迷你统计项 */
 .stats-mini .stat-item { text-align: center; flex: 1; min-width: 80px; }
+/* 迷你统计数值 */
 .stats-mini .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--secondary); display: block; }
+/* 迷你统计标签 */
 .stats-mini .stat-label { font-size: 0.76rem; color: var(--text-muted); }
 
+/* --- 通知列表 --- */
+/* 通知列表容器 */
 .notification-list { display: flex; flex-direction: column; gap: 8px; }
+/* 单条通知：带悬停效果和未读标记 */
 .notification-item {
   display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
   border-radius: var(--radius-sm); background: var(--bg); cursor: pointer;
   transition: all var(--transition);
 }
+/* 通知悬停效果 */
 .notification-item:hover { background: var(--primary-light); }
+/* 未读通知：左侧主色竖线标记 */
 .notification-item.unread { border-left: 3px solid var(--primary); }
+/* 通知图标 */
 .notification-icon { font-size: 1.1rem; flex-shrink: 0; }
+/* 通知内容区 */
 .notification-content { flex: 1; }
+/* 通知标题 */
 .notification-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 2px; }
+/* 通知消息正文 */
 .notification-message { font-size: 0.8rem; color: var(--text-secondary); }
+/* 通知时间 */
 .notification-time { font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; }
 
+/* --- 空状态 --- */
+/* 空状态容器：居中显示图标和文字 */
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+/* 空状态图标 */
 .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+/* 空状态主文字 */
 .empty-state .empty-text { font-size: 1rem; margin-bottom: 8px; }
+/* 空状态副文字 */
 .empty-state .empty-subtext { font-size: 0.85rem; margin-bottom: 16px; }
+/* 空状态操作按钮 */
 .empty-btn {
   padding: 8px 20px; border-radius: 20px; border: 1.5px solid var(--primary);
   background: none; color: var(--primary); cursor: pointer;
   font-size: 0.88rem; transition: all var(--transition);
 }
+/* 空状态按钮悬停：填充主色 */
 .empty-btn:hover { background: var(--primary); color: #fff; }
 
-/* ============================================ */
-/* === 领养页 (adopt.html) === */
-/* ============================================ */
+/* ============================================
+   领养页 (adopt.html)
+   领养信息介绍、流程步骤、注意事项、
+   可领养猫咪列表和申请表单
+   ============================================ */
+
+/* --- 领养介绍区 --- */
+/* 领养介绍网格：多列布局 */
 .adopt-intro { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px; }
+/* 介绍卡片 */
 .intro-card {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 24px; box-shadow: var(--shadow);
 }
+/* 介绍卡片标题 */
 .intro-card h3 { font-size: 1.1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
 
+/* --- 领养流程步骤 --- */
+/* 流程步骤容器：水平排列 */
 .process-steps {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
 }
+/* 单个步骤：纵向排列数字和描述 */
 .step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+/* 步骤序号圆圈 */
 .step-num {
   width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: var(--primary-light); color: var(--primary-dark); font-weight: 700; font-size: 0.95rem;
 }
+/* 步骤描述文字 */
 .step-desc { font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; }
+/* 步骤之间的箭头 */
 .step-arrow { color: var(--text-muted); font-size: 1.2rem; }
 
+/* --- 注意事项列表 --- */
+/* 注意事项列表：无默认列表样式 */
 .notice-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+/* 注意事项条目：左侧主色圆点标记 */
 .notice-list li {
   font-size: 0.88rem; color: var(--text-secondary); padding-left: 20px;
   position: relative; line-height: 1.6;
 }
+/* 注意事项圆点伪元素：主色圆点 */
 .notice-list li::before { content: '•'; position: absolute; left: 6px; color: var(--primary); font-weight: 700; }
 
+/* --- 可领养猫咪列表 --- */
+/* 可领养猫咪区域容器 */
 .available-cats { margin-bottom: 24px; }
+/* 可领养猫咪区域标题 */
 .available-cats h2 { font-size: 1.2rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+/* 猫咪网格布局 */
 .cats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
+/* --- 领养卡片 --- */
+/* 领养卡片信息区域 */
 .adopt-card .cat-card-info { padding: 16px; }
+/* 领养卡片中的猫咪名称 */
 .adopt-card .cat-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+/* 领养卡片中的昵称 */
 .adopt-card .cat-nickname { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+/* 领养卡片中的标签行 */
 .adopt-card .cat-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+/* 领养卡片中的描述文字 */
 .adopt-card .cat-description { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5; }
+/* 领养申请按钮：全宽主色按钮 */
 .adopt-apply-btn {
   width: 100%; padding: 10px; border-radius: 20px; border: none;
   background: var(--primary); color: #fff; font-size: 0.9rem; font-weight: 600;
   cursor: pointer; transition: all var(--transition);
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
+/* 领养按钮悬停效果 */
 .adopt-apply-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
+/* 无可领养猫咪提示 */
 .no-cats { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.95rem; }
 
-/* === 领养申请表 === */
+/* --- 领养申请表单 --- */
+/* 申请表单弹窗区域：全屏固定定位 */
 .application-form-section {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; pointer-events: none; transition: opacity 0.3s;
 }
+/* 表单弹窗显示状态 */
 .application-form-section.show { opacity: 1; pointer-events: all; }
+/* 表单遮罩层 */
 .form-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.5);
 }
+/* 表单容器：相对定位，在遮罩层之上 */
 .form-container {
   position: relative; z-index: 1;
   background: var(--bg-card); border-radius: var(--radius);
   max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;
   box-shadow: var(--shadow-lg); padding: 24px;
 }
+/* 表单顶部拖拽手柄 */
 .form-handle {
   width: 40px; height: 4px; border-radius: 2px; background: var(--border);
   margin: 0 auto 16px;
 }
+/* 表单头部：标题和关闭按钮 */
 .form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+/* 表单标题 */
 .form-header h2 { font-size: 1.2rem; }
+/* 表单关闭按钮 */
 .form-close {
   background: none; border: none; font-size: 1.5rem; cursor: pointer;
   color: var(--text-muted); transition: color var(--transition);
 }
+/* 关闭按钮悬停效果 */
 .form-close:hover { color: var(--text); }
 
+/* 表单分区：每个分区带标题和底部分隔线 */
 .form-section { margin-bottom: 18px; }
+/* 表单分区标题 */
 .form-section h3 {
   font-size: 0.95rem; color: var(--secondary); margin-bottom: 10px;
   padding-bottom: 6px; border-bottom: 1px solid var(--border);
 }
+/* 表单行：横向排列多个字段 */
 .form-row { display: flex; gap: 12px; margin-bottom: 10px; }
+/* 表单字段组：纵向排列标签和输入框 */
 .form-group { flex: 1; display: flex; flex-direction: column; }
+/* 表单字段标签 */
 .form-group label {
   font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;
 }
+/* 表单输入框/选择框/文本域统一样式 */
 .form-group input, .form-group select, .form-group textarea {
   padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   font-family: var(--font); font-size: 0.88rem; background: var(--bg); color: var(--text);
   transition: border-color var(--transition);
 }
+/* 表单输入框聚焦样式 */
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
   outline: none; border-color: var(--primary);
 }
 
+/* 复选框组 */
 .checkbox-group { margin-top: 8px; }
+/* 复选框标签：横向排列复选框和文字 */
 .checkbox-label {
   display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
   font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;
 }
+/* 复选框样式 */
 .checkbox-label input[type="checkbox"] { margin-top: 3px; accent-color: var(--primary); }
 
+/* 表单操作按钮行 */
 .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+/* 取消按钮 */
 .btn-cancel {
   flex: 1; padding: 12px; border-radius: 24px; border: 1.5px solid var(--border);
   background: var(--bg); color: var(--text-secondary); font-size: 0.9rem;
   cursor: pointer; font-weight: 600; transition: all var(--transition);
 }
+/* 取消按钮悬停：变红色 */
 .btn-cancel:hover { border-color: var(--danger); color: var(--danger); }
+/* 提交按钮：主色填充，占更宽空间 */
 .btn-submit {
   flex: 2; padding: 12px; border-radius: 24px; border: none;
   background: var(--primary); color: #fff; font-size: 0.9rem; font-weight: 700;
   cursor: pointer; transition: all var(--transition);
 }
+/* 提交按钮悬停效果 */
 .btn-submit:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
+/* 按钮加载状态：旋转动画 */
 .button-loading { display: flex; align-items: center; gap: 8px; justify-content: center; }
+/* 小号旋转加载图标 */
 .spinner-small {
   width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
   border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
 }
+/* 旋转动画关键帧 */
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* === 图表容器 === */
+/* ============================================
+   图表容器
+   数据可视化图表的包装容器，
+   包含标题、时间周期选择器和图表区域
+   ============================================ */
+/* 图表容器：卡片样式 */
 .chart-container {
   background: var(--bg-card); border-radius: var(--radius);
   padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px;
 }
+/* 图表标题 */
 .chart-container h4 { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 12px; }
+/* 图表包装区域：相对定位，固定高度 */
 .chart-wrapper { position: relative; height: 250px; }
+/* 时间周期选择器：按钮组 */
 .period-selector { display: flex; gap: 6px; margin-bottom: 12px; }
+/* 周期选择按钮 */
 .period-btn {
   padding: 5px 12px; border-radius: 14px; border: 1px solid var(--border);
   background: var(--bg); color: var(--text-secondary); cursor: pointer;
   font-size: 0.78rem; transition: all var(--transition);
 }
+/* 周期按钮激活状态 */
 .period-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
 /* ============================================
-   【新增】分享弹窗样式
+   分享弹窗
+   用于分享猫咪信息到社交平台或复制链接的弹窗
    ============================================ */
+/* 分享弹窗遮罩层 */
 .share-modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
   z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
 }
+/* 分享弹窗显示状态 */
 .share-modal.show { opacity: 1; pointer-events: all; }
+/* 分享弹窗内容区 */
 .share-modal-content {
   background: var(--bg-card); border-radius: var(--radius);
   max-width: 420px; width: 90%; padding: 28px; box-shadow: var(--shadow-lg);
   position: relative;
 }
+/* 分享弹窗关闭按钮 */
 .share-modal-close {
   position: absolute; top: 12px; right: 16px;
   background: none; border: none; font-size: 1.4rem; cursor: pointer;
   color: var(--text-muted);
 }
+/* 分享弹窗头部 */
 .share-modal-header { text-align: center; margin-bottom: 20px; }
+/* 分享弹窗标题 */
 .share-modal-header h3 { font-size: 1.2rem; }
+/* 分享弹窗描述 */
 .share-modal-header p { font-size: 0.82rem; color: var(--text-muted); }
+/* 分享的猫咪预览区 */
 .share-cat-preview { text-align: center; margin-bottom: 20px; }
+/* 分享的猫咪头像（大号 emoji） */
 .share-cat-avatar { font-size: 4rem; }
+/* 分享的猫咪名称 */
 .share-cat-name { font-weight: 700; font-size: 1.1rem; margin-top: 8px; }
+/* 分享的猫咪昵称 */
 .share-cat-nickname { color: var(--text-muted); font-size: 0.9rem; }
+/* 分享的猫咪附加信息 */
 .share-cat-info { display: flex; gap: 12px; justify-content: center; font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; }
+/* 分享选项行：社交平台图标 */
 .share-options { display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; }
+/* 单个分享选项：纵向排列图标和文字 */
 .share-option {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   cursor: pointer; transition: all var(--transition); padding: 10px;
   border-radius: var(--radius-sm);
 }
+/* 分享选项悬停效果 */
 .share-option:hover { background: var(--bg); transform: translateY(-2px); }
+/* 分享选项图标 */
 .share-option-icon { font-size: 1.8rem; }
+/* 分享选项标签 */
 .share-option-label { font-size: 0.78rem; color: var(--text-secondary); }
+/* 复制链接区域 */
 .share-link-section { margin-top: 8px; }
+/* 复制链接标签 */
 .share-link-label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
+/* 复制链接输入框和按钮容器 */
 .share-link-container { display: flex; gap: 8px; }
+/* 链接输入框 */
 .share-link-input {
   flex: 1; padding: 8px 12px; border: 1.5px solid var(--border);
   border-radius: var(--radius-sm); font-size: 0.82rem;
   background: var(--bg); color: var(--text);
 }
+/* 复制链接按钮 */
 .share-link-btn {
   padding: 8px 16px; border-radius: var(--radius-sm); border: none;
   background: var(--primary); color: #fff; font-size: 0.82rem; cursor: pointer;
 }
 
-/* === 响应式 === */
+/* ============================================
+   响应式适配
+   针对不同屏幕尺寸的媒体查询，
+   确保在各种设备上都有良好的显示效果
+   ============================================ */
 
-/* 平板端 ≤1024px */
+/* --- 平板端适配（屏幕宽度 ≤ 1024px） --- */
 @media (max-width: 1024px) {
+  /* 导航栏缩小间距 */
   .topbar-inner { padding: 0 16px; gap: 12px; flex-wrap: wrap; min-height: auto; }
+  /* 品牌图标缩小 */
   .brand-mark { width: 44px; height: 44px; font-size: 24px; border-radius: 14px; }
+  /* 品牌名称缩小 */
   .brand-text strong { font-size: 1.5rem; }
+  /* 品牌副标题隐藏（空间不足） */
   .brand-text span { display: none; }
+  /* 菜单移到第二行 */
   .menu { order: 3; width: 100%; justify-content: center; padding: 4px 0 8px; }
+  /* 菜单按钮缩小 */
   .menu button, .menu .menu-link { padding: 10px 12px; font-size: 0.9rem; }
   .nav-actions { margin-left: auto; }
+  /* Hero 区域缩小标题 */
   .hero h1 { font-size: 1.5rem; }
   .hero-stats { gap: 16px; }
+  /* 直播画面固定高度 */
   .live-camera { height: 220px; }
   .live-cat-emoji { font-size: 80px; }
+  /* 统计卡片改为两列 */
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  /* 列表/网格改为单列 */
   .cats-list { grid-template-columns: 1fr; }
   .cats-grid { grid-template-columns: 1fr; }
   .diary-cards { grid-template-columns: 1fr; }
   .adopt-intro { grid-template-columns: 1fr; }
+  /* 流程步骤紧凑排列 */
   .process-steps { gap: 4px; }
   .step-num { width: 32px; height: 32px; font-size: 0.8rem; }
   .step-arrow { font-size: 0.9rem; }
   .adopt-tracker { gap: 0; }
   .adopt-phase { min-width: 60px; }
+  /* 表单行改为纵向排列 */
   .form-row { flex-direction: column; gap: 8px; }
 }
 
-/* 手机端 ≤600px */
+/* --- 手机端适配（屏幕宽度 ≤ 600px） --- */
 @media (max-width: 600px) {
+  /* 导航栏进一步缩小 */
   .topbar { border-radius: 18px; margin-bottom: 10px; }
   .topbar-inner { padding: 0 10px; gap: 6px; }
   .brand-mark { width: 38px; height: 38px; font-size: 20px; border-radius: 12px; }
   .brand-text strong { font-size: 1.2rem; }
   .menu button, .menu .menu-link { padding: 8px 10px; font-size: 0.82rem; }
+  /* 图标按钮和用户芯片缩小 */
   .icon-btn { height: 38px; width: 38px; }
   .user-chip { height: 38px; padding: 0 10px; }
   .avatar { width: 26px; height: 26px; font-size: 12px; }
+  /* 主内容区减少内边距 */
   .main-content { padding: 12px 10px 40px; }
+  /* Hero 区域紧凑化 */
   .hero { padding: 24px 14px; }
+  /* 统计卡片两列紧凑 */
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat-card { padding: 14px; }
   .stat-value { font-size: 1.2rem; }
   .stat-icon { font-size: 1.4rem; }
+  /* 快速操作按钮缩小 */
   .quick-actions .btn { font-size: 0.82rem; padding: 10px 16px; }
 }
 
 /* ============================================
    首页 (index.html) 专属样式
+   首页 Dashboard 布局、Hero 卡片、
+   地图卡片、统计行、直播/日记/领养等功能卡片
    ============================================ */
 
-/* === 首页布局容器 === */
+/* --- 首页布局容器 --- */
+/* 首页外壳：限宽居中 */
 .shell {
   max-width: var(--container-max);
   margin: 0 auto;
   padding: 20px 20px 36px;
 }
 
+/* 首页仪表盘：单列网格布局 */
 .dashboard {
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
 }
 
+/* 主内容堆叠区 */
 .main-stack {
   display: grid;
   gap: 20px;
 }
 
-/* === 首页面板基础样式 === */
+/* --- 首页面板基础样式 --- */
+/* 通用面板：卡片背景 + 圆角 + 阴影 */
 .panel {
   background: var(--bg-card);
   border: 1px solid rgba(239, 228, 223, 0.9);
@@ -982,13 +1454,15 @@ a:hover { color: var(--primary-dark); }
   border-radius: var(--radius-lg);
 }
 
-/* === Hero 区域 === */
+/* --- 首页 Hero 区域 --- */
+/* Hero 网格：自适应多列 */
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 20px;
 }
 
+/* Hero 卡片：双列布局（文字 + 插画），最小高度 280px */
 .hero-card {
   min-height: 280px;
   overflow: hidden;
@@ -1002,12 +1476,14 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, #fdf5f6 0%, #f8efe9 100%);
 }
 
+/* Hero 文字区域 */
 .hero-copy {
   padding: 34px 34px 30px;
   position: relative;
   z-index: 2;
 }
 
+/* Hero 眉标（斜体引导文字） */
 .eyebrow {
   color: var(--primary);
   font-size: 1.05rem;
@@ -1015,6 +1491,7 @@ a:hover { color: var(--primary-dark); }
   margin-bottom: 8px;
 }
 
+/* Hero 主标题：超大字号 */
 .hero-copy h1 {
   font-size: 3rem;
   line-height: 1.18;
@@ -1022,12 +1499,14 @@ a:hover { color: var(--primary-dark); }
   letter-spacing: -0.03em;
 }
 
+/* Hero 描述段落 */
 .hero-copy p {
   font-size: 1rem;
   color: var(--text-muted);
   max-width: 420px;
 }
 
+/* Hero 操作按钮行 */
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1035,12 +1514,14 @@ a:hover { color: var(--primary-dark); }
   margin: 24px 0 20px;
 }
 
+/* 柔和按钮（Hero 区域使用） */
 .btn-soft {
   background: rgba(255,255,255,0.88);
   color: var(--text);
   border: 1px solid var(--border);
 }
 
+/* Hero 功能特性列表 */
 .hero-features {
   display: flex;
   gap: 18px;
@@ -1049,12 +1530,14 @@ a:hover { color: var(--primary-dark); }
   font-size: 0.9rem;
 }
 
+/* Hero 插画区域：相对定位，用于放置装饰元素 */
 .hero-art {
   position: relative;
   min-height: 100%;
   overflow: hidden;
 }
 
+/* Hero 插画背景装饰（伪元素） */
 .hero-art::before {
   content: "";
   position: absolute;
@@ -1067,6 +1550,7 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(160deg, #c7dcbf 0%, #f6e1d2 32%, #f0c39d 68%, #e5b178 100%);
 }
 
+/* Hero 插画猫咪 emoji（伪元素） */
 .hero-art::after {
   content: "🐈";
   position: absolute;
@@ -1076,6 +1560,7 @@ a:hover { color: var(--primary-dark); }
   filter: drop-shadow(0 14px 20px rgba(92, 70, 63, 0.22));
 }
 
+/* Hero 手写风注释文字 */
 .hero-note {
   position: absolute;
   right: 78px;
@@ -1087,11 +1572,13 @@ a:hover { color: var(--primary-dark); }
   transform: rotate(-7deg);
 }
 
-/* === 地图卡片 === */
+/* --- 地图卡片 --- */
+/* 地图卡片内边距 */
 .map-card {
   padding: 18px;
 }
 
+/* 卡片头部：标题和描述两端对齐 */
 .card-head {
   display: flex;
   align-items: center;
@@ -1100,14 +1587,17 @@ a:hover { color: var(--primary-dark); }
   margin-bottom: 14px;
 }
 
+/* 卡片标题 */
 .card-head h3 {
   font-size: 1.18rem;
 }
 
+/* 卡片副标题/描述 */
 .card-head small {
   color: var(--text-muted);
 }
 
+/* 地图视图区域：4:3 比例，渐变背景模拟地图 */
 .map-view {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -1120,6 +1610,7 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, #d9ead4, #eef4e8 52%, #dae6f3 100%);
 }
 
+/* 地图水域装饰（伪元素） */
 .map-view::before {
   content: "";
   position: absolute;
@@ -1129,6 +1620,7 @@ a:hover { color: var(--primary-dark); }
   transform: rotate(18deg);
 }
 
+/* 地图标记点：圆形渐变标记 */
 .marker {
   position: absolute;
   width: 22px;
@@ -1143,11 +1635,13 @@ a:hover { color: var(--primary-dark); }
   font-size: 12px;
 }
 
+/* 地图标记点变体 - 绿色（辅助色） */
 .marker.sage {
   background: linear-gradient(135deg, var(--secondary), #b5caaf);
   box-shadow: 0 8px 18px rgba(159,181,157,0.34);
 }
 
+/* 地图浮动信息卡：右上角悬浮 */
 .map-floating {
   position: absolute;
   top: 20px;
@@ -1159,16 +1653,19 @@ a:hover { color: var(--primary-dark); }
   box-shadow: var(--shadow-lg);
 }
 
+/* 浮动信息卡标题 */
 .map-floating strong {
   display: block;
   margin-bottom: 6px;
 }
 
+/* 浮动信息卡描述 */
 .map-floating p {
   color: var(--text-muted);
   font-size: 0.82rem;
 }
 
+/* 地图迷你按钮：全宽药丸形 */
 .map-mini-btn {
   display: block;
   margin-top: 10px;
@@ -1184,13 +1681,15 @@ a:hover { color: var(--primary-dark); }
   text-decoration: none;
 }
 
-/* === 统计卡片行 === */
+/* --- 统计卡片行 --- */
+/* 统计行网格：自适应列数 */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
 }
 
+/* 首页统计卡片：三列网格（图标/信息/趋势） */
 .stat-card {
   padding: 20px 22px;
   min-height: 112px;
@@ -1200,6 +1699,7 @@ a:hover { color: var(--primary-dark); }
   align-items: center;
 }
 
+/* 统计图标容器：圆角方形背景 */
 .stat-icon {
   width: 54px;
   height: 54px;
@@ -1210,21 +1710,27 @@ a:hover { color: var(--primary-dark); }
   font-size: 24px;
 }
 
+/* 统计图标颜色变体 - 粉色 */
 .stat-icon.pink { background: linear-gradient(135deg, #fff2f5, var(--primary-light)); color: var(--primary); }
+/* 统计图标颜色变体 - 绿色 */
 .stat-icon.sage { background: linear-gradient(135deg, #edf4eb, #dde9db); color: var(--secondary); }
+/* 统计图标颜色变体 - 金色 */
 .stat-icon.gold { background: linear-gradient(135deg, #fbf3e7, #f6dfbd); color: #c99a61; }
 
+/* 统计卡片数值 */
 .stat-card h4 {
   font-size: 2rem;
   line-height: 1;
 }
 
+/* 统计卡片描述 */
 .stat-card p {
   color: var(--text-muted);
   margin-top: 6px;
   font-size: 0.9rem;
 }
 
+/* 统计趋势（右侧） */
 .stat-trend {
   text-align: right;
   color: var(--secondary);
@@ -1232,6 +1738,7 @@ a:hover { color: var(--primary-dark); }
   font-weight: 700;
 }
 
+/* 迷你趋势曲线装饰 */
 .curve {
   width: 68px;
   height: 34px;
@@ -1242,6 +1749,7 @@ a:hover { color: var(--primary-dark); }
   position: relative;
 }
 
+/* 趋势曲线装饰线 */
 .curve::before {
   content: "";
   position: absolute;
@@ -1252,26 +1760,30 @@ a:hover { color: var(--primary-dark); }
   transform: skewY(-18deg);
 }
 
-/* === 内容网格 === */
+/* --- 内容网格布局 --- */
+/* 主内容网格：自适应双列 */
 .content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 20px;
 }
 
+/* 左侧/右侧内容堆叠 */
 .left-stack,
 .right-stack {
   display: grid;
   gap: 20px;
 }
 
+/* 双列网格 */
 .dual-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 20px;
 }
 
-/* === 功能卡片通用样式 === */
+/* --- 功能卡片通用样式 --- */
+/* 各类功能卡片的统一内边距 */
 .live-card,
 .diary-card,
 .join-card,
@@ -1281,7 +1793,8 @@ a:hover { color: var(--primary-dark); }
   padding: 20px;
 }
 
-/* === 直播卡片 === */
+/* --- 首页直播卡片 --- */
+/* 直播视频区域：16:9 比例，深色渐变背景 */
 .live-video {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -1294,6 +1807,7 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(180deg, #705540 0%, #583f31 58%, #352722 100%);
 }
 
+/* 直播视频叠加层效果 */
 .live-video::before {
   content: "";
   position: absolute;
@@ -1305,6 +1819,7 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, rgba(88,63,49,0.25), rgba(0,0,0,0.08));
 }
 
+/* 猫咪舞台区域：底部居中显示猫咪 */
 .cat-stage {
   position: absolute;
   inset: 0;
@@ -1315,16 +1830,19 @@ a:hover { color: var(--primary-dark); }
   padding-bottom: 32px;
 }
 
+/* 舞台上的猫咪大图标 */
 .cat-stage .cat-hero {
   font-size: 7rem;
   filter: drop-shadow(0 14px 24px rgba(0,0,0,0.28));
   transition: transform 0.25s ease;
 }
 
+/* 猫咪弹跳状态 */
 .cat-stage .cat-hero.bounce {
   transform: scale(1.06) translateY(-6px);
 }
 
+/* 直播标签行：左上角 */
 .live-tags {
   position: absolute;
   top: 14px;
@@ -1333,6 +1851,7 @@ a:hover { color: var(--primary-dark); }
   gap: 8px;
 }
 
+/* 药丸形标签基础样式 */
 .pill {
   border-radius: 999px;
   padding: 6px 12px;
@@ -1341,16 +1860,19 @@ a:hover { color: var(--primary-dark); }
   backdrop-filter: blur(8px);
 }
 
+/* 直播中标签：红色 */
 .pill.live {
   background: rgba(224, 90, 120, 0.92);
   color: #fff;
 }
 
+/* AI 标签：白色 */
 .pill.ai {
   background: rgba(255,255,255,0.9);
   color: #6a6d59;
 }
 
+/* 直播间编号：右上角 */
 .live-room {
   position: absolute;
   top: 14px;
@@ -1362,6 +1884,7 @@ a:hover { color: var(--primary-dark); }
   font-size: 0.78rem;
 }
 
+/* 直播控制区：两列网格布局 */
 .live-controls {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1370,17 +1893,20 @@ a:hover { color: var(--primary-dark); }
   margin-top: 16px;
 }
 
+/* 当前猫咪信息 */
 .current-cat strong {
   display: block;
   font-size: 1.12rem;
 }
 
+/* 当前猫咪描述 */
 .current-cat p {
   color: var(--text-muted);
   font-size: 0.88rem;
   margin-top: 4px;
 }
 
+/* 直播元数据行（温度、湿度等） */
 .live-meta {
   display: flex;
   gap: 14px;
@@ -1388,6 +1914,7 @@ a:hover { color: var(--primary-dark); }
   margin-top: 10px;
 }
 
+/* 元数据小盒子 */
 .meta-box {
   min-width: 92px;
   padding: 10px 12px;
@@ -1396,12 +1923,14 @@ a:hover { color: var(--primary-dark); }
   border: 1px solid var(--border);
 }
 
+/* 元数据标签 */
 .meta-box span {
   display: block;
   color: var(--text-muted);
   font-size: 0.76rem;
 }
 
+/* 元数据数值 */
 .meta-box strong {
   display: block;
   margin-top: 4px;
@@ -1409,17 +1938,20 @@ a:hover { color: var(--primary-dark); }
   font-size: 1rem;
 }
 
+/* 投喂区域 */
 .feed-area {
   display: grid;
   gap: 12px;
 }
 
+/* 投喂食物包选择行 */
 .feed-packs {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
+/* 单个投喂食物包选项 */
 .feed-pack {
   min-width: 86px;
   border-radius: 18px;
@@ -1431,28 +1963,33 @@ a:hover { color: var(--primary-dark); }
   transition: 0.25s ease;
 }
 
+/* 食物包选中状态 */
 .feed-pack.active {
   border-color: #e7b6c3;
   background: linear-gradient(135deg, #fff3f7, #fffdfd);
   box-shadow: 0 10px 20px rgba(216,141,163,0.14);
 }
 
+/* 食物包名称 */
 .feed-pack strong {
   display: block;
   color: var(--primary);
 }
 
+/* 食物包价格 */
 .feed-pack span {
   color: var(--text-muted);
   font-size: 0.76rem;
 }
 
+/* 投喂记录日志 */
 .feed-logs {
   margin-top: 16px;
   display: grid;
   gap: 10px;
 }
 
+/* 日志行：三列网格 */
 .log-row {
   display: grid;
   grid-template-columns: clamp(50px, 10%, 80px) 1fr auto;
@@ -1463,22 +2000,26 @@ a:hover { color: var(--primary-dark); }
   border-bottom: 1px dashed var(--border);
 }
 
+/* 最后一条日志无底边框 */
 .log-row:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
 
+/* 日志中的弱化文字（时间等） */
 .log-row time,
 .muted {
   color: var(--text-muted);
 }
 
-/* === 日记卡片 === */
+/* --- 首页日记卡片 --- */
+/* 精选日记内容区 */
 .diary-card .featured-diary {
   display: grid;
   gap: 14px;
 }
 
+/* 猫咪标签芯片：药丸形，显示猫咪名称 */
 .cat-chip {
   display: inline-flex;
   align-items: center;
@@ -1490,22 +2031,26 @@ a:hover { color: var(--primary-dark); }
   font-weight: 700;
 }
 
+/* 日记时间 */
 .diary-time {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
+/* 日记正文 */
 .diary-text {
   font-size: 1rem;
   line-height: 1.82;
 }
 
+/* 缩略图行：网格排列 */
 .thumb-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 10px;
 }
 
+/* 单个缩略图：渐变背景 */
 .thumb {
   aspect-ratio: 1 / 0.74;
   border-radius: 16px;
@@ -1518,7 +2063,8 @@ a:hover { color: var(--primary-dark); }
   font-size: 2rem;
 }
 
-/* === 领养中心卡片 === */
+/* --- 领养中心卡片 --- */
+/* 领养入口网格 */
 .join-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -1526,6 +2072,7 @@ a:hover { color: var(--primary-dark); }
   margin-bottom: 16px;
 }
 
+/* 领养入口项：居中文字和图标 */
 .join-item {
   padding: 18px 14px;
   border-radius: 18px;
@@ -1534,6 +2081,7 @@ a:hover { color: var(--primary-dark); }
   background: linear-gradient(180deg, #fff, #fff9f8);
 }
 
+/* 领养入口图标容器 */
 .join-item .icon {
   width: 48px;
   height: 48px;
@@ -1545,15 +2093,18 @@ a:hover { color: var(--primary-dark); }
   font-size: 24px;
 }
 
+/* 领养入口标题 */
 .join-item h4 {
   margin-bottom: 6px;
 }
 
+/* 领养入口描述 */
 .join-item p {
   font-size: 0.82rem;
   color: var(--text-muted);
 }
 
+/* 领养横幅：渐变背景 + 猫咪装饰 */
 .join-banner {
   min-height: 122px;
   border-radius: 20px;
@@ -1566,6 +2117,7 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, #fff5f6, #f9eee6 58%, #f8f4ed);
 }
 
+/* 领养横幅猫咪 emoji 装饰 */
 .join-banner::after {
   content: "🐱";
   position: absolute;
@@ -1575,6 +2127,7 @@ a:hover { color: var(--primary-dark); }
   opacity: 0.9;
 }
 
+/* 领养横幅文字 */
 .join-banner p {
   color: var(--primary);
   font-size: 1.1rem;
@@ -1582,18 +2135,21 @@ a:hover { color: var(--primary-dark); }
   max-width: 280px;
 }
 
-/* === 社区活动卡片 === */
+/* --- 社区活动卡片 --- */
+/* 活动卡片：全高度网格 */
 .activity-card {
   min-height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
 }
 
+/* 活动列表 */
 .activity-list {
   display: grid;
   gap: 12px;
 }
 
+/* 活动行：头像 + 内容 + 标签 */
 .activity-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1601,6 +2157,7 @@ a:hover { color: var(--primary-dark); }
   align-items: start;
 }
 
+/* 活动头像 */
 .activity-avatar {
   width: 36px;
   height: 36px;
@@ -1612,11 +2169,13 @@ a:hover { color: var(--primary-dark); }
   font-size: 18px;
 }
 
+/* 活动描述文字 */
 .activity-row p {
   font-size: 0.86rem;
   line-height: 1.55;
 }
 
+/* 活动标签 */
 .activity-tag {
   padding: 4px 8px;
   border-radius: 999px;
@@ -1626,6 +2185,7 @@ a:hover { color: var(--primary-dark); }
   font-weight: 700;
 }
 
+/* 活动底部号召区域 */
 .activity-footer {
   margin-top: 16px;
   padding: 20px;
@@ -1639,13 +2199,15 @@ a:hover { color: var(--primary-dark); }
   line-height: 1.6;
 }
 
-/* === 猫咪档案卡片 === */
+/* --- 首页猫咪档案卡片 --- */
+/* 猫咪档案卡片内的网格 */
 .cats-card .cats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
 }
 
+/* 首页猫咪卡片：带边框和悬停效果 */
 .cat-card {
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -1655,11 +2217,13 @@ a:hover { color: var(--primary-dark); }
   transition: 0.25s ease;
 }
 
+/* 首页猫咪卡片悬停效果 */
 .cat-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
 }
 
+/* 猫咪视觉区域：正方形，渐变背景 */
 .cat-visual {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -1670,20 +2234,24 @@ a:hover { color: var(--primary-dark); }
   background: linear-gradient(135deg, #d9ead4, #f0dcca 58%, #dcb08b);
 }
 
+/* 猫咪信息区域 */
 .cat-info {
   padding: 14px;
 }
 
+/* 猫咪名称 */
 .cat-info h4 {
   font-size: 1rem;
 }
 
+/* 猫咪描述 */
 .cat-info p {
   color: var(--text-muted);
   font-size: 0.82rem;
   margin-top: 4px;
 }
 
+/* 猫咪标签行 */
 .tags {
   margin-top: 10px;
   display: flex;
@@ -1691,6 +2259,7 @@ a:hover { color: var(--primary-dark); }
   gap: 6px;
 }
 
+/* 标签样式（首页变体） */
 .tag {
   border-radius: 999px;
   padding: 4px 8px;
@@ -1698,17 +2267,22 @@ a:hover { color: var(--primary-dark); }
   font-weight: 700;
 }
 
+/* 正常状态标签：绿色 */
 .tag.ok { background: #edf5eb; color: #6f8f6d; }
+/* 警告状态标签：黄色 */
 .tag.warn { background: #fbf0de; color: #c08a42; }
+/* 粉色标签 */
 .tag.pink { background: #f9e7ee; color: var(--primary-dark); }
 
-/* === 洞察卡片 === */
+/* --- 洞察卡片 --- */
+/* 洞察网格 */
 .insight-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
 }
 
+/* 迷你面板 */
 .mini-panel {
   padding: 18px;
   border-radius: 18px;
@@ -1716,6 +2290,7 @@ a:hover { color: var(--primary-dark); }
   background: linear-gradient(180deg, #fff, #fffaf8);
 }
 
+/* 迷你面板描述 */
 .mini-panel p {
   color: var(--text-muted);
   margin-top: 8px;
@@ -1723,22 +2298,26 @@ a:hover { color: var(--primary-dark); }
   line-height: 1.7;
 }
 
-/* === 侧边栏 === */
+/* --- 侧边栏 --- */
+/* 侧边栏容器 */
 .sidebar {
   display: grid;
   gap: 20px;
   align-content: start;
 }
 
+/* 侧边栏卡片 */
 .side-card {
   padding: 24px;
 }
 
+/* 侧边栏列表 */
 .side-list {
   display: grid;
   gap: 12px;
 }
 
+/* 侧边栏行：图标 + 内容 */
 .side-row {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1746,6 +2325,7 @@ a:hover { color: var(--primary-dark); }
   align-items: start;
 }
 
+/* 状态圆点：绿色（正常） */
 .dot-status {
   width: 12px;
   height: 12px;
@@ -1755,17 +2335,20 @@ a:hover { color: var(--primary-dark); }
   box-shadow: 0 0 0 6px rgba(159,181,157,0.18);
 }
 
+/* 状态圆点：粉色（警告） */
 .dot-status.alert {
   background: var(--primary);
   box-shadow: 0 0 0 6px rgba(216,141,163,0.14);
 }
 
+/* 侧边栏行文字 */
 .side-row p {
   font-size: 0.84rem;
   line-height: 1.6;
 }
 
-/* === 页脚 === */
+/* --- 页脚 --- */
+/* 页脚容器：两端对齐 */
 .footer {
   margin-top: 26px;
   padding: 22px 10px 8px;
@@ -1776,13 +2359,15 @@ a:hover { color: var(--primary-dark); }
   font-size: 0.86rem;
 }
 
+/* 页脚导航链接 */
 .footer-nav {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
 }
 
-/* === 首页弹窗 === */
+/* --- 首页弹窗 --- */
+/* 首页通用弹窗遮罩 */
 .modal {
   position: fixed;
   inset: 0;
@@ -1794,10 +2379,12 @@ a:hover { color: var(--primary-dark); }
   z-index: 100;
 }
 
+/* 弹窗显示状态 */
 .modal.show {
   display: flex;
 }
 
+/* 弹窗卡片 */
 .modal-card {
   width: min(680px, 100%);
   max-height: 86vh;
@@ -1810,6 +2397,7 @@ a:hover { color: var(--primary-dark); }
   position: relative;
 }
 
+/* 首页弹窗关闭按钮 */
 .modal-close {
   position: absolute;
   top: 12px;
@@ -1824,7 +2412,8 @@ a:hover { color: var(--primary-dark); }
   font-size: 1.4rem;
 }
 
-/* === 首页 Toast === */
+/* --- 首页 Toast --- */
+/* 首页 Toast 消息提示 */
 .toast {
   position: fixed;
   left: 50%;
@@ -1840,24 +2429,29 @@ a:hover { color: var(--primary-dark); }
   z-index: 110;
 }
 
+/* 首页 Toast 显示状态 */
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
 }
 
-/* === 首页响应式 === */
+/* --- 首页响应式（平板端 ≤1024px） --- */
 @media (max-width: 1024px) {
   .shell { padding: 12px 12px 24px; }
   .topbar { border-radius: 20px; }
+  /* Hero 改为单列 */
   .hero-grid { grid-template-columns: 1fr; }
   .hero-card { grid-template-columns: 1fr; }
   .hero-art { min-height: 220px; }
+  /* 内容改为单列 */
   .content-grid { grid-template-columns: 1fr; }
   .dual-grid { grid-template-columns: 1fr; }
+  /* Hero 文字缩小 */
   .hero-copy { padding: 24px 20px 20px; }
   .hero-copy h1 { font-size: 1.8rem; }
   .hero-copy p { font-size: 0.9rem; }
   .hero-note { right: 40px; top: 30px; font-size: 0.95rem; }
+  /* 统计行紧凑 */
   .stats-row { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
   .stat-card { padding: 16px; }
   .stat-card h4 { font-size: 1.6rem; }
@@ -1866,6 +2460,7 @@ a:hover { color: var(--primary-dark); }
   .cats-card .cats-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
   .insight-grid { grid-template-columns: 1fr; }
   .thumb-row { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  /* 直播控制改为单列 */
   .live-controls { grid-template-columns: 1fr; }
   .live-controls .btn { width: 100%; }
   .log-row { grid-template-columns: 1fr; gap: 6px; }
@@ -1873,11 +2468,13 @@ a:hover { color: var(--primary-dark); }
   .side-row { grid-template-columns: 1fr; gap: 6px; }
   .cat-stage .cat-hero { font-size: 5rem; }
   .map-floating { width: clamp(120px, 28%, 160px); padding: 10px; }
+  /* 页脚改为纵向 */
   .footer { flex-direction: column; text-align: center; }
   .panel { border-radius: 20px; }
   .modal-card { padding: 18px; }
 }
 
+/* --- 首页响应式（手机端 ≤600px） --- */
 @media (max-width: 600px) {
   .shell { padding: 8px 8px 20px; }
   .hero-copy { padding: 20px 16px 16px; }
@@ -1889,6 +2486,7 @@ a:hover { color: var(--primary-dark); }
   .hero-art { min-height: 160px; }
   .hero-art::after { font-size: 6rem; right: 20px; bottom: 10px; }
   .hero-note { right: 28px; top: 20px; font-size: 0.85rem; }
+  /* 统计行两列 */
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-card { padding: 14px; grid-template-columns: auto 1fr; }
   .stat-trend { display: none; }
@@ -1896,12 +2494,14 @@ a:hover { color: var(--primary-dark); }
   .stat-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 14px; }
   .card-head h3 { font-size: 1.05rem; }
   .cat-stage .cat-hero { font-size: 4rem; }
+  /* 直播标签缩小 */
   .live-tags { top: 10px; left: 10px; }
   .pill { padding: 4px 8px; font-size: 0.7rem; }
   .live-room { top: 10px; right: 10px; font-size: 0.7rem; padding: 4px 8px; }
   .meta-box { min-width: 80px; padding: 8px 10px; }
   .meta-box strong { font-size: 0.9rem; }
   .feed-pack { min-width: 72px; padding: 8px 10px; }
+  /* 猫咪网格两列 */
   .cats-card .cats-grid { grid-template-columns: 1fr 1fr; }
   .cat-visual { font-size: 3rem; }
   .thumb-row { grid-template-columns: repeat(2, 1fr); }
@@ -1919,12 +2519,18 @@ a:hover { color: var(--primary-dark); }
   .modal-close { width: 34px; height: 34px; font-size: 1.2rem; }
 }
 
-/* === 首页深色模式覆盖 === */
+/* ============================================
+   首页深色模式覆盖
+   为首页专属组件提供暗黑模式下的样式适配
+   ============================================ */
+
+/* 面板暗黑模式：深色背景 + 深色边框 */
 [data-theme="dark"] .panel {
   background: var(--bg-card);
   border-color: rgba(74, 64, 66, 0.9);
 }
 
+/* Hero 卡片暗黑背景 */
 [data-theme="dark"] .hero-card {
   background:
     linear-gradient(90deg, rgba(50,45,48,0.98) 0%, rgba(45,40,43,0.95) 38%, rgba(42,37,40,0.15) 100%),
@@ -1933,15 +2539,19 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, #2a2528 0%, #2f2a2d 100%);
 }
 
+/* Hero 标题暗黑模式 */
 [data-theme="dark"] .hero-copy h1 { color: #e8e0e2; }
+/* Hero 描述暗黑模式 */
 [data-theme="dark"] .hero-copy p { color: #b0a8aa; }
 
+/* 柔和按钮暗黑模式 */
 [data-theme="dark"] .btn-soft {
   background: rgba(50,45,48,0.88);
   color: #e8e0e2;
   border-color: #4a4042;
 }
 
+/* 地图视图暗黑模式 */
 [data-theme="dark"] .map-view {
   background:
     linear-gradient(90deg, rgba(50,45,48,0.55) 8%, transparent 8%, transparent 9%, rgba(50,45,48,0.55) 9%, rgba(50,45,48,0.55) 13%, transparent 13%),
@@ -1949,6 +2559,7 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, #2a3528, #2f3025 52%, #2a2528 100%);
 }
 
+/* 地图浮动信息卡暗黑模式 */
 [data-theme="dark"] .map-floating {
   background: rgba(50,45,48,0.92);
   color: #e8e0e2;
@@ -1956,43 +2567,52 @@ a:hover { color: var(--primary-dark); }
 
 [data-theme="dark"] .map-floating p { color: #b0a8aa; }
 
+/* 地图迷你按钮暗黑模式 */
 [data-theme="dark"] .map-mini-btn {
   background: #3d2d30;
   color: #d88da3;
 }
 
+/* 统计图标暗黑模式背景 */
 [data-theme="dark"] .stat-icon.pink { background: linear-gradient(135deg, #3d2d30, #2a2528); }
 [data-theme="dark"] .stat-icon.sage { background: linear-gradient(135deg, #2a3528, #2f3025); }
 [data-theme="dark"] .stat-icon.gold { background: linear-gradient(135deg, #3d3528, #2f3025); }
 
+/* 元数据盒子暗黑模式 */
 [data-theme="dark"] .meta-box {
   background: linear-gradient(135deg, #2a2528, #2f2a2d);
   border-color: #4a4042;
 }
 
+/* 投喂食物包暗黑模式 */
 [data-theme="dark"] .feed-pack {
   background: #2a2528;
   border-color: #4a4042;
   color: #e8e0e2;
 }
 
+/* 投喂食物包选中状态暗黑模式 */
 [data-theme="dark"] .feed-pack.active {
   border-color: #c8708b;
   background: linear-gradient(135deg, #3d2d30, #2a2528);
 }
 
+/* 投喂食物包名称暗黑模式 */
 [data-theme="dark"] .feed-pack strong { color: #d88da3; }
 
+/* 猫咪标签芯片暗黑模式 */
 [data-theme="dark"] .cat-chip {
   background: linear-gradient(135deg, #3d2d30, #2a2528);
   color: #d88da3;
 }
 
+/* 领养入口项暗黑模式 */
 [data-theme="dark"] .join-item {
   background: linear-gradient(180deg, #2a2528, #2f2a2d);
   border-color: #4a4042;
 }
 
+/* 领养横幅暗黑模式 */
 [data-theme="dark"] .join-banner {
   background:
     radial-gradient(circle at 16% 72%, rgba(159,181,157,0.15), transparent 18%),
@@ -2000,41 +2620,56 @@ a:hover { color: var(--primary-dark); }
     linear-gradient(135deg, #2a2528, #2f2a2d 58%, #2f3025);
 }
 
+/* 活动底部区域暗黑模式 */
 [data-theme="dark"] .activity-footer {
   background:
     radial-gradient(circle at 18% 70%, rgba(159,181,157,0.15), transparent 18%),
     linear-gradient(135deg, #2a2528, #2f2a2d);
 }
 
+/* 猫咪卡片暗黑模式 */
 [data-theme="dark"] .cat-card {
   background: linear-gradient(180deg, rgba(50,45,48,0.95), rgba(42,37,40,0.98));
   border-color: #4a4042;
 }
 
+/* 猫咪视觉区域暗黑模式 */
 [data-theme="dark"] .cat-visual {
   background: linear-gradient(135deg, #2a3528, #2f3025 58%, #3d3530);
 }
 
+/* 正常标签暗黑模式 */
 [data-theme="dark"] .tag.ok { background: #2a3528; color: #9fb59d; }
+/* 警告标签暗黑模式 */
 [data-theme="dark"] .tag.warn { background: #3d3528; color: #f0c89b; }
+/* 粉色标签暗黑模式 */
 [data-theme="dark"] .tag.pink { background: #3d2d30; color: #d88da3; }
 
+/* 迷你面板暗黑模式 */
 [data-theme="dark"] .mini-panel {
   background: linear-gradient(180deg, #2a2528, #2f2a2d);
   border-color: #4a4042;
 }
 
+/* 弹窗卡片暗黑模式 */
 [data-theme="dark"] .modal-card {
   background: #2a2528;
   border-color: #4a4042;
 }
 
+/* 弹窗关闭按钮暗黑模式 */
 [data-theme="dark"] .modal-close {
   background: #3d2d30;
   color: #d88da3;
 }
 
-/* === 首页内联样式迁移 - 工具类 === */
+/* ============================================
+   首页内联样式迁移 - 工具类
+   从首页内联样式提取出的通用工具类，
+   包含卡片头部链接、直播图片、日记刷新按钮等
+   ============================================ */
+
+/* 卡片头部链接样式 */
 .card-head-link {
   color: var(--primary);
   font-weight: 600;
@@ -2042,6 +2677,7 @@ a:hover { color: var(--primary-dark); }
   text-decoration: none;
 }
 
+/* 首页直播流图片：绝对定位铺满容器 */
 .home-stream-img {
   position: absolute;
   inset: 0;
@@ -2051,10 +2687,12 @@ a:hover { color: var(--primary-dark); }
   z-index: 1;
 }
 
+/* 日记刷新按钮：可点击 */
 #diaryRefreshBtn {
   cursor: pointer;
 }
 
+/* 日记头部行：两端对齐 */
 .diary-header-row {
   display: flex;
   justify-content: space-between;
@@ -2062,19 +2700,26 @@ a:hover { color: var(--primary-dark); }
   align-items: center;
 }
 
+/* 参与图标变体 - 投喂（粉色） */
 .join-icon-feed { background: var(--primary-light); color: var(--primary-dark); }
+/* 参与图标变体 - 领养（玫红） */
 .join-icon-adopt { background: #fdeff1; color: #d47a95; }
+/* 参与图标变体 - 志愿者（绿色） */
 .join-icon-volunteer { background: #dde9db; color: #6f8d6e; }
 
+/* 统计趋势标签 */
 .stat-trend-label {
   margin-top: 6px;
 }
 
+/* 投喂记录高亮文字 */
 .feed-log-highlight {
   color: var(--primary-dark);
   font-weight: 700;
 }
 
+/* --- 猫咪详情网格 --- */
+/* 猫咪详情网格：左图右文 */
 .cat-detail-grid {
   display: grid;
   grid-template-columns: clamp(100px, 20vw, 160px) 1fr;
@@ -2082,6 +2727,7 @@ a:hover { color: var(--primary-dark); }
   align-items: center;
 }
 
+/* 猫咪详情视觉区域：圆角渐变背景 */
 .cat-detail-visual {
   height: clamp(100px, 20vw, 160px);
   border-radius: 24px;
@@ -2092,22 +2738,26 @@ a:hover { color: var(--primary-dark); }
   font-size: clamp(3rem, 5vw, 5.5rem);
 }
 
+/* 猫咪详情名称 */
 .cat-detail-name {
   font-size: clamp(1.2rem, 2vw, 2rem);
   margin-bottom: 6px;
 }
 
+/* 猫咪详情昵称 */
 .cat-detail-nickname {
   color: var(--text-muted);
   font-weight: 400;
   font-size: clamp(0.8rem, 1.5vw, 1rem);
 }
 
+/* 猫咪详情描述 */
 .cat-detail-desc {
   color: var(--text-muted);
   line-height: 1.8;
 }
 
+/* 猫咪详情标签行 */
 .cat-detail-tags {
   display: flex;
   gap: 8px;
@@ -2115,6 +2765,7 @@ a:hover { color: var(--primary-dark); }
   margin-top: 12px;
 }
 
+/* 猫咪详情统计网格 */
 .cat-detail-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -2122,6 +2773,7 @@ a:hover { color: var(--primary-dark); }
   margin-top: 20px;
 }
 
+/* 猫咪详情操作按钮行 */
 .cat-detail-actions {
   display: flex;
   gap: 10px;
@@ -2129,16 +2781,20 @@ a:hover { color: var(--primary-dark); }
   margin-top: 20px;
 }
 
+/* 活动时间文字 */
 .activity-time {
   font-size: 0.76rem;
   margin-top: 4px;
 }
 
+/* --- 猫咪详情响应式（手机端 ≤600px） --- */
 @media (max-width: 600px) {
+  /* 猫咪详情网格改为单列居中 */
   .cat-detail-grid {
     grid-template-columns: 1fr;
     text-align: center;
   }
+  /* 猫咪详情视觉区域居中 */
   .cat-detail-visual {
     margin: 0 auto;
   }
