@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫咪日记 - CatTrace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=cache_bust) }}">
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#ff8fb0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CatTrace">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-152.png') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div>🐱 CatTrace</div>
+            <div class="nav-tagline">流浪猫科学救助平台</div>
+        </div>
+        <div class="nav-links">
+            <a href="/">🏠 首页</a>
+            <a href="/cats">🐱 猫咪档案</a>
+            <a href="/diary" class="active">📖 日记</a>
+            <a href="/adopt">🏡 领养</a>
+            <button id="loginBtn" class="nav-login-btn">
+                <span class="nav-text">登录</span>
+            </button>
+            <button id="darkModeToggle" class="dark-mode-toggle" title="切换深色模式">🌙</button>
+        </div>
+    </nav>
+
+    <main class="main-content diary-page">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>📖 猫咪日记</h1>
+            <p class="page-subtitle">AI 每日自动生成，记录每一只猫咪的温馨日常</p>
+        </div>
+
+        <!-- 猫咪筛选标签 -->
+        <div class="diary-filter-bar">
+            <div class="diary-filter-group">
+                <button class="diary-filter-btn active" data-cat="all">🐾 全部猫咪</button>
+                <div id="catFilterBtns">
+                    <!-- 动态填充猫咪筛选按钮 -->
+                </div>
+            </div>
+            <div class="diary-sort-group">
+                <select id="diarySort" class="diary-sort-select">
+                    <option value="date-desc">📅 最新优先</option>
+                    <option value="date-asc">📅 最早优先</option>
+                    <option value="likes">❤️ 最多点赞</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 日记时间线主体 -->
+        <div class="diary-timeline" id="diaryTimeline">
+            <div class="diary-loading">
+                <div class="diary-loading-spinner"></div>
+                <p>正在翻阅猫咪日记...</p>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="diary-pagination" id="diaryPagination" style="display:none;">
+            <button class="btn btn-secondary diary-page-btn" id="prevPageBtn" onclick="DiaryPage.prevPage()">← 上一页</button>
+            <span class="diary-page-info" id="pageInfo">第 1 页</span>
+            <button class="btn btn-secondary diary-page-btn" id="nextPageBtn" onclick="DiaryPage.nextPage()">下一页 →</button>
+        </div>
+
+        <!-- 日记详情弹窗 -->
+        <div class="diary-detail-modal" id="diaryDetailModal">
+            <div class="diary-detail-content">
+                <button class="diary-detail-close" onclick="DiaryPage.closeDetail()">✕</button>
+                <div class="diary-detail-body" id="diaryDetailBody">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js', v=cache_bust) }}"></script>
+    <script src="{{ url_for('static', filename='js/diary.js', v=cache_bust) }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof DiaryPage !== 'undefined') DiaryPage.init();
+        });
+    </script>
+</body>
+</html>

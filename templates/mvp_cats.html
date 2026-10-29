@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫咪档案 - 猫迹 CatTrace MVP</title>
+    <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <meta name="theme-color" content="#d88da3">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🐱 猫迹 CatTrace MVP</div>
+        <div class="nav-links">
+            <a href="/mvp_index" class="nav-link">首页</a>
+            <a href="/mvp_cats" class="nav-link active">猫咪档案</a>
+        </div>
+        <div class="nav-actions">
+            <button id="darkModeToggle" class="nav-btn">🌙</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <h1 class="page-title">🐱 猫咪档案</h1>
+        
+        <!-- 搜索框 -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索猫咪名字...">
+        </div>
+
+        <!-- 猫咪卡片列表 -->
+        <div id="catsGrid" class="cats-grid">
+            <!-- 动态生成 -->
+        </div>
+    </main>
+
+    <!-- 猫咪详情弹窗 -->
+    <div id="catDetailModal" class="modal">
+        <div class="modal-content cat-detail-modal">
+            <span class="modal-close" onclick="closeCatDetail()">&times;</span>
+            <div class="cat-detail-header">
+                <div class="cat-detail-avatar" id="detailAvatar">🐱</div>
+                <div class="cat-detail-info">
+                    <h2 id="detailName">猫咪名字</h2>
+                    <p id="detailLocation">📍 位置</p>
+                    <span id="detailStatus" class="status-badge">状态</span>
+                </div>
+            </div>
+            <div class="cat-detail-body">
+                <div class="cat-detail-section">
+                    <h3>基本信息</h3>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-label">性别</span>
+                            <span class="detail-value" id="detailGender">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">年龄</span>
+                            <span class="detail-value" id="detailAge">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">体重</span>
+                            <span class="detail-value" id="detailWeight">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">性格</span>
+                            <span class="detail-value" id="detailPersonality">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cat-detail-section">
+                    <h3>投喂统计</h3>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-label">今日投喂</span>
+                            <span class="detail-value" id="todayFeeds">0</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">累计投喂</span>
+                            <span class="detail-value" id="totalFeeds">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="cat-detail-actions">
+                <button id="detailFeedBtn" class="btn btn-feed">🍖 投喂</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/main.js?v={{ cache_bust }}"></script>
+    <script>
+        let currentCatId = null;
+
+        // 加载猫咪列表
+        async function loadCats() {
+            try {
+                const response = await fetch('/api/cats');
+                const data = await response.json();
+                renderCatsGrid(data.cats);
+            } catch (error) {
+                showToast('加载猫咪列表失败', 'error');
+            }
+        }
+
+        function renderCatsGrid(cats) {
+            const grid = document.getElementById('catsGrid');
+            grid.innerHTML = cats.map(cat => `
+                <div class="cat-card" onclick="showCatDetail('${cat.id}')">
+                    <div class="cat-card-avatar" style="background:${cat.color || '#d88da3'}">${cat.emoji || ''}</div>
+                    <div class="cat-card-info">
+                        <h3>${cat.name}</h3>
+                        <p>📍 ${cat.location}</p>
+                        <span class="status-badge ${cat.status}">${getStatusText(cat.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const map = {
+                'adoptable': '可领养',
+                'adopted': '已领养',
+                'monitoring': '监控中'
+            };
+            return map[status] || status;
+        }
+
+        function showCatDetail(catId) {
+            currentCatId = catId;
+            fetch(`/api/cats/${catId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const cat = data.cat;
+                    document.getElementById('detailAvatar').textContent = cat.emoji || '🐱';
+                    document.getElementById('detailAvatar').style.background = cat.color || '#d88da3';
+                    document.getElementById('detailName').textContent = cat.name;
+                    document.getElementById('detailLocation').textContent = '📍 ' + cat.location;
+                    document.getElementById('detailGender').textContent = cat.gender || '-';
+                    document.getElementById('detailAge').textContent = cat.age || '-';
+                    document.getElementById('detailWeight').textContent = cat.weight || '-';
+                    document.getElementById('detailPersonality').textContent = cat.personality || '-';
+                    document.getElementById('todayFeeds').textContent = cat.today_feeds || 0;
+                    document.getElementById('totalFeeds').textContent = cat.total_feeds || 0;
+                    
+                    const statusMap = {
+                        'adoptable': { text: '可领养', class: 'status-adoptable' },
+                        'adopted': { text: '已领养', class: 'status-adopted' },
+                        'monitoring': { text: '监控中', class: 'status-monitoring' }
+                    };
+                    const status = statusMap[cat.status] || { text: cat.status, class: '' };
+                    const statusEl = document.getElementById('detailStatus');
+                    statusEl.textContent = status.text;
+                    statusEl.className = 'status-badge ' + status.class;
+                    
+                    document.getElementById('catDetailModal').style.display = 'flex';
+                });
+        }
+
+        function closeCatDetail() {
+            document.getElementById('catDetailModal').style.display = 'none';
+        }
+
+        // 投喂按钮
+        document.getElementById('detailFeedBtn').addEventListener('click', async () => {
+            if (!currentCatId) return;
+            
+            try {
+                const response = await fetch('/api/feed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cat_id: currentCatId })
+                });
+                
+                if (response.ok) {
+                    showToast('投喂成功！', 'success');
+                    showCatDetail(currentCatId); // 刷新数据
+                } else {
+                    showToast('投喂失败', 'error');
+                }
+            } catch (error) {
+                showToast('网络错误', 'error');
+            }
+        });
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', async (e) => {
+            const search = e.target.value.toLowerCase();
+            const response = await fetch('/api/cats');
+            const data = await response.json();
+            
+            const filtered = data.cats.filter(cat => 
+                cat.name.toLowerCase().includes(search)
+            );
+            renderCatsGrid(filtered);
+        });
+
+        // 页面加载
+        loadCats();
+    </script>
+</body>
+</html>

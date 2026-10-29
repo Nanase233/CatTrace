@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫迹 CatTrace MVP - 云养猫平台</title>
+    <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <meta name="theme-color" content="#d88da3">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🐱 猫迹 CatTrace MVP</div>
+        <div class="nav-links">
+            <a href="/mvp_index" class="nav-link active">首页</a>
+            <a href="/mvp_cats" class="nav-link">猫咪档案</a>
+        </div>
+        <div class="nav-actions">
+            <button id="darkModeToggle" class="nav-btn">🌙</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- 直播区域 -->
+        <section class="live-section">
+            <h2 class="section-title">📹 云养猫直播</h2>
+            <div class="live-room">
+                <div class="live-camera">
+                    <div class="live-cat-avatar" id="liveCatEmoji">🐱</div>
+                    <div class="live-overlay">
+                        <span class="live-status">🟢 直播中</span>
+                        <span class="live-viewers" id="onlineCount">1,234</span>
+                    </div>
+                </div>
+                <div class="live-info">
+                    <h3 class="live-cat-name" id="liveCatName">咪咪</h3>
+                    <p class="live-cat-location" id="liveCatLocation">📍 A 区 - 教学楼后</p>
+                    <div class="live-stats">
+                        <span>🍖 今日投喂：<strong id="todayFeeds">156</strong></span>
+                        <span>👁️ 累计观看：<strong id="totalViews">6,156</strong></span>
+                    </div>
+                    <button id="feedBtn" class="btn btn-feed btn-large">🍖 远程投喂</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 投喂记录 -->
+        <section class="feed-logs-section">
+            <h3 class="section-subtitle">📋 最近投喂记录</h3>
+            <div id="feedLogs" class="feed-logs">
+                <!-- 动态生成 -->
+            </div>
+        </section>
+
+        <!-- 猫咪列表 -->
+        <section class="cats-section">
+            <h2 class="section-title">🐱 猫咪列表</h2>
+            <div id="catsGrid" class="cats-grid">
+                <!-- 动态生成 -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>🐱 猫迹 CatTrace MVP - 用科技守护每一只流浪猫</p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/main.js?v={{ cache_bust }}"></script>
+    <script>
+        function showToast(msg, type) { Toast.show(msg, 3000, type || 'info'); }
+
+        // 加载数据
+        async function loadData() {
+            try {
+                const [catsRes, feedsRes] = await Promise.all([
+                    fetch('/api/cats'),
+                    fetch('/api/feed-logs?limit=10')
+                ]);
+                
+                const catsData = await catsRes.json();
+                const feedsData = await feedsRes.json();
+                
+                renderCats(catsData.cats);
+                renderFeedLogs(feedsData.logs);
+                updateLiveInfo(catsData.cats[0]); // 默认显示第一只猫
+            } catch (error) {
+                showToast('加载数据失败', 'error');
+            }
+        }
+
+        function renderCats(cats) {
+            const grid = document.getElementById('catsGrid');
+            grid.innerHTML = cats.map(cat => `
+                <div class="cat-card" onclick="window.location.href='/mvp_cats?id=${cat.id}'">
+                    <div class="cat-card-avatar" style="background:${cat.color || '#d88da3'}">${cat.emoji || '🐱'}</div>
+                    <div class="cat-card-info">
+                        <h3>${cat.name}</h3>
+                        <p>📍 ${cat.location}</p>
+                        <span class="status-badge ${cat.status}">${getStatusText(cat.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFeedLogs(logs) {
+            const container = document.getElementById('feedLogs');
+            container.innerHTML = logs.map(log => `
+                <div class="log-item">
+                    <span class="log-time">${log.time}</span>
+                    <span class="log-user">${log.user}</span>
+                    <span class="log-action">投喂了${log.cat_name}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateLiveInfo(cat) {
+            if (!cat) return;
+            document.getElementById('liveCatEmoji').textContent = cat.emoji || '🐱';
+            document.getElementById('liveCatEmoji').style.background = cat.color || '#d88da3';
+            document.getElementById('liveCatName').textContent = cat.name;
+            document.getElementById('liveCatLocation').textContent = '📍 ' + cat.location;
+            document.getElementById('todayFeeds').textContent = cat.today_feeds || 0;
+        }
+
+        function getStatusText(status) {
+            const map = {
+                'adoptable': '可领养',
+                'adopted': '已领养',
+                'monitoring': '监控中'
+            };
+            return map[status] || status;
+        }
+
+        // 投喂按钮
+        document.getElementById('feedBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/feed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cat_id: 'cat1' })
+                });
+                
+                if (response.ok) {
+                    showToast('投喂成功！', 'success');
+                    loadData(); // 刷新数据
+                } else {
+                    showToast('投喂失败', 'error');
+                }
+            } catch (error) {
+                showToast('网络错误', 'error');
+            }
+        });
+
+        // 页面加载
+        loadData();
+
+        // 定时刷新在线人数
+        setInterval(() => {
+            const online = 1000 + Math.floor(Math.random() * 500);
+            document.getElementById('onlineCount').textContent = online.toLocaleString();
+        }, 30000);
+    </script>
+</body>
+</html>
