@@ -510,6 +510,10 @@ def adopt():
 def diary():
     return render_template('diary.html')
 
+@app.route('/live')
+def live():
+    return render_template('live.html')
+
 @app.route('/api/cats')
 def get_cats():
     data = load_data()
