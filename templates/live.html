@@ -6,15 +6,15 @@
     <title>云直播 - 猫迹 CatTrace</title>
     <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
     <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#d88da3">
+    <meta name="theme-color" content="#D68DA2">
     <style>
         /* === 云直播页面专属样式 === */
         .live-page { max-width: 1440px; margin: 0 auto; padding: 24px 20px 60px; }
 
-        /* 直播主布局：视频 / 猫屋信息 / 实时互动 三栏 */
+        /* 直播主布局：左直播主区域 / 右猫屋信息与互动 两栏 */
         .live-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr) minmax(0, 0.95fr);
+            grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
             gap: 20px;
             margin-bottom: 24px;
             align-items: start;
@@ -380,28 +380,26 @@
         .live-topbar .menu .menu-link { font-size: 0.92rem; padding: 10px 14px; }
         .live-topbar .nav-actions { margin-left: auto; }
         /* === 响应式布局 === */
-        /* 900px ~ 1179px：两列，互动栏下移占满整行 */
-        @media (max-width: 1179px) {
-            .live-layout { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
-            .live-col--chat { grid-column: 1 / -1; align-self: auto; }
-            .live-col--chat .interaction-feed { flex: 0 0 auto; }
-            .feed-list { max-height: 300px; }
+        /* 900px ~ 1199px：左右 55%/45% 两栏 */
+        @media (max-width: 1199px) and (min-width: 900px) {
+            .live-layout { grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); }
         }
-        /* < 900px：单列布局 */
-        @media (max-width: 899px) {
+        /* 600px ~ 899px：单列布局 */
+        @media (max-width: 899px) and (min-width: 600px) {
             .live-layout { grid-template-columns: 1fr; }
-            .live-col--chat { grid-column: auto; }
             .analytics-grid { grid-template-columns: 1fr; }
             .live-topbar .topbar-inner { padding: 0 14px; gap: 10px; }
             .live-topbar .brand-text span { display: none; }
             .live-topbar .menu .menu-link { padding: 8px 10px; font-size: 0.84rem; }
             .live-topbar .menu { justify-content: center; }
         }
-        /* 手机端 ≤600px */
-        @media (max-width: 600px) {
+        /* < 600px：移动端单列，投喂套餐两列网格 */
+        @media (max-width: 599px) {
             .live-page { padding: 12px 10px 40px; }
+            .live-layout { grid-template-columns: 1fr; }
             .feed-packages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .house-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .analytics-grid { grid-template-columns: 1fr; }
             .live-topbar .topbar-inner { flex-wrap: wrap; }
             .live-topbar .menu { order: 3; width: 100%; justify-content: center; }
             .live-topbar .nav-actions { margin-left: auto; }
@@ -501,8 +499,8 @@
                 </section>
             </div>
 
-            <!-- 中栏：猫屋信息 + 远程投喂 -->
-            <div class="live-col live-col--info">
+            <!-- 右栏：猫屋信息 + 远程投喂 + 实时互动 -->
+            <div class="live-sidebar">
                 <!-- 猫屋信息卡 -->
                 <div class="house-info-card">
                     <div class="house-info-header">
@@ -553,10 +551,7 @@
                         <div class="device-status" id="deviceStatus"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 右栏：实时互动 -->
-            <div class="live-col live-col--chat">
                 <!-- 实时互动流 -->
                 <div class="interaction-feed">
                     <h4>💬 实时互动</h4>

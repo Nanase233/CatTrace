@@ -265,6 +265,7 @@
     }
 
     function renderFeedPacks() {
+        if (!$('feedPacks')) return;
         $('feedPacks').innerHTML = FEED_PACKS.map(function (pack) {
             return '' +
                 '<button class="feed-pack ' + (pack.price === state.selectedPack.price ? 'active' : '') + '" type="button" data-price="' + pack.price + '">' +
@@ -311,6 +312,7 @@
 
     function renderFeedLogs() {
         var box = $('feedLogs');
+        if (!box) return;
         if (!state.feedLogs.length) {
             box.innerHTML = '<div class="empty-state">暂无投喂记录，来成为第一个投喂的人吧。</div>';
             return;
@@ -1198,7 +1200,7 @@
     }
 
     function bindStaticEvents() {
-        $('feedBtn').addEventListener('click', feedCurrentCat);
+        if ($('feedBtn')) $('feedBtn').addEventListener('click', feedCurrentCat);
 
         $('heroFeedBtn').addEventListener('click', function () {
             scrollToSection('liveSection');
@@ -1211,7 +1213,7 @@
         $('viewCatBtn').addEventListener('click', function () {
             if (state.currentCatId) showCatDetail(state.currentCatId);
         });
-        $('catInfoBtn').addEventListener('click', function () {
+        if ($('catInfoBtn')) $('catInfoBtn').addEventListener('click', function () {
             if (state.currentCatId) showCatDetail(state.currentCatId);
         });
         $('diaryRefreshBtn').addEventListener('click', function () {
@@ -1227,7 +1229,7 @@
             scrollToSection('liveSection');
             showToast('已定位到当前猫屋直播');
         });
-        $('shareLiveBtn').addEventListener('click', openShareModal);
+        if ($('shareLiveBtn')) $('shareLiveBtn').addEventListener('click', openShareModal);
         $('openReportBtn').addEventListener('click', openReportModal);
         $('adoptNoticeBtn').addEventListener('click', openAdoptNotice);
         $('adoptNoticeBtn2').addEventListener('click', openAdoptNotice);
@@ -1272,6 +1274,15 @@
                 });
                 btn.classList.add('active');
                 scrollToSection(btn.getAttribute('data-target'));
+            });
+        });
+
+        /* 直播卡片点击入口：跳转到 /live，排除内部按钮/链接点击 */
+        Array.prototype.forEach.call(document.querySelectorAll('[data-live-entry]'), function (card) {
+            card.addEventListener('click', function (e) {
+                var tag = (e.target.tagName || '').toUpperCase();
+                if (tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || e.target.closest('button') || e.target.closest('a')) return;
+                window.location.href = '/live';
             });
         });
 

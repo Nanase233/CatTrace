@@ -127,6 +127,20 @@ a {
     color: var(--pink-deep);
 }
 
+.menu-link {
+    text-decoration: none;
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: 0.25s ease;
+}
+
+.menu-link:hover {
+    background: linear-gradient(135deg, var(--pink-soft), #fff6f8);
+    color: var(--pink-deep);
+}
+
 .top-actions {
     display: flex;
     align-items: center;
@@ -199,13 +213,13 @@ a {
 
 .main-stack {
     display: grid;
-    gap: 20px;
+    gap: clamp(24px, 3vw, 36px);
 }
 
 .hero-grid {
     display: grid;
-    grid-template-columns: 1.8fr 0.82fr;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 0.85fr);
+    gap: clamp(16px, 2vw, 24px);
 }
 
 @media (max-width: 900px) {
@@ -396,7 +410,9 @@ a {
 }
 
 .map-view {
-    height: 238px;
+    min-height: 200px;
+    aspect-ratio: 4 / 3;
+    max-height: 320px;
     border-radius: 24px;
     position: relative;
     overflow: hidden;
@@ -536,33 +552,43 @@ a {
 
 .content-grid {
     display: grid;
-    grid-template-columns: 1.35fr 0.88fr;
-    gap: 20px;
+    grid-template-columns: minmax(0, 2.3fr) minmax(280px, 1fr);
+    gap: clamp(20px, 2.5vw, 32px);
 }
 
 .left-stack,
 .right-stack {
     display: grid;
-    gap: 20px;
+    gap: clamp(16px, 2vw, 24px);
 }
 
 .dual-grid {
     display: grid;
-    grid-template-columns: 1.08fr 0.92fr;
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: clamp(16px, 2vw, 24px);
+    align-items: start;
 }
 
+/* 双栏模块中核心功能卡片（直播、日记）保持合理比例 */
 .live-card,
-.diary-card,
+.diary-card {
+    padding: clamp(16px, 2vw, 22px);
+}
+
 .join-card,
-.activity-card,
+.activity-card {
+    padding: clamp(16px, 2vw, 20px);
+}
+
 .cats-card,
 .insight-card {
-    padding: 20px;
+    padding: clamp(18px, 2.2vw, 24px);
 }
 
 .live-video {
-    height: 312px;
+    min-height: 240px;
+    aspect-ratio: 16 / 9;
+    max-height: 400px;
     border-radius: 20px;
     overflow: hidden;
     position: relative;
@@ -638,12 +664,39 @@ a {
     font-size: 0.78rem;
 }
 
+.live-preview-info {
+    margin-top: 16px;
+    display: grid;
+    gap: 12px;
+}
+
+.live-preview-info .current-cat strong {
+    display: block;
+    font-size: 1.12rem;
+}
+
+.live-preview-info .current-cat p {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-top: 4px;
+}
+
+.live-preview-info .btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+/* 以下样式保留用于 /live 页面，首页不再使用 */
 .live-controls {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 16px;
     align-items: center;
     margin-top: 16px;
+}
+
+.live-controls .btn {
+    white-space: nowrap;
 }
 
 .current-cat strong {
@@ -731,8 +784,8 @@ a {
 
 .log-row {
     display: grid;
-    grid-template-columns: 62px 1fr auto;
-    gap: 10px;
+    grid-template-columns: clamp(50px, 10%, 80px) 1fr auto;
+    gap: clamp(8px, 2vw, 16px);
     align-items: center;
     font-size: 0.84rem;
     padding-bottom: 10px;
@@ -995,12 +1048,24 @@ a {
 
 .sidebar {
     display: grid;
-    gap: 20px;
+    gap: clamp(14px, 1.8vw, 20px);
     align-content: start;
 }
 
+/* 辅助栏卡片：较浅的背景和较小的字体，区分于核心功能卡片 */
 .side-card {
-    padding: 18px;
+    padding: clamp(14px, 1.6vw, 18px);
+    background: linear-gradient(145deg, #fffdfb, #faf8f5);
+    border: 1px solid rgba(230, 222, 214, 0.6);
+}
+
+.side-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.side-card small {
+    font-size: 0.76rem;
 }
 
 .side-list {
@@ -1426,7 +1491,7 @@ a {
 .adopt-card, .gov-card { padding: 20px; }
 .adopt-stages {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
     margin-bottom: 18px;
 }
@@ -1505,8 +1570,8 @@ a {
 
 .detail-head {
     display: grid;
-    grid-template-columns: 96px 1fr;
-    gap: 16px;
+    grid-template-columns: clamp(60px, 15%, 120px) 1fr;
+    gap: clamp(10px, 2vw, 18px);
     align-items: center;
 }
 .detail-avatar {
@@ -1598,7 +1663,11 @@ a {
 }
 
 .adopt-form { display: grid; gap: 14px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
 .field {
     display: grid;
     gap: 6px;

@@ -6,7 +6,7 @@
 <title>猫迹 CatTrace · 城市流浪猫生命共同体</title>
 <meta name="description" content="猫迹 CatTrace：AI 识别、云直播、科学投喂、领养与社区共治，让每一只流浪猫都被温柔以待。">
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-<meta name="theme-color" content="#d88da3">
+<meta name="theme-color" content="#D68DA2">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css', v=cache_bust) }}">
 </head>
 <body>
@@ -22,7 +22,7 @@
             </div>
             <nav class="menu" id="menu">
                 <button class="active" data-target="heroSection">首页</button>
-                <button data-target="liveSection">云直播</button>
+                <a href="/live" class="menu-link">云直播</a>
                 <button data-target="catsSection">猫咪档案</button>
                 <button data-target="adoptSection">领养中心</button>
                 <button data-target="govSection">社区共治</button>
@@ -96,13 +96,13 @@
             <section class="content-grid">
                 <div class="left-stack">
                     <div class="dual-grid">
-                        <article class="panel live-card" id="liveSection">
+                        <article class="panel live-card" id="liveSection" data-live-entry="true" style="cursor:pointer;">
                             <div class="card-head">
                                 <div>
                                     <h3>📺 实时云直播</h3>
                                     <small>看见猫屋，也看见变化</small>
                                 </div>
-                                <small>更多直播 →</small>
+                                <small>进入直播 →</small>
                             </div>
                             <div class="live-video">
                                 <div class="live-tags">
@@ -114,41 +114,13 @@
                                     <div class="cat-hero" id="liveCatEmoji">🐱</div>
                                 </div>
                             </div>
-                            <div class="live-controls">
-                                <div>
-                                    <div class="current-cat">
-                                        <strong id="liveCatTitle">加载中…</strong>
-                                        <p id="liveCatLocation">正在获取猫咪状态</p>
-                                    </div>
-                                    <div class="live-meta">
-                                        <div class="meta-box">
-                                            <span>今日投喂</span>
-                                            <strong id="liveFeedCount">-- 次</strong>
-                                        </div>
-                                        <div class="meta-box">
-                                            <span>环境温度</span>
-                                            <strong id="liveTemp">--°C</strong>
-                                        </div>
-                                        <div class="meta-box">
-                                            <span>环境湿度</span>
-                                            <strong id="liveHumidity">--%</strong>
-                                        </div>
-                                        <div class="meta-box">
-                                            <span>健康评分</span>
-                                            <strong id="liveHealth">--</strong>
-                                        </div>
-                                    </div>
+                            <div class="live-preview-info">
+                                <div class="current-cat">
+                                    <strong id="liveCatTitle">加载中…</strong>
+                                    <p id="liveCatLocation">正在获取猫咪状态</p>
                                 </div>
-                                <div class="feed-area">
-                                    <div class="feed-packs" id="feedPacks"></div>
-                                    <button class="btn btn-primary" id="feedBtn">🍖 远程投喂</button>
-                                    <div class="live-extra-actions">
-                                        <button class="btn btn-soft" id="shareLiveBtn">📤 分享直播</button>
-                                        <button class="btn btn-soft" id="catInfoBtn">ℹ️ 猫咪信息</button>
-                                    </div>
-                                </div>
+                                <button class="btn btn-primary btn-block">进入直播 →</button>
                             </div>
-                            <div class="feed-logs" id="feedLogs"></div>
                         </article>
 
                         <article class="panel diary-card">
