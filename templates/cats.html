@@ -1,16 +1,28 @@
+{# ============================================================
+   文件说明：猫咪档案页面 (cats.html)
+   功能描述：展示社区流浪猫的档案信息列表，支持按名字搜索和按状态筛选，
+             点击猫咪卡片可查看详细信息（基本信息、健康记录、投喂历史等）。
+   路由地址：/cats
+   依赖接口：GET /api/cats - 获取猫咪列表
+   ============================================================ #}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>猫咪档案 - 猫迹 CatTrace</title>
+    <!-- 引入全局样式表，v 参数用于缓存刷新 -->
     <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <!-- PWA 应用清单文件 -->
     <link rel="manifest" href="/static/manifest.json">
+    <!-- PWA 主题色设置 -->
     <meta name="theme-color" content="#d88da3">
 </head>
 <body>
+    <!-- ==================== 顶部导航栏 ==================== -->
     <header class="topbar">
         <div class="topbar-inner">
+            <!-- 品牌 Logo 和名称，点击返回首页 -->
             <a href="/" class="brand" style="text-decoration:none;">
                 <div class="brand-mark">🐱</div>
                 <div class="brand-text">
@@ -18,13 +30,16 @@
                     <span>城市流浪猫生命共同体</span>
                 </div>
             </a>
+            <!-- 主导航菜单 -->
             <nav class="menu">
                 <a href="/" class="menu-link">首页</a>
                 <a href="/live" class="menu-link">云直播</a>
+                <!-- 当前页面：猫咪档案，添加 active 样式高亮 -->
                 <a href="/cats" class="menu-link active">猫咪档案</a>
                 <a href="/adopt" class="menu-link">领养中心</a>
                 <a href="/#activitySection" class="menu-link">社区共治</a>
             </nav>
+            <!-- 导航栏右侧操作区：深色模式切换和登录按钮 -->
             <div class="nav-actions">
                 <button id="darkModeToggle" class="icon-btn" aria-label="切换深色模式" style="width:40px;height:40px;font-size:1.1rem;"></button>
                 <button id="loginBtn" class="user-chip" style="height:40px;padding:0 12px;font-size:0.85rem;">
@@ -35,12 +50,16 @@
         </div>
     </header>
 
+    <!-- ==================== 页面主体内容 ==================== -->
     <main class="main-content">
         <h1 class="page-title">🐱 猫咪档案</h1>
         
-        <!-- 搜索和筛选 -->
+        <!-- ==================== 搜索和筛选区域 ==================== -->
+        <!-- 提供按猫咪名字搜索和按状态筛选的功能 -->
         <div class="cats-filter">
+            <!-- 搜索输入框：支持按猫咪名字模糊搜索 -->
             <input type="text" id="searchInput" class="search-input" placeholder="搜索猫咪名字...">
+            <!-- 状态下拉筛选器：可选择全部/可领养/已领养/监控中 -->
             <select id="statusFilter" class="filter-select">
                 <option value="all">所有状态</option>
                 <option value="adoptable">可领养</option>
@@ -49,16 +68,20 @@
             </select>
         </div>
 
-        <!-- 猫咪卡片列表 -->
+        <!-- ==================== 猫咪卡片网格列表 ==================== -->
+        <!-- 由 JavaScript 动态渲染猫咪卡片，每个卡片展示猫咪头像、名字、位置和状态 -->
         <div id="catsGrid" class="cats-grid">
             <!-- 动态生成猫咪卡片 -->
         </div>
     </main>
 
-    <!-- 猫咪详情弹窗 -->
+    <!-- ==================== 猫咪详情弹窗（Modal） ==================== -->
+    <!-- 点击猫咪卡片后弹出的详情面板，展示该猫咪的完整信息 -->
     <div id="catDetailModal" class="modal">
         <div class="modal-content cat-detail-modal">
+            <!-- 关闭按钮 -->
             <span class="modal-close" onclick="closeCatDetail()">&times;</span>
+            <!-- 详情头部：头像、名字、位置、状态 -->
             <div class="cat-detail-header">
                 <div class="cat-detail-avatar" id="detailAvatar">🐱</div>
                 <div class="cat-detail-info">
@@ -68,6 +91,7 @@
                 </div>
             </div>
             <div class="cat-detail-body">
+                <!-- 基本信息区域：性别、年龄、体重、性格 -->
                 <div class="cat-detail-section">
                     <h3>基本信息</h3>
                     <div class="detail-info-grid">
@@ -89,12 +113,14 @@
                         </div>
                     </div>
                 </div>
+                <!-- 健康记录区域：展示猫咪的疫苗、绝育等健康信息 -->
                 <div class="cat-detail-section">
                     <h3>健康记录</h3>
                     <div id="healthRecords" class="health-records">
                         <!-- 动态生成健康记录 -->
                     </div>
                 </div>
+                <!-- 投喂历史区域：展示社区成员对该猫咪的投喂记录 -->
                 <div class="cat-detail-section">
                     <h3>投喂历史</h3>
                     <div id="feedHistory" class="feed-history">
@@ -102,6 +128,7 @@
                     </div>
                 </div>
             </div>
+            <!-- 详情弹窗底部操作按钮 -->
             <div class="cat-detail-actions">
                 <button id="detailFeedBtn" class="btn btn-feed">🍖 投喂</button>
                 <button id="detailReportBtn" class="btn btn-secondary">🚨 举报异常</button>
@@ -109,11 +136,18 @@
         </div>
     </div>
 
+    <!-- 全局 Toast 提示组件 -->
     <div id="toast" class="toast"></div>
 
+    <!-- 引入全局公共脚本 -->
     <script src="/static/js/main.js?v={{ cache_bust }}"></script>
     <script>
-        // 加载猫咪列表
+        // ==================== 数据加载 ====================
+
+        /**
+         * 从后端 API 加载猫咪列表并渲染到页面
+         * 接口：GET /api/cats
+         */
         async function loadCats() {
             try {
                 const response = await fetch('/api/cats');
@@ -124,6 +158,12 @@
             }
         }
 
+        // ==================== 渲染函数 ====================
+
+        /**
+         * 将猫咪数据渲染为卡片网格布局
+         * @param {Array} cats - 猫咪数据数组，每个元素包含 id、name、location、status、color、emoji 等字段
+         */
         function renderCatsGrid(cats) {
             const grid = document.getElementById('catsGrid');
             grid.innerHTML = cats.map(cat => `
@@ -138,6 +178,11 @@
             `).join('');
         }
 
+        /**
+         * 将状态英文标识转换为中文显示文本
+         * @param {string} status - 状态标识（adoptable/adopted/monitoring）
+         * @returns {string} 中文状态文本
+         */
         function getStatusText(status) {
             const statusMap = {
                 'adoptable': '可领养',
@@ -147,19 +192,35 @@
             return statusMap[status] || status;
         }
 
+        // ==================== 弹窗控制 ====================
+
+        /**
+         * 打开猫咪详情弹窗
+         * @param {string} catId - 猫咪 ID
+         */
         function showCatDetail(catId) {
             // 打开详情弹窗
             document.getElementById('catDetailModal').style.display = 'flex';
         }
 
+        /**
+         * 关闭猫咪详情弹窗
+         */
         function closeCatDetail() {
             document.getElementById('catDetailModal').style.display = 'none';
         }
 
-        // 搜索和筛选
+        // ==================== 搜索和筛选功能 ====================
+
+        // 绑定搜索输入框的 input 事件，实时触发筛选
         document.getElementById('searchInput').addEventListener('input', filterCats);
+        // 绑定状态下拉框的 change 事件，切换时触发筛选
         document.getElementById('statusFilter').addEventListener('change', filterCats);
 
+        /**
+         * 根据搜索关键词和状态筛选条件过滤猫咪列表
+         * 每次触发都会重新请求 API 获取最新数据后进行前端过滤
+         */
         function filterCats() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('statusFilter').value;
@@ -168,9 +229,11 @@
                 .then(r => r.json())
                 .then(data => {
                     let filtered = data.cats;
+                    // 按名字模糊匹配过滤
                     if (search) {
                         filtered = filtered.filter(cat => cat.name.toLowerCase().includes(search));
                     }
+                    // 按状态精确匹配过滤（"all" 表示不过滤）
                     if (status !== 'all') {
                         filtered = filtered.filter(cat => cat.status === status);
                     }
@@ -178,12 +241,15 @@
                 });
         }
 
-        // 页面加载时获取猫咪列表
+        // ==================== 页面初始化 ====================
+
+        // 页面加载时获取猫咪列表，完成后检查 URL 参数是否指定了要展示的猫咪
         loadCats().then(() => {
-            // 支持从云直播页跳转：?id=catId
+            // 支持从云直播页跳转并自动打开对应猫咪详情：?id=catId
             const params = new URLSearchParams(window.location.search);
             const catId = params.get('id');
             if (catId) {
+                // 延迟 300ms 确保渲染完成后再打开弹窗
                 setTimeout(() => showCatDetail(catId), 300);
             }
         });

@@ -1,16 +1,29 @@
+{# ============================================================
+   文件说明：领养中心页面 (adopt.html)
+   功能描述：展示可领养的流浪猫列表，说明领养流程，
+             提供领养申请表单供用户提交领养请求。
+   路由地址：/adopt
+   依赖接口：GET /api/cats?status=adoptable - 获取可领养猫咪列表
+             POST /api/adopt-apply - 提交领养申请
+   ============================================================ #}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>领养中心 - 猫迹 CatTrace</title>
+    <!-- 引入全局样式表，v 参数用于缓存刷新 -->
     <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <!-- PWA 应用清单文件 -->
     <link rel="manifest" href="/static/manifest.json">
+    <!-- PWA 主题色设置 -->
     <meta name="theme-color" content="#d88da3">
 </head>
 <body>
+    <!-- ==================== 顶部导航栏 ==================== -->
     <header class="topbar">
         <div class="topbar-inner">
+            <!-- 品牌 Logo 和名称，点击返回首页 -->
             <a href="/" class="brand" style="text-decoration:none;">
                 <div class="brand-mark">🐱</div>
                 <div class="brand-text">
@@ -18,13 +31,16 @@
                     <span>城市流浪猫生命共同体</span>
                 </div>
             </a>
+            <!-- 主导航菜单 -->
             <nav class="menu">
                 <a href="/" class="menu-link">首页</a>
                 <a href="/live" class="menu-link">云直播</a>
                 <a href="/cats" class="menu-link">猫咪档案</a>
+                <!-- 当前页面：领养中心，添加 active 样式高亮 -->
                 <a href="/adopt" class="menu-link active">领养中心</a>
                 <a href="/#activitySection" class="menu-link">社区共治</a>
             </nav>
+            <!-- 导航栏右侧操作区：深色模式切换和登录按钮 -->
             <div class="nav-actions">
                 <button id="darkModeToggle" class="icon-btn" aria-label="切换深色模式" style="width:40px;height:40px;font-size:1.1rem;"></button>
                 <button id="loginBtn" class="user-chip" style="height:40px;padding:0 12px;font-size:0.85rem;">
@@ -35,38 +51,46 @@
         </div>
     </header>
 
+    <!-- ==================== 页面主体内容 ==================== -->
     <main class="main-content">
         <h1 class="page-title">🏠 领养中心</h1>
         
+        <!-- ==================== 领养中心简介 ==================== -->
         <div class="adopt-intro">
             <p>每一只流浪猫都值得一个温暖的家。在这里，你可以找到等待领养的猫咪，也可以提交领养申请。</p>
         </div>
 
-        <!-- 可领养猫咪列表 -->
+        <!-- ==================== 可领养猫咪展示区域 ==================== -->
+        <!-- 以卡片网格形式展示所有状态为"可领养"的猫咪 -->
         <h2 class="section-title">等待领养的猫咪</h2>
         <div id="adoptableCats" class="cats-grid">
             <!-- 动态生成可领养猫咪卡片 -->
         </div>
 
-        <!-- 领养流程说明 -->
+        <!-- ==================== 领养流程说明区域 ==================== -->
+        <!-- 以步骤卡片形式展示领养的四个流程步骤 -->
         <section class="adopt-process">
             <h2 class="section-title">领养流程</h2>
             <div class="process-steps">
+                <!-- 步骤一：浏览猫咪信息 -->
                 <div class="process-step">
                     <div class="step-number">1</div>
                     <h3>浏览猫咪</h3>
                     <p>查看等待领养的猫咪信息，了解每只猫咪的性格和需求</p>
                 </div>
+                <!-- 步骤二：填写并提交领养申请表 -->
                 <div class="process-step">
                     <div class="step-number">2</div>
                     <h3>提交申请</h3>
                     <p>填写领养申请表，包括你的居住环境和养猫经验</p>
                 </div>
+                <!-- 步骤三：志愿者审核和面谈 -->
                 <div class="process-step">
                     <div class="step-number">3</div>
                     <h3>审核面谈</h3>
                     <p>志愿者会与你联系，进行线上或线面的面谈审核</p>
                 </div>
+                <!-- 步骤四：审核通过后接猫咪回家 -->
                 <div class="process-step">
                     <div class="step-number">4</div>
                     <h3>接猫回家</h3>
@@ -75,24 +99,29 @@
             </div>
         </section>
 
-        <!-- 领养申请表单 -->
+        <!-- ==================== 领养申请表单区域 ==================== -->
+        <!-- 用户填写领养信息并提交申请 -->
         <section class="adopt-form-section">
             <h2 class="section-title">领养申请</h2>
             <form id="adoptForm" class="adopt-form">
+                <!-- 选择要领养的猫咪（下拉列表由 JS 动态填充） -->
                 <div class="form-group">
                     <label for="catId">选择猫咪</label>
                     <select id="catId" name="catId" required>
                         <option value="">请选择一只猫咪</option>
                     </select>
                 </div>
+                <!-- 申请人姓名 -->
                 <div class="form-group">
                     <label for="name">姓名</label>
                     <input type="text" id="name" name="name" required>
                 </div>
+                <!-- 申请人联系电话 -->
                 <div class="form-group">
                     <label for="phone">联系电话</label>
                     <input type="tel" id="phone" name="phone" required>
                 </div>
+                <!-- 居住情况选择：自有住房/租房/宿舍 -->
                 <div class="form-group">
                     <label for="housing">居住情况</label>
                     <select id="housing" name="housing" required>
@@ -102,19 +131,23 @@
                         <option value="dorm">宿舍</option>
                     </select>
                 </div>
+                <!-- 养猫经验描述（多行文本） -->
                 <div class="form-group">
                     <label for="experience">养猫经验</label>
                     <textarea id="experience" name="experience" rows="3" placeholder="请描述你的养猫经验..."></textarea>
                 </div>
+                <!-- 领养原因说明（多行文本） -->
                 <div class="form-group">
                     <label for="reason">领养原因</label>
                     <textarea id="reason" name="reason" rows="3" placeholder="为什么想领养这只猫咪？"></textarea>
                 </div>
+                <!-- 提交按钮 -->
                 <button type="submit" class="btn btn-primary btn-block">提交申请</button>
             </form>
         </section>
     </main>
 
+    <!-- ==================== 页脚区域 ==================== -->
     <footer class="footer">
         <p>🐱 猫迹 CatTrace - 用科技守护每一只流浪猫</p>
         <p class="footer-links">
@@ -122,11 +155,19 @@
         </p>
     </footer>
 
+    <!-- 全局 Toast 提示组件 -->
     <div id="toast" class="toast"></div>
 
+    <!-- 引入全局公共脚本 -->
     <script src="/static/js/main.js?v={{ cache_bust }}"></script>
     <script>
-        // 加载可领养猫咪
+        // ==================== 数据加载 ====================
+
+        /**
+         * 从后端 API 加载可领养猫咪列表
+         * 接口：GET /api/cats?status=adoptable
+         * 加载后同时更新卡片展示区和表单下拉列表
+         */
         async function loadAdoptableCats() {
             try {
                 const response = await fetch('/api/cats?status=adoptable');
@@ -138,8 +179,16 @@
             }
         }
 
+        // ==================== 渲染函数 ====================
+
+        /**
+         * 将可领养猫咪数据渲染为卡片列表
+         * 如果没有可领养猫咪，显示空状态提示
+         * @param {Array} cats - 可领养猫咪数据数组
+         */
         function renderAdoptableCats(cats) {
             const container = document.getElementById('adoptableCats');
+            // 空状态处理：没有可领养猫咪时显示友好提示
             if (cats.length === 0) {
                 container.innerHTML = '<p class="no-data">目前没有可领养的猫咪，请稍后再来查看。</p>';
                 return;
@@ -157,6 +206,10 @@
             `).join('');
         }
 
+        /**
+         * 将可领养猫咪填充到表单的"选择猫咪"下拉列表中
+         * @param {Array} cats - 可领养猫咪数据数组
+         */
         function populateCatSelect(cats) {
             const select = document.getElementById('catId');
             cats.forEach(cat => {
@@ -167,14 +220,30 @@
             });
         }
 
+        // ==================== 交互操作 ====================
+
+        /**
+         * 选中某只猫咪并自动滚动到申请表单
+         * 点击卡片上的"申请领养"按钮时触发
+         * @param {string} catId - 猫咪 ID
+         */
         function selectCat(catId) {
+            // 将选中的猫咪 ID 设置到表单下拉框
             document.getElementById('catId').value = catId;
+            // 平滑滚动到申请表单区域
             document.getElementById('adoptForm').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // 处理领养申请提交
+        // ==================== 表单提交处理 ====================
+
+        /**
+         * 监听领养申请表的提交事件
+         * 阻止默认提交，通过 Fetch API 异步发送到后端
+         * 接口：POST /api/adopt-apply
+         */
         document.getElementById('adoptForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            // 将表单数据转换为普通对象
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             
@@ -185,18 +254,23 @@
                     body: JSON.stringify(data)
                 });
                 
+                // 提交成功：显示成功提示并重置表单
                 if (response.ok) {
                     showToast('领养申请已提交，我们会尽快联系你！', 'success');
                     e.target.reset();
                 } else {
+                    // 服务端返回错误状态码
                     showToast('申请提交失败，请稍后重试', 'error');
                 }
             } catch (error) {
+                // 网络异常处理
                 showToast('网络错误，请稍后重试', 'error');
             }
         });
 
-        // 页面加载
+        // ==================== 页面初始化 ====================
+
+        // 页面加载时获取可领养猫咪列表
         loadAdoptableCats();
     </script>
 </body>
