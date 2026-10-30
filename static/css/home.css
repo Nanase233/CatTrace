@@ -149,7 +149,9 @@ a {
 }
 
 /* 菜单按钮：透明背景 + 悬停/激活态渐变高亮 */
-.menu button {
+/* 将选择器改为同时包含 button 和 .menu-link */
+.menu button,
+.menu-link {
     border: none;
     background: transparent;
     color: var(--text);
@@ -158,10 +160,19 @@ a {
     font-weight: 600;
     cursor: pointer;
     transition: 0.25s ease;
+    
+    /* 加上下面这几行，保证 a 标签表现和 button 一致 */
+    text-decoration: none; /* 去除 a 标签默认的下划线 */
+    display: inline-flex;  /* 让 a 标签像 button 一样支持 flex 布局 */
+    align-items: center;   /* 垂直居中 */
+    white-space: nowrap;   /* 强制文字不换行 */
+    flex-shrink: 0;        /* 防止被挤压 */
 }
 
 .menu button:hover,
-.menu button.active {
+.menu button.active,
+.menu-link:hover,
+.menu-link.active {
     background: linear-gradient(135deg, var(--pink-soft), #fff6f8);
     color: var(--pink-deep);
 }
@@ -652,10 +663,23 @@ a {
 }
 
 /* 左/右侧模块堆叠容器：使用响应式间距 clamp() */
-.left-stack,
-.right-stack {
+.left-stack {
     display: grid;
     gap: clamp(16px, 2vw, 24px);
+}
+
+/* 右侧栏使用 flex 布局，拉伸到与左侧等高，避免下方空白 */
+.right-stack {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 2vw, 24px);
+    align-self: stretch;
+    height: 100%;
+}
+
+/* 右侧栏最后一个卡片自动扩展填充剩余空间 */
+.right-stack > *:last-child {
+    flex-grow: 1;
 }
 
 /* === 双列自适应网格：用于并排展示两个功能卡片 ===
@@ -665,7 +689,7 @@ a {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     gap: clamp(16px, 2vw, 24px);
-    align-items: start;
+    align-items: stretch;
 }
 
 /* 双栏模块中核心功能卡片（直播、日记）保持合理比例 */
@@ -2121,6 +2145,8 @@ a {
     .side-row { grid-template-columns: 1fr; }
     .side-row { gap: 6px; }
     .hero-art { min-height: 220px; }
+    /* 单列布局时重置右侧栏高度，避免拉伸 */
+    .right-stack { height: auto; }
 }
 
 @media (max-width: 600px) {
