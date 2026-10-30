@@ -349,6 +349,142 @@
                         </div>
                     </article>
 
+                    <!-- ===== 公益参与 + 最新动态（双列网格） ===== -->
+                    <!-- #joinSection 双列网格区域，包含公益参与入口和最新动态列表 -->
+                    <div class="dual-grid" id="joinSection">
+                        <!-- .join-card 公益参与卡片 -->
+                        <article class="panel join-card">
+                            <!-- 卡片头部 -->
+                            <div class="card-head">
+                                <div>
+                                    <h3>💗 公益参与</h3>
+                                    <small>用你的行动，为流浪猫创造更好的未来</small>
+                                </div>
+                                <small>更多 →</small>
+                            </div>
+                            <!-- .join-grid 参与方式网格，每个 .join-item 代表一种参与方式 -->
+                            <div class="join-grid">
+                                <!-- data-action="feed" 投喂入口，JS 通过 data-action 识别操作类型并触发对应流程 -->
+                                <!-- role="button" tabindex="0" 无障碍属性，使 div 可被键盘聚焦和激活 -->
+                                <div class="join-item" data-action="feed" role="button" tabindex="0">
+                                    <div class="icon" style="background:var(--pink-soft);color:var(--pink-deep);">🍖</div>
+                                    <h4>我要投喂</h4>
+                                    <p>透明参与每一次守护</p>
+                                </div>
+                                <!-- data-action="adopt" 领养入口 -->
+                                <div class="join-item" data-action="adopt" role="button" tabindex="0">
+                                    <div class="icon" style="background:#fdeff1;color:#d47a95;">💞</div>
+                                    <h4>寻找领养</h4>
+                                    <p>给它一个家</p>
+                                </div>
+                                <!-- data-action="volunteer" 志愿者入口 -->
+                                <div class="join-item" data-action="volunteer" role="button" tabindex="0">
+                                    <div class="icon" style="background:var(--sage-soft);color:#6f8d6e;">🤝</div>
+                                    <h4>加入志愿者</h4>
+                                    <p>一起参与守护</p>
+                                </div>
+                            </div>
+                            <!-- .join-banner 公益宣传横幅 -->
+                            <div class="join-banner">
+                                <p>让爱心不再是一个人的事，<br>而是一群人的力量。</p>
+                            </div>
+                        </article>
+                    </div>
+
+                </div>
+
+                <!-- ===== 右侧边栏 ===== -->
+                <!-- .right-stack.sidebar 右侧边栏堆叠区域，包含守护摘要、领养进度、人气榜 -->
+                <aside class="right-stack sidebar">
+
+                    <!-- ===== 今日守护摘要卡片 ===== -->
+                    <article class="panel side-card">
+                        <!-- 卡片头部 -->
+                        <div class="card-head">
+                            <div>
+                                <h3>🌿 今日守护摘要</h3>
+                                <small>温暖感 + 数据感并存</small>
+                            </div>
+                        </div>
+                        <!-- .side-list 摘要列表 -->
+                        <div class="side-list">
+                            <!-- AI 识别状态行 -->
+                            <div class="side-row">
+                                <!-- .dot-status 状态指示圆点，绿色表示正常 -->
+                                <span class="dot-status"></span>
+                                <p>
+                                    <strong>AI 识别正常</strong><br>
+                                    <!-- #summaryAI AI 识别详细状态文本，JS 动态更新 -->
+                                    <span class="muted" id="summaryAI">正在同步识别状态…</span>
+                                </p>
+                            </div>
+                            <!-- 设备状态行 -->
+                            <div class="side-row">
+                                <span class="dot-status"></span>
+                                <p>
+                                    <strong>设备状态稳定</strong><br>
+                                    <!-- #summaryDevice 设备详细状态文本，JS 动态更新 -->
+                                    <span class="muted" id="summaryDevice">正在同步设备状态…</span>
+                                </p>
+                            </div>
+                            <!-- 健康提醒行 -->
+                            <div class="side-row">
+                                <!-- #summaryHealthDot 健康状态指示圆点，JS 根据健康数据动态改变颜色 -->
+                                <span class="dot-status" id="summaryHealthDot"></span>
+                                <p>
+                                    <!-- #summaryHealthTitle 健康提醒标题，JS 动态更新 -->
+                                    <strong id="summaryHealthTitle">健康提醒</strong><br>
+                                    <!-- #summaryHealthText 健康提醒详细文本，JS 动态更新 -->
+                                    <span class="muted" id="summaryHealthText">正在同步健康数据…</span>
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- ===== 领养进度卡片 ===== -->
+                    <article class="panel side-card">
+                        <!-- 卡片头部 -->
+                        <div class="card-head">
+                            <div>
+                                <h3>🏠 领养进度</h3>
+                                <small>从兴趣到稳定陪伴</small>
+                            </div>
+                        </div>
+                        <!-- #adoptTrackEmpty 空状态提示，未提交领养申请时显示 -->
+                        <p class="muted" id="adoptTrackEmpty" style="font-size:0.84rem;line-height:1.6;">提交申请后，可在此追踪领养进度。</p>
+                        <!-- #adoptTrackProgress 领养进度详情容器，默认隐藏，JS 在有领养记录时显示并渲染进度 -->
+                        <div id="adoptTrackProgress" hidden></div>
+                    </article>
+
+                    <!-- ===== 猫咪人气榜卡片 ===== -->
+                    <article class="panel side-card">
+                        <!-- 卡片头部 -->
+                        <div class="card-head">
+                            <div>
+                                <h3>🏆 猫咪人气榜</h3>
+                                <small>按累计投喂实时排序</small>
+                            </div>
+                        </div>
+                        <!-- #leaderboardList 人气榜列表容器，JS 动态渲染按投喂次数排序的猫咪列表 -->
+                        <div class="leader-list" id="leaderboardList"></div>
+                    </article>
+                    <!-- .activity-card 最新动态卡片 -->
+                        <article class="panel activity-card">
+                        <!-- 卡片头部 -->
+                        <div class="card-head">
+                             <div>
+                                 <h3>📰 最新动态</h3>
+                                <small>投喂、识别、设备运行与社区反馈</small>
+                            </div>
+                            <small>更多 →</small>
+                        </div>
+                        <!-- #activityList 动态列表容器，JS 动态渲染平台最新活动记录 -->
+                        <div class="activity-list" id="activityList"></div>
+                        <!-- 底部温暖文案 -->
+                        <div class="activity-footer">因为有你，<br>城市更温暖</div>
+                    </article>
+                </aside>
+            </section>
                     <!-- ===== 社区共治中心区域 ===== -->
                     <!-- #govSection 社区共治中心，也是导航"社区共治"按钮的滚动目标 -->
                     <article class="panel gov-card" id="govSection">
@@ -447,138 +583,6 @@
                             </div>
                         </div>
                     </article>
-                </div>
-
-                <!-- ===== 右侧边栏 ===== -->
-                <!-- .right-stack.sidebar 右侧边栏堆叠区域，包含守护摘要、领养进度、人气榜 -->
-                <aside class="right-stack sidebar">
-
-                    <!-- ===== 今日守护摘要卡片 ===== -->
-                    <article class="panel side-card">
-                        <!-- 卡片头部 -->
-                        <div class="card-head">
-                            <div>
-                                <h3>🌿 今日守护摘要</h3>
-                                <small>温暖感 + 数据感并存</small>
-                            </div>
-                        </div>
-                        <!-- .side-list 摘要列表 -->
-                        <div class="side-list">
-                            <!-- AI 识别状态行 -->
-                            <div class="side-row">
-                                <!-- .dot-status 状态指示圆点，绿色表示正常 -->
-                                <span class="dot-status"></span>
-                                <p>
-                                    <strong>AI 识别正常</strong><br>
-                                    <!-- #summaryAI AI 识别详细状态文本，JS 动态更新 -->
-                                    <span class="muted" id="summaryAI">正在同步识别状态…</span>
-                                </p>
-                            </div>
-                            <!-- 设备状态行 -->
-                            <div class="side-row">
-                                <span class="dot-status"></span>
-                                <p>
-                                    <strong>设备状态稳定</strong><br>
-                                    <!-- #summaryDevice 设备详细状态文本，JS 动态更新 -->
-                                    <span class="muted" id="summaryDevice">正在同步设备状态…</span>
-                                </p>
-                            </div>
-                            <!-- 健康提醒行 -->
-                            <div class="side-row">
-                                <!-- #summaryHealthDot 健康状态指示圆点，JS 根据健康数据动态改变颜色 -->
-                                <span class="dot-status" id="summaryHealthDot"></span>
-                                <p>
-                                    <!-- #summaryHealthTitle 健康提醒标题，JS 动态更新 -->
-                                    <strong id="summaryHealthTitle">健康提醒</strong><br>
-                                    <!-- #summaryHealthText 健康提醒详细文本，JS 动态更新 -->
-                                    <span class="muted" id="summaryHealthText">正在同步健康数据…</span>
-                                </p>
-                            </div>
-                        </div>
-                    </article>
-
-                    <!-- ===== 领养进度卡片 ===== -->
-                    <article class="panel side-card">
-                        <!-- 卡片头部 -->
-                        <div class="card-head">
-                            <div>
-                                <h3>🏠 领养进度</h3>
-                                <small>从兴趣到稳定陪伴</small>
-                            </div>
-                        </div>
-                        <!-- #adoptTrackEmpty 空状态提示，未提交领养申请时显示 -->
-                        <p class="muted" id="adoptTrackEmpty" style="font-size:0.84rem;line-height:1.6;">提交申请后，可在此追踪领养进度。</p>
-                        <!-- #adoptTrackProgress 领养进度详情容器，默认隐藏，JS 在有领养记录时显示并渲染进度 -->
-                        <div id="adoptTrackProgress" hidden></div>
-                    </article>
-
-                    <!-- ===== 猫咪人气榜卡片 ===== -->
-                    <article class="panel side-card">
-                        <!-- 卡片头部 -->
-                        <div class="card-head">
-                            <div>
-                                <h3>🏆 猫咪人气榜</h3>
-                                <small>按累计投喂实时排序</small>
-                            </div>
-                        </div>
-                        <!-- #leaderboardList 人气榜列表容器，JS 动态渲染按投喂次数排序的猫咪列表 -->
-                        <div class="leader-list" id="leaderboardList"></div>
-                    </article>
-
-                    <!-- ===== 公益参与卡片（从左侧移入） ===== -->
-                    <article class="panel side-card join-card">
-                        <!-- 卡片头部 -->
-                        <div class="card-head">
-                            <div>
-                                <h3>💗 公益参与</h3>
-                                <small>用你的行动，为流浪猫创造更好的未来</small>
-                            </div>
-                            <small>更多 →</small>
-                        </div>
-                        <!-- .join-grid 参与方式网格，每个 .join-item 代表一种参与方式 -->
-                        <div class="join-grid">
-                            <!-- data-action="feed" 投喂入口，JS 通过 data-action 识别操作类型并触发对应流程 -->
-                            <div class="join-item" data-action="feed" role="button" tabindex="0">
-                                <div class="icon" style="background:var(--pink-soft);color:var(--pink-deep);">🍖</div>
-                                <h4>我要投喂</h4>
-                                <p>透明参与每一次守护</p>
-                            </div>
-                            <!-- data-action="adopt" 领养入口 -->
-                            <div class="join-item" data-action="adopt" role="button" tabindex="0">
-                                <div class="icon" style="background:#fdeff1;color:#d47a95;">💞</div>
-                                <h4>寻找领养</h4>
-                                <p>给它一个家</p>
-                            </div>
-                            <!-- data-action="volunteer" 志愿者入口 -->
-                            <div class="join-item" data-action="volunteer" role="button" tabindex="0">
-                                <div class="icon" style="background:var(--sage-soft);color:#6f8d6e;">🤝</div>
-                                <h4>加入志愿者</h4>
-                                <p>一起参与守护</p>
-                            </div>
-                        </div>
-                        <!-- .join-banner 公益宣传横幅 -->
-                        <div class="join-banner">
-                            <p>让爱心不再是一个人的事，<br>而是一群人的力量。</p>
-                        </div>
-                    </article>
-
-                    <!-- ===== 最新动态卡片（从左侧移入） ===== -->
-                    <article class="panel side-card activity-card">
-                        <!-- 卡片头部 -->
-                        <div class="card-head">
-                            <div>
-                                <h3>📰 最新动态</h3>
-                                <small>投喂、识别、设备运行与社区反馈</small>
-                            </div>
-                            <small>更多 →</small>
-                        </div>
-                        <!-- #activityList 动态列表容器，JS 动态渲染平台最新活动记录 -->
-                        <div class="activity-list" id="activityList"></div>
-                        <!-- 底部温暖文案 -->
-                        <div class="activity-footer">因为有你，<br>城市更温暖 ♡</div>
-                    </article>
-                </aside>
-            </section>
         </main>
     </div>
 

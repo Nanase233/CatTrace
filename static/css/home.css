@@ -1074,7 +1074,7 @@ a {
 
 /* === 社区活动卡片：三行网格（标题 | 列表 | 底部）=== */
 .activity-card {
-    min-height: 100%;
+    height: auto;
     display: grid;
     grid-template-rows: auto 1fr auto;
 }
@@ -1082,6 +1082,8 @@ a {
 .activity-list {
     display: grid;
     gap: 12px;
+    max-height: 350px; /* 高度根据实际情况调整 */
+    overflow-y: auto; 
 }
 
 /* 活动行：三列网格（头像 | 内容 | 标签） */
@@ -2196,7 +2198,7 @@ a {
     height: 48px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(135deg, #b8687e, #9a4f65);
+    background: linear-gradient(135deg, #d88da3);
     color: #fff;
     font-size: 1.4rem;
     font-weight: bold;
