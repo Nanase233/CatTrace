@@ -1,34 +1,36 @@
-<!--
-    ========================================================================
-    文件：live.html — 云直播独立页面
-    功能：展示流浪猫实时监控直播，提供远程投喂互动、猫屋信息查看、
-          AI 猫咪动态分析以及投喂/到访数据统计等功能。
-    主要模块：
-      1. 顶部导航栏（统一导航）
-      2. 左侧直播主区域（视频容器、播放控制、猫屋切换、AI 猫咪动态）
-      3. 右侧猫屋信息与互动区域（猫屋信息卡、远程投喂区、实时互动流）
-      4. 下方猫咪动态分析（投喂趋势图、到访统计饼图）
-      5. 响应式布局（适配桌面、平板、移动端多种屏幕尺寸）
-    ========================================================================
--->
+<!-- ============================================================
+     猫迹 CatTrace 云直播独立页面模板 (live.html)
+     功能：24 小时云直播独立页面，支持实时观看、远程投喂、
+           猫屋切换、互动流、AI 猫咪动态、数据分析等
+     布局：顶部导航 + 左直播区/右信息区两栏 + 底部数据分析
+     ============================================================ -->
 <!DOCTYPE html>
+<!-- lang="zh-CN" 声明页面语言为简体中文 -->
 <html lang="zh-CN">
 <head>
+    <!-- ===== 头部区域：元信息、样式、脚本 ===== -->
     <meta charset="UTF-8">
+    <!-- 视口设置：适配移动设备屏幕宽度 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
     <title>云直播 - 猫迹 CatTrace</title>
-    <!-- 引入全局样式表 -->
+    <!-- 全局样式表（导航栏、页脚等公共样式），cache_bust 为缓存破坏参数 -->
     <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
-    <!-- PWA 应用清单文件 -->
+    <!-- PWA 清单文件引用，定义应用图标、名称等 -->
     <link rel="manifest" href="/static/manifest.json">
-    <!-- 主题颜色（移动端浏览器地址栏颜色） -->
+    <!-- 浏览器主题色，#D68DA2 为品牌粉色 -->
     <meta name="theme-color" content="#D68DA2">
-    <!-- ==================== 页面专属样式 ==================== -->
+
+    <!-- ===== 云直播页面专属内联样式 ===== -->
     <style>
         /* === 云直播页面专属样式 === */
+
+        /* .live-page 直播页面主容器：限制最大宽度 1440px，居中显示 */
         .live-page { max-width: 1440px; margin: 0 auto; padding: 24px 20px 60px; }
 
-        /* ---------- 直播主布局：左侧直播区域 / 右侧猫屋信息与互动 两栏网格 ---------- */
+        /* .live-layout 直播主布局：CSS Grid 两栏布局
+           左栏（直播视频区）占 1.5fr，右栏（信息/互动区）占 1fr
+           gap 为两栏间距，align-items:start 保证两栏顶部对齐 */
         .live-layout {
             display: grid;
             grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
@@ -37,13 +39,13 @@
             align-items: start;
         }
 
-        /* 左中右三栏通用容器 */
+        /* .live-col 左中右三栏通用容器：纵向弹性布局，gap 为子元素间距 */
         .live-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
-        /* 左侧：直播区域 */
+        /* .live-main 左侧直播主区域：纵向弹性布局 */
         .live-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
-        /* ---------- 视频容器（16:9 比例，包含直播流、离线降级、控制栏等层） ---------- */
+        /* .live-video-wrap 视频容器：16:9 宽高比，圆角，溢出隐藏，渐变背景模拟猫屋场景 */
         .live-video-wrap {
             position: relative;
             width: 100%;
@@ -53,6 +55,7 @@
             background: linear-gradient(180deg, #5a4030 0%, #3d2d20 40%, #2a1f18 100%);
             box-shadow: var(--shadow-lg);
         }
+        /* .live-video-wrap::before 视频容器装饰层：模拟光晕和顶部高光效果 */
         .live-video-wrap::before {
             content: "";
             position: absolute; inset: 0;
@@ -62,57 +65,69 @@
             pointer-events: none;
         }
 
-        /* 直播标签 */
+        /* .live-overlay-top 直播顶部覆盖层：绝对定位在视频区域顶部，放置 LIVE 标签和观看人数 */
         .live-overlay-top {
             position: absolute; top: 14px; left: 14px; right: 14px;
             display: flex; justify-content: space-between; align-items: flex-start;
             z-index: 10;
         }
+        /* .live-badges 直播标签组容器 */
         .live-badges { display: flex; gap: 8px; }
+        /* .live-badge LIVE 直播标签：红色背景，白色文字，脉冲动画表示正在直播 */
         .live-badge {
             background: rgba(216,60,80,0.92); color: #fff;
             padding: 5px 12px; border-radius: 999px;
             font-size: 0.78rem; font-weight: 700;
             animation: livePulse 1.8s infinite;
         }
+        /* livePulse 关键帧：LIVE 标签脉冲闪烁动画，1.8 秒循环 */
         @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        /* .ai-badge AI 识别状态标签：白色背景，绿色文字 */
         .ai-badge {
             background: rgba(255,255,255,0.92); color: #6a6d59;
             padding: 5px 12px; border-radius: 999px;
             font-size: 0.78rem; font-weight: 600;
         }
+        /* .viewer-badge 观看人数标签：半透明黑色背景 */
         .viewer-badge {
             background: rgba(0,0,0,0.45); color: #fff;
             padding: 5px 12px; border-radius: 999px;
             font-size: 0.78rem;
         }
 
-        /* 猫咪舞台 */
+        /* .cat-stage 猫咪舞台区域：绝对定位填满视频容器，猫咪 emoji 居中偏下显示 */
         .cat-stage {
             position: absolute; inset: 0;
             display: flex; align-items: flex-end; justify-content: center;
             padding-bottom: 16%;
         }
+        /* .cat-stage-emoji 猫咪 emoji 图标：响应式大小，带阴影和过渡动画 */
         .cat-stage-emoji {
             font-size: clamp(4rem, 8vw, 8rem);
             filter: drop-shadow(0 12px 24px rgba(0,0,0,0.3));
             transition: transform 0.3s ease;
             user-select: none;
         }
+        /* .cat-stage-emoji.bounce 弹跳动画类：投喂成功时触发 */
         .cat-stage-emoji.bounce { animation: catBounce 0.5s ease; }
+        /* catBounce 关键帧：猫咪弹跳缩放动画，0.5 秒完成 */
         @keyframes catBounce { 0%,100%{transform:scale(1)} 30%{transform:scale(1.15)} 60%{transform:scale(0.92)} }
 
-        /* 摄像头视频流 */
+        /* .live-stream-img 摄像头实时视频流图片层：z-index:1 在底层 */
         .live-stream-img { z-index: 1; }
+        /* #offlineFallback 离线降级层：z-index:2 覆盖在视频流上方，摄像头离线时显示 */
         #offlineFallback { z-index: 2; }
+        /* .cam-status-dot 摄像头状态指示圆点 */
         .cam-status-dot {
             display: inline-block; width: 8px; height: 8px; border-radius: 50%;
             margin-right: 6px; vertical-align: middle;
         }
+        /* .cam-status-dot.online 在线状态：绿色 */
         .cam-status-dot.online { background: #2ecc71; }
+        /* .cam-status-dot.offline 离线状态：红色 */
         .cam-status-dot.offline { background: #e74c3c; }
 
-        /* ---------- 播放控制栏（底部渐变遮罩，包含播放/暂停、音量、清晰度、全屏按钮） ---------- */
+        /* .live-controls-bar 播放控制栏：绝对定位在视频底部，渐变背景从透明到半透明黑色 */
         .live-controls-bar {
             position: absolute; bottom: 0; left: 0; right: 0;
             display: flex; align-items: center; justify-content: space-between;
@@ -120,7 +135,9 @@
             background: linear-gradient(transparent, rgba(0,0,0,0.55));
             z-index: 10;
         }
+        /* .playback-controls 播放控制按钮组 */
         .playback-controls { display: flex; gap: 8px; }
+        /* .playback-btn 播放控制按钮：圆形半透明，hover 变亮，active 状态使用主题色 */
         .playback-btn {
             background: rgba(255,255,255,0.2); border: none; color: #fff;
             width: 34px; height: 34px; border-radius: 50%;
@@ -130,24 +147,30 @@
         }
         .playback-btn:hover { background: rgba(255,255,255,0.35); }
         .playback-btn.active { background: var(--primary); }
+
+        /* .volume-slider 音量滑块：自定义样式，去除浏览器默认外观 */
         .volume-slider {
             width: 80px; height: 4px; -webkit-appearance: none; appearance: none;
             background: rgba(255,255,255,0.3); border-radius: 2px; outline: none;
             cursor: pointer;
         }
+        /* .volume-slider 滑块滑块（thumb）样式 */
         .volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none; width: 12px; height: 12px;
             border-radius: 50%; background: #fff; cursor: pointer;
         }
 
-        /* ---------- 猫屋切换器（横向滚动卡片，用于切换不同猫咪的直播视角） ---------- */
+        /* .cat-switcher 猫屋切换器：横向滚动容器，可切换不同猫屋/猫咪的直播 */
         .cat-switcher {
             display: flex; gap: 10px; overflow-x: auto;
             padding: 4px 0;
             scrollbar-width: thin;
         }
+        /* .cat-switcher Webkit 滚动条样式 */
         .cat-switcher::-webkit-scrollbar { height: 4px; }
         .cat-switcher::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* .switch-card 猫屋切换卡片：纵向排列 emoji + 名称 + 状态，可点击切换 */
         .switch-card {
             flex-shrink: 0;
             display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -157,23 +180,26 @@
             min-width: 80px;
         }
         .switch-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        /* .switch-card.active 当前选中卡片：主题色边框和浅色背景 */
         .switch-card.active { border-color: var(--primary); background: var(--primary-light); }
         .switch-card .emoji { font-size: 1.6rem; }
         .switch-card .name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
         .switch-card .status { font-size: 0.68rem; color: var(--text-muted); }
 
-        /* ---------- 右侧边栏：猫屋信息卡 + 远程投喂区 + 实时互动流 ---------- */
+        /* .live-sidebar 右侧边栏：纵向弹性布局 */
         .live-sidebar { display: flex; flex-direction: column; gap: 16px; }
 
-        /* ---------- 猫屋信息卡（展示猫屋名称、编号、状态、位置、温度、猫咪数量等指标） ---------- */
+        /* .house-info-card 猫屋信息卡片 */
         .house-info-card {
             background: var(--bg-card); border-radius: var(--radius);
             padding: 20px; box-shadow: var(--shadow);
             border: 1px solid var(--border);
         }
+        /* .house-info-header 猫屋信息头部：图标 + 名称/编号 + 在线状态 */
         .house-info-header {
             display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
         }
+        /* .house-icon 猫屋图标容器：渐变背景圆角方块 */
         .house-icon {
             width: 42px; height: 42px; border-radius: 14px;
             background: linear-gradient(135deg, #d9ead4, #f0dcca);
@@ -182,25 +208,34 @@
         }
         .house-name { font-weight: 700; font-size: 1.05rem; }
         .house-id { font-size: 0.76rem; color: var(--text-muted); }
+
+        /* .house-status 猫屋在线/离线状态标签 */
         .house-status {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 3px 10px; border-radius: 999px;
             font-size: 0.72rem; font-weight: 600;
             margin-left: auto;
         }
+        /* .house-status.online 在线状态：绿色背景 */
         .house-status.online { background: #e8f5e9; color: #2e7d32; }
+        /* .house-status.offline 离线状态：灰色背景 */
         .house-status.offline { background: #f5f0eb; color: #888; }
+        /* .status-dot 状态圆点，继承父元素颜色 (currentColor) */
         .status-dot {
             width: 7px; height: 7px; border-radius: 50%;
             background: currentColor;
         }
+        /* 在线状态下状态圆点脉冲动画 */
         .house-status.online .status-dot { animation: aiPulse 1.5s infinite; }
+        /* aiPulse 关键帧：状态圆点脉冲闪烁动画 */
         @keyframes aiPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
+        /* .house-metrics 猫屋数据指标网格：2 列布局 */
         .house-metrics {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 10px; margin-top: 12px;
         }
+        /* .metric-item 单个指标项：渐变背景卡片 */
         .metric-item {
             padding: 10px 12px; border-radius: 12px;
             background: linear-gradient(135deg, #fffaf8, #f8f4f1);
@@ -209,7 +244,7 @@
         .metric-label { font-size: 0.72rem; color: var(--text-muted); }
         .metric-value { font-size: 1rem; font-weight: 700; color: var(--secondary); margin-top: 2px; }
 
-        /* ---------- 远程投喂区（套餐选择、投喂按钮、投喂状态和设备执行状态反馈） ---------- */
+        /* .feed-section 远程投喂区域 */
         .feed-section {
             background: var(--bg-card); border-radius: var(--radius);
             padding: 20px; box-shadow: var(--shadow);
@@ -219,10 +254,13 @@
             font-size: 1rem; margin-bottom: 12px;
             display: flex; align-items: center; gap: 6px;
         }
+
+        /* .feed-packages 投喂套餐网格：4 列布局 */
         .feed-packages {
             display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 8px; margin-bottom: 14px;
         }
+        /* .feed-pkg 单个投喂套餐卡片：价格 + 标签 + 描述 */
         .feed-pkg {
             padding: 10px 8px; border-radius: 14px;
             border: 1.5px solid var(--border);
@@ -230,6 +268,7 @@
             cursor: pointer; transition: all var(--transition);
         }
         .feed-pkg:hover { border-color: var(--primary); }
+        /* .feed-pkg.active 当前选中套餐：主题色边框 + 粉色渐变背景 + 阴影 */
         .feed-pkg.active {
             border-color: var(--primary);
             background: linear-gradient(135deg, #fff3f7, #fffdfd);
@@ -238,6 +277,8 @@
         .feed-pkg .price { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
         .feed-pkg .desc { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
         .feed-pkg .amount { font-size: 0.65rem; color: var(--text-muted); }
+
+        /* .feed-btn 投喂按钮：全宽，主题色背景 */
         .feed-btn {
             width: 100%; padding: 12px; border: none; border-radius: 16px;
             background: var(--primary); color: #fff;
@@ -246,28 +287,38 @@
             font-family: var(--font);
         }
         .feed-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(216,141,163,0.4); }
+        /* .feed-btn:disabled 禁用状态：半透明，禁止光标 */
         .feed-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-        /* 投喂状态区分 */
+        /* .feed-status-area 投喂状态区域容器 */
         .feed-status-area { margin-top: 10px; }
+        /* .feed-status 投喂状态文本：居中显示，不同状态不同颜色 */
         .feed-status {
             font-size: 0.78rem; color: var(--text-muted);
             text-align: center; min-height: 20px;
         }
+        /* .feed-status.success 投喂成功状态：绿色 */
         .feed-status.success { color: var(--secondary); }
+        /* .feed-status.error 投喂失败状态：红色 */
         .feed-status.error { color: var(--danger); }
+        /* .feed-status.processing 投喂处理中状态：黄色 */
         .feed-status.processing { color: var(--warning); }
+
+        /* .device-status 设备执行状态文本：居中，带背景色区分状态 */
         .device-status {
             margin-top: 6px; font-size: 0.72rem; color: var(--text-muted);
             text-align: center; min-height: 18px;
             padding: 4px 8px; border-radius: 8px;
             background: var(--bg);
         }
+        /* .device-status.executing 设备执行中：黄色背景 */
         .device-status.executing { color: #e8a838; background: #fef9ed; }
+        /* .device-status.done 设备执行完成：绿色背景 */
         .device-status.done { color: #2e7d32; background: #e8f5e9; }
+        /* .device-status.failed 设备执行失败：红色背景 */
         .device-status.failed { color: #c62828; background: #fdecea; }
 
-        /* ---------- 实时互动流（展示投喂记录、用户留言、系统通知等动态信息） ---------- */
+        /* .interaction-feed 实时互动流区域：弹性布局，高度自适应 */
         .live-col--chat { align-self: stretch; }
         .interaction-feed {
             background: var(--bg-card); border-radius: var(--radius);
@@ -280,6 +331,8 @@
             font-size: 1rem; margin-bottom: 12px;
             display: flex; align-items: center; gap: 6px;
         }
+
+        /* .feed-list 互动消息列表：纵向滚动容器 */
         .feed-list {
             flex: 1 1 auto; overflow-y: auto; display: flex; flex-direction: column;
             gap: 10px; min-height: 0;
@@ -287,6 +340,8 @@
         }
         .feed-list::-webkit-scrollbar { width: 4px; }
         .feed-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* .feed-item 单条互动消息：图标 + 内容 + 标签 */
         .feed-item {
             display: flex; align-items: center; gap: 10px;
             padding: 10px 12px; border-radius: 12px;
@@ -297,25 +352,32 @@
         .feed-item-content { flex: 1 1 auto; min-width: 0; word-break: break-word; }
         .feed-item-user { font-weight: 600; }
         .feed-item-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* .feed-item-tag 互动消息类型标签：不同类别不同颜色 */
         .feed-item-tag {
             flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
             font-size: 0.68rem; font-weight: 600; white-space: nowrap;
         }
+        /* .feed-item-tag.feed 投喂类型：粉色 */
         .feed-item-tag.feed { background: #f5dce4; color: #c8708b; }
+        /* .feed-item-tag.comment 留言类型：绿色 */
         .feed-item-tag.comment { background: #dde9db; color: #6a7d59; }
+        /* .feed-item-tag.system 系统类型：灰色 */
         .feed-item-tag.system { background: #f5f0eb; color: #8a7d6a; }
 
-        /* 下方：AI 猫咪动态 */
+        /* .activity-section AI 猫咪动态区域 */
         .activity-section { margin-bottom: 0; }
         .activity-section h3 {
             font-size: 1.05rem; font-weight: 700; margin-bottom: 12px;
             display: flex; align-items: center; gap: 8px;
         }
-        /* 网格排列，宽度自适应父容器，不产生横向滚动 */
+
+        /* .activity-cards AI 动态卡片网格：2 列自适应布局 */
         .activity-cards {
             display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
         }
+        /* .activity-card 单张 AI 动态卡片：可点击，hover 时上浮 */
         .activity-card {
             min-width: 0; width: 100%;
             background: var(--bg-card); border-radius: var(--radius);
@@ -324,7 +386,9 @@
             cursor: pointer; transition: all var(--transition);
         }
         .activity-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--primary); }
+        /* .activity-card-header 动态卡片头部：头像 + 名称 + 时间 */
         .activity-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        /* .activity-avatar 猫咪头像：圆形渐变背景 */
         .activity-avatar {
             width: 40px; height: 40px; border-radius: 50%;
             background: linear-gradient(135deg, #f5dce4, #efe1d2);
@@ -335,23 +399,29 @@
         .activity-time { font-size: 0.72rem; color: var(--text-muted); }
         .activity-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px; }
         .activity-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        /* .activity-tag 动态标签：圆角药丸样式 */
         .activity-tag {
             padding: 2px 8px; border-radius: 999px;
             font-size: 0.68rem; font-weight: 600;
         }
+        /* .activity-tag.ai AI 确认标签：绿色 */
         .activity-tag.ai { background: #dde9db; color: #6a7d59; }
+        /* .activity-tag.pending 待处理标签：黄色 */
         .activity-tag.pending { background: #f5edd6; color: #8a7530; }
 
-        /* ---------- 数据分析面板（投喂趋势柱状图、猫咪到访统计饼图） ---------- */
+        /* .analytics-section 数据分析区域 */
         .analytics-section { margin-bottom: 0; }
         .analytics-section h3 {
             font-size: 1.2rem; font-weight: 700; margin-bottom: 14px;
             display: flex; align-items: center; gap: 8px;
         }
+
+        /* .analytics-grid 数据分析网格：2 列布局 */
         .analytics-grid {
             display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 20px; align-items: stretch;
         }
+        /* .analytics-card 数据分析卡片：纵向弹性布局，最小高度 220px */
         .analytics-card {
             background: var(--bg-card); border-radius: var(--radius);
             padding: 20px; box-shadow: var(--shadow);
@@ -361,9 +431,11 @@
         }
         .analytics-card h4 { font-size: 0.95rem; margin-bottom: 14px; color: var(--text-secondary); }
 
-        /* 简易柱状图 */
+        /* .bar-chart 简易柱状图：底部对齐的弹性布局 */
         .bar-chart { display: flex; align-items: flex-end; gap: 8px; flex: 1; min-height: 120px; }
+        /* .bar-col 柱状图单列：纵向排列数值 + 柱子 + 标签 */
         .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        /* .bar 柱子：主题色渐变，高度由 JS 动态设置，带过渡动画 */
         .bar {
             width: 100%; border-radius: 6px 6px 0 0;
             background: linear-gradient(180deg, var(--primary), var(--primary-light));
@@ -373,17 +445,19 @@
         .bar-label { font-size: 0.68rem; color: var(--text-muted); }
         .bar-value { font-size: 0.72rem; font-weight: 600; color: var(--text); }
 
-        /* 简易饼图（用 CSS conic-gradient） */
+        /* .pie-chart-wrap 饼图容器：饼图 + 图例水平排列 */
         .pie-chart-wrap { display: flex; align-items: center; gap: 16px; flex: 1; }
+        /* .pie-chart 简易饼图：使用 CSS conic-gradient 实现，响应式大小 */
         .pie-chart {
             width: clamp(80px, 10vw, 120px); height: clamp(80px, 10vw, 120px); border-radius: 50%;
             flex-shrink: 0;
         }
         .pie-legend { display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem; }
         .pie-legend-item { display: flex; align-items: center; gap: 6px; }
+        /* .pie-dot 图例颜色圆点 */
         .pie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-        /* 模拟数据标识 */
+        /* .sim-badge 模拟数据标识：灰色小标签，标注该数据为模拟数据 */
         .sim-badge {
             display: inline-flex; align-items: center; gap: 4px;
             padding: 2px 8px; border-radius: 999px;
@@ -391,17 +465,19 @@
             font-size: 0.65rem; font-weight: 600;
         }
 
-        /* 直播页 topbar 适配 */
+        /* 直播页 topbar 适配样式 */
         .live-topbar { max-width: 1440px; margin: 0 auto 20px; }
         .live-topbar .menu { justify-content: flex-start; }
         .live-topbar .menu .menu-link { font-size: 0.92rem; padding: 10px 14px; }
         .live-topbar .nav-actions { margin-left: auto; }
-        /* ==================== 响应式布局（适配不同屏幕尺寸） ==================== */
-        /* 中大屏（900px ~ 1199px）：左右 55%/45% 两栏布局 */
+
+        /* === 响应式布局 === */
+
+        /* 900px ~ 1199px 中等屏幕：调整两栏比例为 55%/45% */
         @media (max-width: 1199px) and (min-width: 900px) {
             .live-layout { grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); }
         }
-        /* 中等屏幕（600px ~ 899px）：切换为单列布局，图表也变为单列 */
+        /* 600px ~ 899px 平板屏幕：切换为单列布局，数据分析也变为单列 */
         @media (max-width: 899px) and (min-width: 600px) {
             .live-layout { grid-template-columns: 1fr; }
             .analytics-grid { grid-template-columns: 1fr; }
@@ -410,7 +486,7 @@
             .live-topbar .menu .menu-link { padding: 8px 10px; font-size: 0.84rem; }
             .live-topbar .menu { justify-content: center; }
         }
-        /* 小屏（< 600px）：移动端单列布局，投喂套餐改为两列网格 */
+        /* < 600px 移动端：单列布局，投喂套餐变为 2 列网格 */
         @media (max-width: 599px) {
             .live-page { padding: 12px 10px 40px; }
             .live-layout { grid-template-columns: 1fr; }
@@ -421,7 +497,7 @@
             .live-topbar .menu { order: 3; width: 100%; justify-content: center; }
             .live-topbar .nav-actions { margin-left: auto; }
         }
-        /* 超小屏（≤480px）：收紧内边距，保证按钮可点击区域 */
+        /* ≤480px 小屏手机：收紧内边距，活动卡片变为单列，缩小按钮和滑块 */
         @media (max-width: 480px) {
             .live-page { padding: 10px 8px 32px; }
             .house-info-card,
@@ -438,9 +514,11 @@
     </style>
 </head>
 <body>
-    <!-- ==================== 顶部导航栏（统一导航，包含品牌标识、页面导航链接、深色模式切换、登录按钮） ==================== -->
+    <!-- ===== 统一导航栏 ===== -->
+    <!-- .topbar.live-topbar 顶部导航栏，.live-topbar 为直播页专属样式覆盖 -->
     <header class="topbar live-topbar">
         <div class="topbar-inner">
+            <!-- .brand 品牌标识区域，使用 <a> 标签链接回首页 -->
             <a href="/" class="brand" style="text-decoration:none;">
                 <div class="brand-mark">🐱</div>
                 <div class="brand-text">
@@ -448,15 +526,21 @@
                     <span>城市流浪猫生命共同体</span>
                 </div>
             </a>
+            <!-- #liveMenu 导航菜单，当前"云直播"为 active 状态 -->
             <nav class="menu" id="liveMenu">
                 <a href="/" class="menu-link">首页</a>
+                <!-- active 类标记当前所在页面 -->
                 <a href="/live" class="menu-link active">云直播</a>
                 <a href="/cats" class="menu-link">猫咪档案</a>
                 <a href="/adopt" class="menu-link">领养中心</a>
+                <!-- 社区共治链接指向首页的 activitySection 锚点 -->
                 <a href="/#activitySection" class="menu-link">社区共治</a>
             </nav>
+            <!-- .nav-actions 导航右侧操作区 -->
             <div class="nav-actions">
+                <!-- #darkModeToggle 深色模式切换按钮，JS 切换 body 的 data-theme 属性 -->
                 <button id="darkModeToggle" class="icon-btn" aria-label="切换深色模式" style="width:40px;height:40px;font-size:1.1rem;"></button>
+                <!-- #loginBtn 登录按钮，JS 绑定点击弹出登录提示 -->
                 <button id="loginBtn" class="user-chip" style="height:40px;padding:0 12px;font-size:0.85rem;">
                     <span class="avatar" style="width:26px;height:26px;font-size:12px;">爱</span>
                     <span>登录</span>
@@ -465,133 +549,195 @@
         </div>
     </header>
 
+    <!-- ===== 直播页面主内容区域 ===== -->
     <main class="live-page">
-        <!-- ==================== 主布局容器（左右两栏：左侧直播区域 + 右侧信息互动区域） ==================== -->
+
+        <!-- 主布局：左直播区 + 右信息区 -->
+        <!-- .live-layout CSS Grid 两栏布局容器 -->
         <div class="live-layout">
-            <!-- ==================== 左侧：直播主区域（视频容器、猫屋切换器、AI 猫咪动态） ==================== -->
+
+            <!-- ===== 左侧：直播主区域 ===== -->
             <div class="live-main">
-                <!-- 视频容器（16:9 比例，包含直播标签、摄像头视频流、离线降级层、播放控制栏） -->
+
+                <!-- ===== 视频容器 ===== -->
+                <!-- #liveVideo 视频包裹容器，16:9 宽高比，也是全屏模式的 target 元素 -->
                 <div class="live-video-wrap" id="liveVideo">
-                    <!-- 视频顶部遮罩层：左侧显示直播标签和 AI 识别状态，右侧显示观看人数 -->
+
+                    <!-- .live-overlay-top 视频顶部覆盖层：LIVE 标签 + AI 状态 + 观看人数 -->
                     <div class="live-overlay-top">
+                        <!-- .live-badges 左侧标签组 -->
                         <div class="live-badges">
+                            <!-- LIVE 直播标签，红色脉冲动画 -->
                             <span class="live-badge">● LIVE</span>
+                            <!-- #aiStatus AI 识别状态标签，JS 动态更新为"AI 已识别：猫咪名称"或"设备离线" -->
                             <span class="ai-badge" id="aiStatus">AI 已识别：有猫</span>
                         </div>
+                        <!-- #viewerCount 右侧观看人数标签，JS 动态更新数字 -->
                         <span class="viewer-badge" id="viewerCount">12,468 人正在观看</span>
                     </div>
-                    <!-- 真实摄像头视频流（通过 img 标签拉取 MJPEG 流） -->
+
+                    <!-- ===== 真实摄像头视频流 ===== -->
+                    <!-- #liveStreamImg 摄像头实时画面图片，通过 /api/camera/stream 接口获取视频流 -->
+                    <!-- 绝对定位填满整个视频容器，object-fit:cover 保持比例裁剪 -->
                     <img id="liveStreamImg" class="live-stream-img"
                          src="/api/camera/stream" alt="摄像头实时画面"
                          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
-                    <!-- 离线降级层（摄像头离线时显示猫咪 emoji 和提示信息） -->
+
+                    <!-- ===== 离线降级层 ===== -->
+                    <!-- #offlineFallback 摄像头离线时的降级显示层，显示猫咪 emoji 和离线提示 -->
                     <div class="cat-stage" id="offlineFallback">
+                        <!-- #liveCatEmoji 离线状态下显示的猫咪 emoji，JS 根据当前猫咪动态更新 -->
                         <div class="cat-stage-emoji" id="liveCatEmoji"></div>
+                        <!-- 离线提示文本浮层 -->
                         <div style="position:absolute;bottom:22%;left:50%;transform:translateX(-50%);
                                     background:rgba(0,0,0,0.6);color:#fff;padding:8px 20px;border-radius:999px;
                                     font-size:0.85rem;white-space:nowrap;">
                             📡 摄像头离线，等待连接…
                         </div>
                     </div>
-                    <!-- 播放控制栏（底部渐变遮罩，包含播放/暂停、静音、音量、清晰度、全屏按钮） -->
+
+                    <!-- ===== 播放控制栏 ===== -->
+                    <!-- .live-controls-bar 视频底部控制栏 -->
                     <div class="live-controls-bar">
+                        <!-- 左侧：播放/暂停 + 静音 + 音量滑块 -->
                         <div class="playback-controls">
+                            <!-- #playPauseBtn 播放/暂停切换按钮，JS 切换 ⏸/▶ 图标 -->
                             <button class="playback-btn" id="playPauseBtn" title="播放/暂停">⏸</button>
+                            <!-- #muteBtn 静音切换按钮，JS 切换 🔊/🔇 图标 -->
                             <button class="playback-btn" id="muteBtn" title="静音">🔊</button>
+                            <!-- #volumeSlider 音量滑块，range 0-100，默认 80 -->
                             <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" title="音量">
                         </div>
+                        <!-- 右侧：清晰度切换 + 全屏按钮 -->
                         <div style="display:flex;gap:8px;">
+                            <!-- #qualityBtn 清晰度切换按钮，JS 在 HD/SD 之间切换 -->
                             <button class="playback-btn" id="qualityBtn" title="清晰度">HD</button>
+                            <!-- #fullscreenBtn 全屏按钮，JS 调用 Fullscreen API -->
                             <button class="playback-btn" id="fullscreenBtn" title="全屏">⛶</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 猫屋切换器（横向滚动卡片列表，用于切换不同猫咪的直播视角） -->
+                <!-- ===== 猫屋切换器 ===== -->
+                <!-- #catSwitcher 猫屋/猫咪切换容器，JS 动态渲染切换卡片，点击切换当前直播的猫咪 -->
                 <div class="cat-switcher" id="catSwitcher"></div>
 
-                <!-- AI 猫咪动态区域（展示 AI 识别到的猫咪行为记录卡片） -->
+                <!-- ===== AI 猫咪动态区域 ===== -->
+                <!-- .activity-section 视频下方的 AI 猫咪动态卡片区域 -->
                 <section class="activity-section">
                     <h3>🐾 AI 猫咪动态 <span class="sim-badge">模拟数据</span></h3>
+                    <!-- #activityCards AI 动态卡片容器，JS 动态渲染猫咪活动记录卡片 -->
                     <div class="activity-cards" id="activityCards"></div>
                 </section>
             </div>
 
-            <!-- ==================== 右侧边栏：猫屋信息卡 + 远程投喂区 + 实时互动流 ==================== -->
+            <!-- ===== 右栏：猫屋信息 + 远程投喂 + 实时互动 ===== -->
             <div class="live-sidebar">
-                <!-- 猫屋信息卡（展示猫屋名称、编号、在线状态、位置、温度、猫咪数量、投喂次数、访问次数、健康评分等指标） -->
+
+                <!-- ===== 猫屋信息卡 ===== -->
+                <!-- .house-info-card 显示当前猫屋的详细信息和实时数据指标 -->
                 <div class="house-info-card">
+                    <!-- 猫屋信息头部：图标 + 名称/编号 + 在线状态 -->
                     <div class="house-info-header">
                         <div class="house-icon">🏠</div>
                         <div>
+                            <!-- #houseName 猫屋名称，JS 动态更新 -->
                             <div class="house-name" id="houseName">朝阳公园猫屋</div>
+                            <!-- #houseId 猫屋编号，JS 动态更新 -->
                             <div class="house-id" id="houseId">编号 #03 · <span class="sim-badge">模拟数据</span></div>
                         </div>
+                        <!-- #houseStatus 猫屋在线/离线状态标签，JS 动态切换 .online/.offline 类 -->
                         <div class="house-status online" id="houseStatus">
                             <span class="status-dot"></span> 在线
                         </div>
                     </div>
+                    <!-- .house-metrics 猫屋数据指标网格（2x3 布局） -->
                     <div class="house-metrics">
+                        <!-- 位置指标 -->
                         <div class="metric-item">
                             <div class="metric-label">📍 位置</div>
+                            <!-- #houseLocation 猫屋位置，JS 动态更新 -->
                             <div class="metric-value" id="houseLocation" style="font-size:0.85rem;">朝阳公园</div>
                         </div>
+                        <!-- 环境温度指标 -->
                         <div class="metric-item">
                             <div class="metric-label">🌡 环境温度</div>
+                            <!-- #houseTemp 温度值，JS 动态更新（含随机浮动模拟真实传感器） -->
                             <div class="metric-value" id="houseTemp">23.6°C</div>
                         </div>
+                        <!-- 当前猫咪数量指标 -->
                         <div class="metric-item">
                             <div class="metric-label">🐱 当前猫咪</div>
+                            <!-- #houseCatCount 当前猫屋中猫咪数量，JS 根据 CATS 数据动态计算 -->
                             <div class="metric-value" id="houseCatCount">3 只</div>
                         </div>
+                        <!-- 今日投喂次数指标 -->
                         <div class="metric-item">
                             <div class="metric-label">🍖 今日投喂</div>
+                            <!-- #houseFeedCount 今日投喂次数，JS 动态更新 -->
                             <div class="metric-value" id="houseFeedCount">156 次</div>
                         </div>
+                        <!-- 今日访问次数指标 -->
                         <div class="metric-item">
                             <div class="metric-label">👁 今日访问</div>
+                            <!-- #houseVisitCount 今日猫咪到访次数，JS 动态更新 -->
                             <div class="metric-value" id="houseVisitCount">42 次</div>
                         </div>
+                        <!-- 健康评分指标 -->
                         <div class="metric-item">
                             <div class="metric-label">📊 健康评分</div>
+                            <!-- #houseHealth 健康评分文本，JS 根据猫咪健康状态动态更新 -->
                             <div class="metric-value" id="houseHealth">优秀</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 远程投喂区（套餐选择、投喂按钮、投喂状态和设备执行状态反馈） -->
+                <!-- ===== 远程投喂区 ===== -->
+                <!-- .feed-section 远程投喂功能区域：选择套餐 → 点击投喂 → 查看状态 -->
                 <div class="feed-section">
                     <h4>🍖 远程投喂 <span class="sim-badge">模拟</span></h4>
+                    <!-- #feedPackages 投喂套餐网格容器，JS 动态渲染 4 种套餐选项 -->
                     <div class="feed-packages" id="feedPackages"></div>
+                    <!-- #feedBtn "立即投喂"按钮，JS 绑定 doFeed() 函数处理投喂逻辑 -->
                     <button class="feed-btn" id="feedBtn">立即投喂</button>
+                    <!-- .feed-status-area 投喂状态和设备执行状态显示区域 -->
                     <div class="feed-status-area">
+                        <!-- #feedStatus 投喂请求状态文本（发送中/成功/失败），JS 动态更新 -->
                         <div class="feed-status" id="feedStatus"></div>
+                        <!-- #deviceStatus 设备执行状态文本（执行中/完成/失败），JS 动态更新 -->
                         <div class="device-status" id="deviceStatus"></div>
                     </div>
                 </div>
 
-                <!-- 实时互动流（展示投喂记录、用户留言、系统通知等动态信息） -->
+                <!-- ===== 实时互动流 ===== -->
+                <!-- .interaction-feed 实时互动消息流：显示投喂、留言、系统消息 -->
                 <div class="interaction-feed">
                     <h4>💬 实时互动</h4>
+                    <!-- #feedList 互动消息列表容器，JS 动态渲染最近 8 条互动记录 -->
                     <div class="feed-list" id="feedList"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== 下方：猫屋数据分析（投喂趋势柱状图、猫咪到访统计饼图） ==================== -->
+        <!-- ===== 猫屋数据分析区域 ===== -->
+        <!-- .analytics-section 底部数据分析区域：投喂趋势图 + 到访饼图 -->
         <section class="analytics-section">
             <h3>📊 猫屋数据分析 <span class="sim-badge">模拟数据</span></h3>
+            <!-- .analytics-grid 分析图表网格：2 列布局 -->
             <div class="analytics-grid">
-                <!-- 左侧图表：本周投喂趋势柱状图 -->
+                <!-- 左侧：本周投喂趋势柱状图 -->
                 <div class="analytics-card">
                     <h4>本周投喂趋势</h4>
+                    <!-- #feedChart 柱状图容器，JS 动态渲染周一到周日的投喂数据 -->
                     <div class="bar-chart" id="feedChart"></div>
                 </div>
-                <!-- 右侧图表：猫咪到访统计饼图（使用 CSS conic-gradient 实现） -->
+                <!-- 右侧：猫咪到访统计饼图 -->
                 <div class="analytics-card">
                     <h4>猫咪到访统计</h4>
                     <div class="pie-chart-wrap">
+                        <!-- #visitPie 饼图容器，JS 使用 CSS conic-gradient 动态渲染 -->
                         <div class="pie-chart" id="visitPie"></div>
+                        <!-- #visitLegend 饼图图例容器，JS 动态渲染各猫咪的颜色和占比 -->
                         <div class="pie-legend" id="visitLegend"></div>
                     </div>
                 </div>
@@ -599,21 +745,27 @@
         </section>
     </main>
 
-    <!-- ==================== 页脚（版权信息、协议链接） ==================== -->
+    <!-- ===== 页脚 ===== -->
+    <!-- .footer 页面底部：品牌标语 + 链接 -->
     <footer class="footer">
         <p>🐱 猫迹 CatTrace - 用科技守护每一只流浪猫</p>
+        <!-- .footer-links 页脚链接组 -->
         <p class="footer-links">
             <a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">联系我们</a>
         </p>
     </footer>
 
-    <!-- Toast 提示组件（用于显示短暂的操作反馈信息） -->
+    <!-- ===== 全局 Toast 提示 ===== -->
+    <!-- #toast 轻量级消息提示条，JS 通过添加 .show 类显示/隐藏 -->
     <div id="toast" class="toast"></div>
 
-    <!-- ==================== JavaScript 逻辑（数据定义、渲染函数、交互事件绑定） ==================== -->
+    <!-- ===== 内联 JavaScript：云直播页面全部交互逻辑 ===== -->
     <script>
-        // ==================== 数据定义 ====================
-        // 猫咪数据数组（包含猫咪基本信息、位置、投喂次数、观看人数等）
+        // ============================================================
+        // === 数据定义 ===
+        // ============================================================
+
+        // CATS 猫咪数据数组：存储所有猫咪的详细信息，用于渲染切换器、信息卡、动态卡片等
         const CATS = [
             { id: 1, name: "橘子", nickname: "朝阳常驻生", emoji: "🐈", location: "朝阳公园猫屋", houseId: "#03", houseLocation: "朝阳公园", age: "2 岁", color: "橘白相间", gender: "雌性", health: "健康", neutered: true, adoptionReady: false, feedCount: 128, visits: 3, viewers: 12468, diary: "今天 8:32 进入猫屋，先巡视了一圈，再安心吃完第一份猫粮。", clips: ["睡觉", "进食", "晒太阳", "巡逻"], desc: "亲人、稳定、喜欢在阳光最好的木台上趴着。" },
             { id: 2, name: "小黑", nickname: "夜行侠", emoji: "🐈⬛", location: "教学楼后花园", houseId: "#07", houseLocation: "教学楼后花园", age: "1 岁半", color: "纯黑", gender: "雄性", health: "健康", neutered: false, adoptionReady: true, feedCount: 96, visits: 2, viewers: 9860, diary: "今天比平时更早出现，AI 在 19:10 首次识别到它。", clips: ["靠近", "观察", "进食", "离开"], desc: "行动谨慎，通常夜间活动。" },
@@ -621,7 +773,7 @@
             { id: 4, name: "墩墩", nickname: "新来的", emoji: "🐾", location: "街角便利店旁", houseId: "#18", houseLocation: "街角便利店旁", age: "8 个月", color: "灰白", gender: "雄性", health: "健康", neutered: false, adoptionReady: true, feedCount: 45, visits: 1, viewers: 6200, diary: "AI 首次识别到这只新猫咪，体态偏瘦，已加入观察名单。", clips: ["观望", "靠近", "进食"], desc: "刚出现不久，有些怕人，需要持续观察。" }
         ];
 
-        // 投喂套餐数据（包含价格、标签、描述、投喂份数、服务说明）
+        // FEED_PACKS 投喂套餐数组：定义 4 种投喂选项的价格、标签、份数和服务说明
         const FEED_PACKS = [
             { price: 5, label: "爱心单次", desc: "1 份猫粮", amount: 1, service: "即时投喂 1 份猫粮，设备将自动执行" },
             { price: 10, label: "轻量守护", desc: "6 份猫粮", amount: 6, service: "6 份猫粮分次投喂，覆盖一天" },
@@ -629,12 +781,13 @@
             { price: 50, label: "整月陪伴", desc: "100 份猫粮", amount: 100, service: "100 份猫粮，整月持续守护" }
         ];
 
-        // ==================== 状态变量 ====================
-        let currentCatId = 1;           // 当前选中的猫咪 ID
-        let selectedPack = FEED_PACKS[0]; // 当前选中的投喂套餐
-        let isPlaying = true;           // 直播播放状态
-        let isMuted = false;            // 静音状态
-        // 互动日志数据（包含投喂记录、用户留言、系统通知）
+        // === 运行时状态变量 ===
+        let currentCatId = 1;       // 当前选中的猫咪 ID，默认为 1（橘子）
+        let selectedPack = FEED_PACKS[0]; // 当前选中的投喂套餐，默认为第一个（5 元）
+        let isPlaying = true;       // 播放状态：true=播放中，false=暂停
+        let isMuted = false;        // 静音状态：false=有声，true=静音
+
+        // feedLogData 互动日志数据数组：存储最近的互动记录（投喂/留言/系统消息）
         let feedLogData = [
             { time: "刚刚", user: "云养人 2381", cat: "橘子", detail: "1 份猫粮", type: "feed" },
             { time: "2 分钟前", user: "爱心用户 8752", cat: "雪球", detail: "轻量守护", type: "feed" },
@@ -643,24 +796,33 @@
             { time: "12 分钟前", user: "系统", cat: "", detail: "朝阳公园猫屋设备运行正常", type: "system" }
         ];
 
-        // ==================== 工具函数 ====================
-        // 获取 DOM 元素的快捷方法
+        // ============================================================
+        // === 工具函数 ===
+        // ============================================================
+
+        // $ 快捷 DOM 查询函数：通过 id 获取元素
         function $(id) { return document.getElementById(id); }
-        // 数字格式化（添加千位分隔符）
+        // fmt 数字格式化函数：将数字转为中文 locale 格式（如 12468 → "12,468"）
         function fmt(num) { return Number(num || 0).toLocaleString("zh-CN"); }
-        // 获取当前选中的猫咪数据对象
+        // currentCat 获取当前选中猫咪对象：从 CATS 数组中查找，找不到则返回第一只
         function currentCat() { return CATS.find(c => c.id === currentCatId) || CATS[0]; }
 
-        // 显示 Toast 提示消息（短暂显示后自动消失）
+        // showToast 显示 Toast 提示消息
+        // msg: 提示文本, dur: 显示持续时间（毫秒），默认 2200ms
         function showToast(msg, dur = 2200) {
             const t = $("toast");
             t.textContent = msg;
             t.classList.add("show");
+            // 定时移除 show 类以隐藏提示
             setTimeout(() => t.classList.remove("show"), dur);
         }
 
-        // ==================== 渲染函数 ====================
-        // 渲染猫屋切换器（生成横向滚动的猫咪卡片列表，点击切换当前猫咪）
+        // ============================================================
+        // === 渲染函数 ===
+        // ============================================================
+
+        // renderCatSwitcher 渲染猫屋切换器
+        // 遍历 CATS 数组生成切换卡片，绑定点击事件切换当前猫咪并重新渲染所有组件
         function renderCatSwitcher() {
             $("catSwitcher").innerHTML = CATS.map(cat => `
                 <div class="switch-card ${cat.id === currentCatId ? 'active' : ''}" data-id="${cat.id}">
@@ -670,16 +832,19 @@
                 </div>
             `).join("");
 
+            // 为每个切换卡片绑定点击事件
             document.querySelectorAll(".switch-card").forEach(card => {
                 card.addEventListener("click", () => {
+                    // 从 data-id 属性获取猫咪 ID 并更新当前选中
                     currentCatId = Number(card.dataset.id);
-                    renderAll();
+                    renderAll(); // 重新渲染所有组件
                     showToast(`已切换到 ${currentCat().name} 的直播`);
                 });
             });
         }
 
-        // 渲染投喂套餐选择区（生成套餐卡片，点击选中套餐并显示服务说明）
+        // renderFeedPackages 渲染投喂套餐选项
+        // 遍历 FEED_PACKS 生成套餐卡片，绑定点击事件选择套餐
         function renderFeedPackages() {
             $("feedPackages").innerHTML = FEED_PACKS.map(pkg => `
                 <div class="feed-pkg ${pkg.price === selectedPack.price ? 'active' : ''}" data-price="${pkg.price}" title="${pkg.service}">
@@ -689,19 +854,23 @@
                 </div>
             `).join("");
 
+            // 为每个套餐卡片绑定点击事件
             document.querySelectorAll(".feed-pkg").forEach(el => {
                 el.addEventListener("click", () => {
+                    // 从 data-price 属性获取价格并更新选中套餐
                     selectedPack = FEED_PACKS.find(p => p.price === Number(el.dataset.price)) || FEED_PACKS[0];
-                    renderFeedPackages();
-                    // 显示服务说明
+                    renderFeedPackages(); // 重新渲染以更新 active 状态
+                    // 在设备状态区域显示所选套餐的服务说明
                     $("deviceStatus").textContent = selectedPack.service;
                     $("deviceStatus").className = "device-status";
                 });
             });
         }
 
-        // 渲染实时互动流（展示投喂记录、用户留言、系统通知等动态信息列表）
+        // renderFeedList 渲染实时互动消息流
+        // 取 feedLogData 前 8 条记录，根据 type 字段显示不同图标和标签颜色
         function renderFeedList() {
+            // tagMap 消息类型到标签文本和 CSS 类名的映射
             const tagMap = { feed: ["投喂", "feed"], comment: ["留言", "comment"], system: ["系统", "system"] };
             $("feedList").innerHTML = feedLogData.slice(0, 8).map(item => {
                 const [label, cls] = tagMap[item.type] || ["其他", "system"];
@@ -720,8 +889,11 @@
             }).join("");
         }
 
-        // 渲染 AI 猫咪动态卡片（展示 AI 识别到的猫咪行为记录，点击跳转到猫咪详情页）
+        // renderActivityCards 渲染 AI 猫咪动态卡片
+        // 展示每只猫咪的最近活动记录，包含描述和状态标签
+        // 卡片点击后跳转到对应猫咪的详情页
         function renderActivityCards() {
+            // 硬编码的活动数据（模拟 AI 生成的动态）
             const activities = [
                 { cat: CATS[0], time: "10:32", desc: "进入猫屋，先巡视一圈后安心进食。AI 识别步态稳定。", tags: [{text:"进食",cls:"ai"},{text:"已确认",cls:"ai"}] },
                 { cat: CATS[1], time: "09:15", desc: "比平时更早出现，在猫屋附近观察了约 5 分钟后离开。", tags: [{text:"观察",cls:"ai"},{text:"已确认",cls:"ai"}] },
@@ -745,15 +917,18 @@
                 </div>
             `).join("");
 
+            // 为每张动态卡片绑定点击事件，跳转到猫咪详情页
             document.querySelectorAll(".activity-card").forEach(card => {
                 card.addEventListener("click", () => {
+                    // 从 data-cat 属性获取猫咪 ID，跳转到 /cats?id=xxx
                     const catId = Number(card.dataset.cat);
                     window.location.href = `/cats?id=${catId}`;
                 });
             });
         }
 
-        // 渲染投喂趋势柱状图（展示本周每天的投喂次数数据）
+        // renderFeedChart 渲染本周投喂趋势柱状图
+        // 使用模拟数据：周一到周日的投喂次数，柱子高度按比例计算
         function renderFeedChart() {
             const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
             const values = [23, 31, 28, 35, 42, 38, 45];
@@ -762,13 +937,15 @@
             $("feedChart").innerHTML = days.map((day, i) => `
                 <div class="bar-col">
                     <div class="bar-value">${values[i]}</div>
+                    <!-- 柱子高度按比例计算：(当前值/最大值) * 100px -->
                     <div class="bar" style="height:${(values[i] / max) * 100}px;"></div>
                     <div class="bar-label">${day}</div>
                 </div>
             `).join("");
         }
 
-        // 渲染猫咪到访统计饼图（使用 CSS conic-gradient 实现，展示各猫咪到访占比）
+        // renderVisitPie 渲染猫咪到访统计饼图
+        // 使用 CSS conic-gradient 实现饼图效果，各猫咪按比例分配角度
         function renderVisitPie() {
             const data = [
                 { name: "橘子", value: 35, color: "#d88da3" },
@@ -778,6 +955,7 @@
             ];
             const total = data.reduce((s, d) => s + d.value, 0);
             let cumulative = 0;
+            // 计算每个扇区的起止角度，生成 conic-gradient 色段
             const segments = data.map(d => {
                 const start = (cumulative / total) * 360;
                 cumulative += d.value;
@@ -785,7 +963,9 @@
                 return `${d.color} ${start}deg ${end}deg`;
             });
 
+            // 将 conic-gradient 设置为饼图元素的 background
             $("visitPie").style.background = `conic-gradient(${segments.join(", ")})`;
+            // 渲染图例
             $("visitLegend").innerHTML = data.map(d => `
                 <div class="pie-legend-item">
                     <span class="pie-dot" style="background:${d.color}"></span>
@@ -794,7 +974,8 @@
             `).join("");
         }
 
-        // 更新直播信息（根据当前选中的猫咪更新页面显示的猫屋信息、AI 状态、观看人数等）
+        // updateLiveInfo 更新直播信息
+        // 根据当前选中的猫咪更新所有直播相关文本：AI 状态、观看人数、猫屋信息、数据指标等
         function updateLiveInfo() {
             const cat = currentCat();
             $("liveCatEmoji").textContent = cat.emoji;
@@ -805,53 +986,65 @@
             $("houseLocation").textContent = cat.houseLocation;
             $("houseFeedCount").textContent = `${fmt(cat.feedCount)} 次`;
             $("houseVisitCount").textContent = `${cat.visits} 次`;
+            // 温度模拟：22-24°C 之间随机浮动
             $("houseTemp").textContent = `${(22 + Math.random() * 2).toFixed(1)}°C`;
+            // 健康状态映射
             $("houseHealth").textContent = cat.health === "健康" ? "优秀" : "关注中";
+            // 计算当前猫屋中的猫咪数量（按 houseId 过滤）
             const houseCats = CATS.filter(c => c.houseId === cat.houseId);
             $("houseCatCount").textContent = `${houseCats.length} 只`;
         }
 
-        // ==================== 投喂逻辑（两阶段：投喂请求 → 设备执行） ====================
-        // 执行投喂操作（模拟网络请求和设备执行，包含成功/失败状态反馈）
+        // ============================================================
+        // === 投喂逻辑 ===
+        // ============================================================
+
+        // doFeed 执行投喂操作
+        // 分两阶段：
+        //   阶段一：投喂请求状态（发送中 → 成功/失败）
+        //   阶段二：设备执行状态（执行中 → 完成/失败）
+        // 投喂成功后更新数据、添加互动记录、触发猫咪弹跳动画
         function doFeed() {
             const cat = currentCat();
             const btn = $("feedBtn");
             const feedStatus = $("feedStatus");
             const deviceStatus = $("deviceStatus");
 
-            // 防止重复点击
+            // 防止重复点击：禁用按钮
             btn.disabled = true;
 
-            // 第一阶段：投喂状态（用户发起）
+            // --- 阶段一：投喂请求 ---
             feedStatus.className = "feed-status processing";
             feedStatus.textContent = " 投喂指令发送中...";
             deviceStatus.className = "device-status";
             deviceStatus.textContent = "";
 
-            // 模拟网络请求延迟
+            // 模拟网络请求延迟（1.2 秒）
             setTimeout(() => {
-                // 模拟：90% 成功率
+                // 模拟 90% 投喂请求成功率
                 const feedSuccess = Math.random() > 0.1;
 
                 if (feedSuccess) {
-                    // 投喂状态：成功
+                    // 投喂请求成功
                     feedStatus.className = "feed-status success";
                     feedStatus.textContent = `✅ 投喂请求已提交！为 ${cat.name} 投喂 ${selectedPack.desc}`;
 
-                    // 第二阶段：设备执行状态
+                    // --- 阶段二：设备执行 ---
                     deviceStatus.className = "device-status executing";
                     deviceStatus.textContent = "🔄 设备正在执行投喂...";
 
-                    // 模拟设备执行延迟
+                    // 模拟设备执行延迟（2 秒）
                     setTimeout(() => {
                         const deviceSuccess = Math.random() > 0.15; // 85% 设备执行成功率
 
                         if (deviceSuccess) {
+                            // 设备执行成功
                             deviceStatus.className = "device-status done";
                             deviceStatus.textContent = "✅ 设备已执行完成，猫粮已投放";
+                            // 更新猫咪投喂次数
                             cat.feedCount += selectedPack.amount;
 
-                            // 添加互动记录
+                            // 在互动日志头部插入新的投喂记录
                             feedLogData.unshift({
                                 time: "刚刚",
                                 user: "爱心用户",
@@ -859,26 +1052,31 @@
                                 detail: selectedPack.label,
                                 type: "feed"
                             });
+                            // 限制互动日志最多 10 条
                             if (feedLogData.length > 10) feedLogData.length = 10;
 
-                            // 猫咪弹跳动画
+                            // 触发猫咪 emoji 弹跳动画
                             const emoji = $("liveCatEmoji");
                             emoji.classList.add("bounce");
                             setTimeout(() => emoji.classList.remove("bounce"), 500);
 
+                            // 更新所有显示数据
                             updateLiveInfo();
                             renderFeedList();
                             showToast(`已为 ${cat.name} 投喂 ${selectedPack.label}`);
                         } else {
+                            // 设备执行失败（模拟卡粮/离线）
                             deviceStatus.className = "device-status failed";
                             deviceStatus.textContent = "❌ 设备执行失败（卡粮/离线），投喂未实际完成";
                         }
 
+                        // 恢复按钮可用状态
                         btn.disabled = false;
+                        // 4 秒后清空投喂状态文本
                         setTimeout(() => { feedStatus.textContent = ""; feedStatus.className = "feed-status"; }, 4000);
                     }, 2000);
                 } else {
-                    // 投喂状态：失败
+                    // 投喂请求失败（网络错误）
                     feedStatus.className = "feed-status error";
                     feedStatus.textContent = "❌ 投喂请求发送失败，请检查网络后重试";
                     deviceStatus.className = "device-status";
@@ -889,69 +1087,95 @@
             }, 1200);
         }
 
-        // ==================== 播放控制 ====================
-        // 绑定播放控制栏事件（播放/暂停、静音、音量调节、清晰度切换、全屏）
+        // ============================================================
+        // === 播放控制 ===
+        // ============================================================
+
+        // bindPlaybackControls 绑定播放控制按钮事件
+        // 包括：播放/暂停、静音、音量滑块、清晰度切换、全屏
         function bindPlaybackControls() {
+            // 播放/暂停切换
             $("playPauseBtn").addEventListener("click", () => {
                 isPlaying = !isPlaying;
+                // 切换按钮图标：播放中显示 ⏸，暂停显示 ▶
                 $("playPauseBtn").textContent = isPlaying ? "⏸" : "▶";
+                // 暂停时添加 active 样式高亮
                 $("playPauseBtn").classList.toggle("active", !isPlaying);
             });
 
+            // 静音切换
             $("muteBtn").addEventListener("click", () => {
                 isMuted = !isMuted;
+                // 切换按钮图标：静音显示 🔇，有声显示 🔊
                 $("muteBtn").textContent = isMuted ? "🔇" : "🔊";
+                // 静音时音量滑块归零，取消静音恢复为 80
                 $("volumeSlider").value = isMuted ? 0 : 80;
             });
 
+            // 音量滑块拖动事件
             $("volumeSlider").addEventListener("input", (e) => {
                 const val = Number(e.target.value);
+                // 音量为 0 时自动切换为静音状态
                 isMuted = val === 0;
                 $("muteBtn").textContent = isMuted ? "🔇" : "🔊";
             });
 
+            // 清晰度切换（HD ↔ SD）
             $("qualityBtn").addEventListener("click", () => {
                 const btn = $("qualityBtn");
+                // 在 HD 和 SD 之间切换文本
                 btn.textContent = btn.textContent === "HD" ? "SD" : "HD";
                 showToast(`清晰度已切换为 ${btn.textContent}`);
             });
 
+            // 全屏切换：调用浏览器 Fullscreen API
             $("fullscreenBtn").addEventListener("click", () => {
                 const video = $("liveVideo");
                 if (document.fullscreenElement) {
+                    // 已在 fullscreen 中，退出全屏
                     document.exitFullscreen();
                 } else {
+                    // 请求进入全屏模式
                     video.requestFullscreen().catch(() => showToast("全屏不可用"));
                 }
             });
         }
 
-        // ==================== 摄像头状态检测 ====================
-        // 摄像头在线状态标志
+        // ============================================================
+        // === 摄像头状态检测 ===
+        // ============================================================
+
+        // camOnline 摄像头在线状态标志
         let camOnline = false;
-        // 检测摄像头在线状态（调用后端 API，页面加载时检测一次，之后每 15 秒轮询）
+
+        // checkCameraStatus 检测摄像头在线状态
+        // 通过 /api/camera/status 接口查询，成功时更新 camOnline 标志
         async function checkCameraStatus() {
             try {
                 const res = await fetch('/api/camera/status');
                 const data = await res.json();
                 camOnline = data.online === true;
             } catch {
+                // 请求失败时默认离线
                 camOnline = false;
             }
             applyCameraState();
         }
-        // 根据摄像头在线状态切换视频流显示/离线降级层显示
+
+        // applyCameraState 根据 camOnline 状态切换视频层和离线降级层的显示
         function applyCameraState() {
             const img = $("liveStreamImg");
             const fallback = $("offlineFallback");
             const aiBadge = $("aiStatus");
             if (camOnline) {
+                // 摄像头在线：显示视频流，隐藏降级层，AI 标签显示正常
                 img.style.display = "block";
                 fallback.style.display = "none";
                 aiBadge.textContent = "AI 已识别：有猫";
                 aiBadge.style.background = "rgba(255,255,255,0.92)";
                 aiBadge.style.color = "#6a6d59";
             } else {
+                // 摄像头离线：隐藏视频流，显示降级层，AI 标签变红
                 img.style.display = "none";
                 fallback.style.display = "flex";
                 aiBadge.textContent = "设备离线";
@@ -959,34 +1183,52 @@
                 aiBadge.style.color = "#fff";
             }
         }
-        // 页面加载时检测，之后每 15 秒轮询
+
+        // 页面加载时立即检测一次摄像头状态
         checkCameraStatus();
+        // 之后每 15 秒轮询一次摄像头状态
         setInterval(checkCameraStatus, 15000);
 
-        // ==================== 渲染全部（统一调用所有渲染函数） ====================
+        // ============================================================
+        // === 初始化 ===
+        // ============================================================
+
+        // renderAll 统一渲染所有组件
         function renderAll() {
-            renderCatSwitcher();
-            renderFeedPackages();
-            renderFeedList();
-            renderActivityCards();
-            renderFeedChart();
-            renderVisitPie();
-            updateLiveInfo();
+            renderCatSwitcher();    // 渲染猫屋切换器
+            renderFeedPackages();   // 渲染投喂套餐
+            renderFeedList();       // 渲染互动消息流
+            renderActivityCards();  // 渲染 AI 猫咪动态卡片
+            renderFeedChart();      // 渲染投喂趋势柱状图
+            renderVisitPie();       // 渲染到访统计饼图
+            updateLiveInfo();       // 更新直播信息
         }
 
-        // ==================== 页面初始化 ====================
-        renderAll();                  // 渲染所有组件
-        bindPlaybackControls();       // 绑定播放控制事件
-        $("feedBtn").addEventListener("click", doFeed);  // 绑定投喂按钮点击事件
+        // 页面初始化：渲染所有组件 + 绑定事件
+        renderAll();
+        bindPlaybackControls();
+        // 绑定投喂按钮点击事件
+        $("feedBtn").addEventListener("click", doFeed);
 
-        // 深色模式切换
+        // ============================================================
+        // === 深色模式 ===
+        // ============================================================
+
+        // #darkModeToggle 深色模式切换：通过 body 的 data-theme 属性控制
         $("darkModeToggle").addEventListener("click", () => {
+            // 判断当前是否为深色模式
             const isDark = document.body.getAttribute("data-theme") === "dark";
+            // 切换 data-theme 属性：深色设为 "dark"，浅色设为空字符串
             document.body.setAttribute("data-theme", isDark ? "" : "dark");
-            $("darkModeToggle").textContent = isDark ? "🌙" : "☀️";
+            // 切换按钮图标：深色模式显示 ☀️（太阳），浅色模式显示 🌙（月亮）
+            $("darkModeToggle").textContent = isDark ? "☀️" : "🌙";
         });
 
-        // 登录按钮点击事件（演示登录流程）
+        // ============================================================
+        // === 登录 ===
+        // ============================================================
+
+        // #loginBtn 登录按钮点击事件：弹出登录流程提示
         $("loginBtn").addEventListener("click", () => showToast("登录流程演示：手机号 / 验证码 / 志愿者认证"));
     </script>
 </body>

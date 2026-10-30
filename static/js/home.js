@@ -1,54 +1,29 @@
+/* 猫迹 CatTrace · 首页交互与 Flask API 接入 */
 /**
- * ========================================================================
- * 猫迹 CatTrace · 首页交互与 Flask API 接入
- * ========================================================================
- *
- * 文件说明：
- *   本文件是「猫迹」社区猫咪守护平台的首页核心交互脚本，采用 IIFE（立即执行函数）
- *   封装，避免全局变量污染。主要功能包括：
- *
- *   1. 全局状态管理 —— 集中管理猫咪数据、用户信息、投喂记录等运行时状态
- *   2. 模拟数据定义 —— 当后端 API 不可用时，提供演示用的兜底数据
- *   3. DOM 操作与工具函数 —— 元素获取、转义、格式化、网络请求等基础能力
- *   4. 渲染函数 —— 统计卡片、猫咪列表、日记、直播信息、排行榜等 UI 渲染
- *   5. 事件绑定 —— 用户交互事件的注册与处理
- *   6. 弹窗管理 —— 模态框的打开/关闭，包括分享、投诉、通知、登录、领养等弹窗
- *   7. 投喂功能 —— 选择投喂档位、调用 API、更新本地状态
- *   8. 搜索与导航 —— 猫咪搜索、页面区域平滑滚动
- *   9. 数据加载与初始化 —— 从后端拉取数据并完成页面首次渲染
- *
- * 技术栈：
- *   - 纯 JavaScript（ES5 + 部分 ES6，如 async/await、Promise）
- *   - Flask 后端 API（/api/cats、/api/stats、/api/feed 等）
- *   - localStorage 持久化用户登录态和领养申请信息
- *
- * 文件结构概览：
- *   [常量定义] → [全局状态] → [工具函数] → [API 封装] → [渲染函数] →
- *   [猫咪详情/领养] → [弹窗管理] → [行为/事件处理] → [初始化]
- * ========================================================================
+ * 首页交互逻辑模块
+ * 使用 IIFE（立即调用函数表达式）封装，避免全局变量污染
+ * 包含猫咪数据管理、投喂功能、领养申请、社区反馈、实时直播等核心业务逻辑
  */
 (function () {
     'use strict';
 
-    /* ====================================================================
-     * 常量定义
-     * ==================================================================== */
-
     /**
      * localStorage 存储键名常量
-     * 用于统一管理本地存储的 key，避免硬编码字符串
      * @constant {Object}
+     * @property {string} token - 用户认证令牌键名
+     * @property {string} user - 用户信息键名
+     * @property {string} adoption - 领养申请记录键名
      */
     var STORAGE = {
-        token: 'cattrace_token',        // 用户登录令牌
-        user: 'cattrace_user',          // 用户信息（JSON 字符串）
-        adoption: 'cattrace_adoption'   // 领养申请记录（JSON 字符串）
+        token: 'cattrace_token',
+        user: 'cattrace_user',
+        adoption: 'cattrace_adoption'
     };
 
     /**
-     * 投喂档位配置
-     * 每个档位定义了价格、标签名和实际投喂份数
-     * @constant {Array<{price: number, label: string, amount: number}>}
+     * 投喂档位配置（模拟数据）
+     * 每个档位定义价格、标签名称和投喂份数
+     * @constant {Array<Object>}
      */
     var FEED_PACKS = [
         { price: 1, label: '爱心单次', amount: 1 },
@@ -58,9 +33,9 @@
     ];
 
     /**
-     * 猫咪性格描述池
-     * 根据猫咪 ID 取模分配，为每只猫咪生成一个固定的性格标签
-     * @constant {string[]}
+     * 猫咪性格描述列表（模拟数据）
+     * 用于在领养申请卡片中展示 AI 生成的性格标签
+     * @constant {Array<string>}
      */
     var PERSONALITIES = [
         '粘人精，喜欢蹭蹭',
@@ -72,9 +47,9 @@
     ];
 
     /**
-     * 地图标记点位置配置
-     * 定义猫咪在地图区域上的 CSS 定位坐标（百分比），循环使用
-     * @constant {Array<{top: string, left: string}>}
+     * 地图标记点位置坐标（模拟数据）
+     * 用于在首页地图区域展示猫咪分布位置，使用 CSS 百分比定位
+     * @constant {Array<Object>}
      */
     var MAP_POSITIONS = [
         { top: '26%', left: '18%' },
@@ -86,9 +61,9 @@
     ];
 
     /**
-     * 领养流程阶段定义
-     * 描述从线上试养到终身关怀的完整领养链路
-     * @constant {Array<{name: string, days: string, icon: string, hint: string}>}
+     * 领养流程阶段定义（模拟数据）
+     * 描述从线上试养到终身关怀的完整领养流程
+     * @constant {Array<Object>}
      */
     var ADOPT_STAGES = [
         { name: '线上试养', days: 'D1-D7', icon: '📱', hint: '每日上传进食、饮水、精神短视频，第 7 天志愿者上门初访。' },
@@ -98,9 +73,9 @@
     ];
 
     /**
-     * 兜底猫咪数据（演示数据）
-     * 当后端 /api/cats 接口不可用时，使用这些数据渲染页面
-     * 保证用户在 API 异常时仍能看到完整的演示界面
+     * 后备猫咪数据（模拟数据）
+     * 当后端 API 不可用时，使用此数据作为降级展示
+     * 包含 4 只猫咪的完整信息：基本信息、健康状态、投喂次数等
      * @constant {Array<Object>}
      */
     var FALLBACK_CATS = [
@@ -126,25 +101,21 @@
         }
     ];
 
-    /* ====================================================================
-     * 全局状态管理
-     * ==================================================================== */
-
     /**
-     * 应用运行时状态对象
-     * 集中存储页面所需的所有动态数据，各渲染函数从此对象读取数据
+     * 全局状态对象
+     * 管理页面所有运行时数据，是整个首页的核心数据中心
      * @type {Object}
-     * @property {Array}  cats            - 猫咪列表（已标准化）
-     * @property {Object} stats           - 统计数据（总数、投喂量等）
-     * @property {Array}  notifications   - 通知消息列表
-     * @property {Array}  feedLogs        - 投喂记录列表
-     * @property {Array}  localActivities - 本地活动日志（用户操作产生的记录）
-     * @property {number|null} currentCatId - 当前选中的猫咪 ID
-     * @property {Object} selectedPack    - 当前选中的投喂档位
-     * @property {string} filter          - 猫咪列表筛选条件（all/adoption/neutered）
-     * @property {Object|null} user       - 当前登录用户信息
-     * @property {Object|null} diaryPhoto - 用户上传的日记照片信息
-     * @property {boolean} usedFallback   - 是否使用了兜底数据
+     * @property {Array} cats - 猫咪列表数据
+     * @property {Object} stats - 统计数据（总数、投喂数等）
+     * @property {Array} notifications - 通知消息列表
+     * @property {Array} feedLogs - 投喂记录日志
+     * @property {Array} localActivities - 本地活动动态（用户操作产生的记录）
+     * @property {number|null} currentCatId - 当前选中猫咪的 ID
+     * @property {Object} selectedPack - 当前选中的投喂档位
+     * @property {string} filter - 猫咪筛选条件：'all' | 'adoption' | 'neutered'
+     * @property {Object|null} user - 当前登录用户信息
+     * @property {Object|null} diaryPhoto - 用户上传的猫咪日记照片
+     * @property {boolean} usedFallback - 是否使用了后备模拟数据
      */
     var state = {
         cats: [],
@@ -160,13 +131,10 @@
         usedFallback: false
     };
 
-    /* ====================================================================
-     * DOM 操作与工具函数
-     * ==================================================================== */
+    /* ---------- 工具函数 ---------- */
 
     /**
      * 通过 ID 获取 DOM 元素的快捷方法
-     * 等价于 document.getElementById 的简写
      * @param {string} id - 元素的 id 属性值
      * @returns {HTMLElement|null} 对应的 DOM 元素，未找到时返回 null
      */
@@ -175,9 +143,9 @@
     }
 
     /**
-     * HTML 特殊字符转义
-     * 防止 XSS 攻击，将用户输入或动态内容中的特殊字符替换为 HTML 实体
-     * @param {*} value - 需要转义的任意类型值（会被转为字符串）
+     * HTML 特殊字符转义，防止 XSS 注入
+     * 将 & < > " ' 五种字符替换为对应的 HTML 实体
+     * @param {*} value - 需要转义的值，null/undefined 会被转为空字符串
      * @returns {string} 转义后的安全字符串
      */
     function esc(value) {
@@ -187,46 +155,39 @@
     }
 
     /**
-     * 数字格式化（千分位分隔）
-     * 使用中文 locale 格式化数字，便于大数字阅读
-     * @param {number} num - 需要格式化的数字
-     * @returns {string} 带千分位分隔的字符串，如 "1,235"
+     * 数字格式化，使用中文千分位分隔
+     * @param {number} num - 待格式化的数字
+     * @returns {string} 格式化后的字符串，如 "1,234"
      */
     function fmt(num) {
         return Number(num || 0).toLocaleString('zh-CN');
     }
 
     /**
-     * 数值限制（钳位函数）
-     * 将数值约束在 [min, max] 区间内
+     * 数值限制函数，将数值约束在 [min, max] 范围内
      * @param {number} num - 输入数值
      * @param {number} min - 最小值
      * @param {number} max - 最大值
-     * @returns {number} 限制后的数值
+     * @returns {number} 约束后的数值
      */
     function clamp(num, min, max) {
         return Math.min(max, Math.max(min, num));
     }
 
     /**
-     * 生成带认证令牌的请求头
-     * 从 localStorage 读取 token，若存在则添加 Authorization 头
-     * @returns {Object} 请求头对象，无 token 时返回空对象
+     * 构造认证请求头
+     * 从 localStorage 读取令牌，若存在则添加 Bearer 认证头
+     * @returns {Object} 包含 Authorization 字段的请求头对象，无令牌时返回空对象
      */
     function authHeaders() {
         var token = localStorage.getItem(STORAGE.token);
         return token ? { Authorization: 'Bearer ' + token } : {};
     }
 
-    /* ====================================================================
-     * API 请求封装
-     * ==================================================================== */
-
     /**
-     * 发送 GET 请求
-     * 自动携带认证头，禁用缓存以确保获取最新数据
-     * @async
-     * @param {string} path - 请求路径（如 '/api/cats'）
+     * 封装 GET 请求
+     * 自动附加认证头，禁用缓存以确保获取最新数据
+     * @param {string} path - 请求路径
      * @returns {Promise<Object>} 解析后的 JSON 响应数据
      * @throws {Error} HTTP 状态码非 2xx 时抛出错误
      */
@@ -237,13 +198,12 @@
     }
 
     /**
-     * 发送 POST 请求
-     * 自动设置 JSON 内容类型和认证头，容错处理响应体解析
-     * @async
-     * @param {string} path - 请求路径（如 '/api/feed'）
-     * @param {Object} [payload] - 请求体数据，会被序列化为 JSON
+     * 封装 POST 请求
+     * 自动设置 JSON 内容类型和认证头，请求体序列化为 JSON
+     * @param {string} path - 请求路径
+     * @param {Object} [payload] - 请求体数据，会被 JSON 序列化
      * @returns {Promise<Object>} 解析后的 JSON 响应数据
-     * @throws {Error} HTTP 错误且响应无 message 字段时抛出错误
+     * @throws {Error} HTTP 状态码非 2xx 且无 message 字段时抛出错误
      */
     async function apiPost(path, payload) {
         var headers = Object.assign({ 'Content-Type': 'application/json' }, authHeaders());
@@ -264,15 +224,11 @@
         return json;
     }
 
-    /* ====================================================================
-     * 数据转换与查找
-     * ==================================================================== */
-
     /**
-     * 根据猫咪毛色返回对应的 emoji 图标
-     * 通过正则匹配颜色关键词来决定使用哪个猫咪 emoji
-     * @param {string} color - 猫咪毛色描述（如 '橘白相间'、'纯黑'）
-     * @returns {string} 对应的 emoji（🐱 或 🐈）
+     * 根据猫咪毛色返回对应的 emoji 表情
+     * 用于在界面中直观地展示猫咪形象
+     * @param {string} color - 猫咪毛色描述文本
+     * @returns {string} 对应的猫咪 emoji：黑色/灰色/橘色返回 🐈，白色返回 🐱
      */
     function emojiFor(color) {
         var text = String(color || '');
@@ -284,11 +240,10 @@
     }
 
     /**
-     * 标准化猫咪数据
-     * 将后端返回的原始数据转换为前端统一使用的格式，
-     * 补充缺失字段的默认值，计算派生字段（如 emoji、性格、来访次数）
+     * 将后端原始猫咪数据标准化为前端统一格式
+     * 补全默认值、转换字段命名风格（下划线 → 驼峰），并计算衍生属性
      * @param {Object} raw - 后端返回的原始猫咪数据
-     * @returns {Object} 标准化后的猫咪对象
+     * @returns {Object} 标准化后的猫咪对象，包含 id、name、emoji、personality 等字段
      */
     function normalizeCat(raw) {
         var id = Number(raw.id);
@@ -302,22 +257,21 @@
             location: raw.location || '未知位置',
             desc: raw.description || '暂无简介',
             health: raw.health || '未知',
-            neutered: Boolean(raw.neutered),          // 是否已绝育
-            adoptionReady: Boolean(raw.adoption_ready), // 是否可领养
+            neutered: Boolean(raw.neutered),
+            adoptionReady: Boolean(raw.adoption_ready),
             adoptionNote: raw.adoption_note || '',
-            feedCount: Number(raw.feed_count || 0),    // 累计投喂次数
-            views: Number(raw.views || 0),             // 累计浏览次数
-            missingDays: Number(raw.missing_status || 0), // 连续未出现天数
-            emoji: emojiFor(raw.color),                // 根据毛色生成的 emoji
-            visits: 1 + (id % 4),                      // 模拟今日来访次数
-            personality: PERSONALITIES[(id * 7) % PERSONALITIES.length] // 根据 ID 分配性格
+            feedCount: Number(raw.feed_count || 0),
+            views: Number(raw.views || 0),
+            missingDays: Number(raw.missing_status || 0),
+            emoji: emojiFor(raw.color),
+            visits: 1 + (id % 4),
+            personality: PERSONALITIES[(id * 7) % PERSONALITIES.length]
         };
     }
 
     /**
      * 获取当前选中的猫咪对象
-     * 根据 state.currentCatId 在猫咪列表中查找，
-     * 找不到则返回列表中第一只猫咪作为默认值
+     * 优先返回 currentCatId 对应的猫咪，若未找到则返回列表中第一只
      * @returns {Object|null} 当前猫咪对象，列表为空时返回 null
      */
     function currentCat() {
@@ -328,7 +282,7 @@
     }
 
     /**
-     * 根据 ID 查找猫咪对象
+     * 根据 ID 查找指定猫咪
      * @param {number|string} id - 猫咪 ID
      * @returns {Object|null} 匹配的猫咪对象，未找到返回 null
      */
@@ -340,9 +294,9 @@
     }
 
     /**
-     * 将健康状态文本转换为更友好的标签
-     * @param {string} health - 原始健康状态（如 '健康'、'需关注'）
-     * @returns {string} 友好标签（'优秀'、'关注中' 或原始值）
+     * 将健康状态文本转换为展示标签
+     * @param {string} health - 原始健康状态文本
+     * @returns {string} 展示用标签：'健康' → '优秀'，含'需'或'关注' → '关注中'
      */
     function healthLabel(health) {
         if (health === '健康') return '优秀';
@@ -350,50 +304,42 @@
         return health || '--';
     }
 
-    /* ====================================================================
-     * 时间格式化
-     * ==================================================================== */
-
     /**
      * 将时间字符串转换为相对时间描述
-     * 根据时间差自动选择合适的粒度（刚刚/分钟前/小时前/天前/具体日期）
-     * @param {string} timeStr - ISO 格式的时间字符串
-     * @returns {string} 相对时间描述（如 '刚刚'、'5 分钟前'、'3 天前'、'6 月 15 日'）
+     * 用于展示投喂记录、通知等的时间戳
+     * @param {string} timeStr - ISO 格式时间字符串
+     * @returns {string} 相对时间文本：'刚刚'、'X 分钟前'、'X 小时前'、'X 天前' 或具体日期
      */
     function formatRelative(timeStr) {
         var date = new Date(timeStr);
-        if (isNaN(date.getTime())) return '--';  // 无效日期
+        if (isNaN(date.getTime())) return '--';
         var diff = Date.now() - date.getTime();
-        if (diff < 60000) return '刚刚';                        // 1 分钟内
-        if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';   // 1 小时内
-        if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前'; // 24 小时内
-        if (diff < 86400000 * 7) return Math.floor(diff / 86400000) + ' 天前'; // 7 天内
-        return (date.getMonth() + 1) + ' 月 ' + date.getDate() + ' 日';     // 超过 7 天显示具体日期
+        if (diff < 60000) return '刚刚';
+        if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+        if (diff < 86400000 * 7) return Math.floor(diff / 86400000) + ' 天前';
+        return (date.getMonth() + 1) + ' 月 ' + date.getDate() + ' 日';
     }
 
     /**
-     * 将 Date 对象格式化为中文日期标签
+     * 将 Date 对象格式化为中文日期文本
      * @param {Date} date - 日期对象
-     * @returns {string} 格式化后的日期字符串（如 '6 月 15 日'）
+     * @returns {string} 格式如 "10 月 30 日"
      */
     function dateLabel(date) {
         return (date.getMonth() + 1) + ' 月 ' + date.getDate() + ' 日';
     }
 
-    /* ====================================================================
-     * 提示与弹窗管理
-     * ==================================================================== */
-
     /**
-     * 显示轻量级提示消息（Toast）
-     * 在页面顶部短暂显示一条消息后自动消失
-     * @param {string} message - 要显示的提示文本
+     * 显示 Toast 轻提示
+     * 通过操作 #toast 元素的 CSS 类实现淡入淡出效果
+     * @param {string} message - 提示文本内容
      * @param {number} [duration=2400] - 显示持续时间（毫秒）
      */
     function showToast(message, duration) {
         var toast = $('toast');
         if (!toast) return;
-        clearTimeout(showToast.timer);  // 清除上一个定时器，避免消息重叠
+        clearTimeout(showToast.timer);
         toast.textContent = message;
         toast.classList.add('show');
         showToast.timer = setTimeout(function () {
@@ -403,19 +349,19 @@
 
     /**
      * 打开模态弹窗
-     * 将指定 HTML 内容注入弹窗主体并显示
-     * @param {string} html - 弹窗内容的 HTML 字符串
+     * 将指定 HTML 内容注入弹窗主体区域并显示
+     * @param {string} html - 弹窗内 HTML 内容
      * @param {boolean} [wide=false] - 是否使用宽屏样式
      */
     function openModal(html, wide) {
-        $('modalCard').classList.toggle('wide', Boolean(wide)); // 根据参数切换宽屏模式
+        $('modalCard').classList.toggle('wide', Boolean(wide));
         $('modalBody').innerHTML = html;
         $('modal').classList.add('show');
     }
 
     /**
      * 关闭模态弹窗
-     * 隐藏弹窗并清空内容，恢复默认样式
+     * 隐藏弹窗容器，清除宽屏样式并清空内容
      */
     function closeModal() {
         $('modal').classList.remove('show');
@@ -426,17 +372,15 @@
     /**
      * 复制文本到剪贴板
      * 优先使用现代 Clipboard API，降级使用 execCommand('copy')
-     * @async
      * @param {string} text - 需要复制的文本内容
      * @returns {Promise<void>}
      */
     async function copyText(text) {
         try {
-            // 优先尝试现代浏览器的 Clipboard API
             await navigator.clipboard.writeText(text);
             showToast('链接已复制，去分享给朋友吧');
         } catch (err) {
-            // 降级方案：创建临时 textarea 元素，使用 execCommand 复制
+            /* 降级方案：创建临时 textarea 元素，使用旧版 execCommand 复制 */
             var input = document.createElement('textarea');
             input.value = text;
             document.body.appendChild(input);
@@ -451,27 +395,23 @@
         }
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 统计卡片
-     * ==================================================================== */
+    /* ---------------- 渲染函数：负责将 state 数据映射到 DOM ---------------- */
 
     /**
      * 渲染顶部统计卡片
-     * 展示四项核心数据：已建档猫咪数、累计投喂数、已绝育数、可领养数
-     * 优先使用后端统计数据，若不可用则从本地猫咪列表计算
+     * 展示猫咪总数、累计投喂、已绝育数、可领养数四个核心指标
+     * 优先使用后端统计数据，降级使用本地猫咪列表计算
      */
     function renderStats() {
         var cats = state.cats;
-        // 优先使用后端统计数据，否则从本地数据计算
         var totalCats = state.stats.total_cats != null ? Number(state.stats.total_cats) : cats.length;
         var totalFeeds = state.stats.total_feeds != null
             ? Number(state.stats.total_feeds)
             : cats.reduce(function (sum, cat) { return sum + cat.feedCount; }, 0);
-        var neutered = cats.filter(function (cat) { return cat.neutered; }).length;      // 已绝育数量
-        var adoptable = cats.filter(function (cat) { return cat.adoptionReady; }).length; // 可领养数量
-        var neuterPct = cats.length ? Math.round(neutered / cats.length * 100) : 0;       // 绝育占比
+        var neutered = cats.filter(function (cat) { return cat.neutered; }).length;
+        var adoptable = cats.filter(function (cat) { return cat.adoptionReady; }).length;
+        var neuterPct = cats.length ? Math.round(neutered / cats.length * 100) : 0;
 
-        // 定义四张统计卡片的数据
         var cards = [
             { icon: '🐱', iconClass: 'pink', value: totalCats, label: '已建档猫咪', trend: '实时同步' },
             { icon: '🍽', iconClass: 'pink', value: totalFeeds, label: '累计投喂', trend: '实时同步' },
@@ -479,7 +419,6 @@
             { icon: '💗', iconClass: 'gold', value: adoptable, label: '可领养', trend: '等待新家' }
         ];
 
-        // 生成卡片 HTML 并插入 DOM
         $('statsRow').innerHTML = cards.map(function (item) {
             return '' +
                 '<article class="panel stat-card">' +
@@ -490,18 +429,14 @@
         }).join('');
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 投喂档位选择
-     * ==================================================================== */
-
     /**
-     * 渲染投喂档位按钮
-     * 生成可选的投喂套餐按钮，当前选中的档位高亮显示，
-     * 同时为每个按钮绑定点击事件以切换选中状态
+     * 渲染投喂档位选择区域
+     * 生成四个投喂按钮，当前选中档位高亮显示
+     * 每次渲染后重新绑定点击事件，点击时切换选中档位并刷新
+     * 目标 DOM：#feedPacks
      */
     function renderFeedPacks() {
         if (!$('feedPacks')) return;
-        // 生成档位按钮 HTML，选中的档位添加 active 类
         $('feedPacks').innerHTML = FEED_PACKS.map(function (pack) {
             return '' +
                 '<button class="feed-pack ' + (pack.price === state.selectedPack.price ? 'active' : '') + '" type="button" data-price="' + pack.price + '">' +
@@ -510,29 +445,24 @@
                 '</button>';
         }).join('');
 
-        // 为每个档位按钮绑定点击事件
         Array.prototype.forEach.call(document.querySelectorAll('.feed-pack'), function (btn) {
             btn.addEventListener('click', function () {
                 var price = Number(btn.getAttribute('data-price'));
-                // 更新选中档位并重新渲染
                 state.selectedPack = FEED_PACKS.filter(function (pack) { return pack.price === price; })[0] || FEED_PACKS[0];
                 renderFeedPacks();
             });
         });
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 地图标记
-     * ==================================================================== */
-
     /**
-     * 渲染地图区域的猫咪标记点
-     * 每只猫咪在地图上显示为一个可点击的标记，
-     * 已绝育的猫咪显示 🏠（绿色），未绝育显示 🐾
+     * 渲染地图上的猫咪标记点
+     * 根据猫咪列表在地图区域生成可点击的标记按钮
+     * 已绝育猫咪显示 🏠 图标并使用绿色样式，未绝育显示 🐾
+     * 标记位置从 MAP_POSITIONS 循环取值
+     * 目标 DOM：#mapMarkers
      */
     function renderMapMarkers() {
         var html = state.cats.map(function (cat, index) {
-            // 循环使用预定义的位置坐标
             var pos = MAP_POSITIONS[index % MAP_POSITIONS.length];
             return '<button type="button" class="marker ' + (cat.neutered ? 'sage' : '') + '" ' +
                 'style="top:' + pos.top + ';left:' + pos.left + ';" data-cat="' + cat.id + '" ' +
@@ -542,14 +472,13 @@
         $('mapMarkers').innerHTML = html;
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 直播信息面板
-     * ==================================================================== */
-
     /**
-     * 渲染当前选中猫咪的直播面板信息
-     * 包括猫咪名称、位置、浏览数、投喂数、温度、湿度、健康状态等
-     * 温度和湿度数据基于猫咪 ID 生成模拟值
+     * 渲染猫咪实时直播区域
+     * 展示当前选中猫咪的直播画面信息，包括位置、浏览量、投喂次数、
+     * 环境温湿度、健康状态、AI 识别状态等
+     * 目标 DOM：#liveCatTitle, #liveCatLocation, #viewerCount, #liveFeedCount,
+     *           #liveTemp, #liveHumidity, #liveHealth, #liveCatEmoji,
+     *           #aiStatus, #mapSpotName, #mapSpotDesc
      */
     function renderLive() {
         var cat = currentCat();
@@ -558,9 +487,7 @@
         $('liveCatLocation').textContent = cat.location + ' · ' + (cat.health === '健康' ? '猫咪状态良好' : '建议持续观察');
         $('viewerCount').textContent = fmt(cat.views) + ' 人浏览';
         $('liveFeedCount').textContent = fmt(cat.feedCount) + ' 次';
-        // 温度基于猫咪 ID 生成 21.8~24.2°C 的模拟值
         $('liveTemp').textContent = (21.8 + (cat.id % 5) * 0.6).toFixed(1) + '°C';
-        // 湿度基于猫咪 ID 生成 54%~64% 的模拟值
         $('liveHumidity').textContent = (54 + (cat.id % 6) * 2) + '%';
         $('liveHealth').textContent = healthLabel(cat.health);
         $('liveCatEmoji').textContent = cat.emoji;
@@ -569,14 +496,11 @@
         $('mapSpotDesc').innerHTML = '猫咪数 ' + cat.visits + ' 只<br>累计投喂 ' + fmt(cat.feedCount) + ' 次';
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 投喂记录
-     * ==================================================================== */
-
     /**
-     * 渲染最近的投喂记录列表
-     * 显示最近 4 条投喂记录，包含时间、用户、猫咪和投喂量
+     * 渲染投喂记录列表
+     * 展示最近 4 条投喂日志，包含投喂时间、用户名、猫咪名和份数
      * 无记录时显示空状态提示
+     * 目标 DOM：#feedLogs
      */
     function renderFeedLogs() {
         var box = $('feedLogs');
@@ -585,7 +509,6 @@
             box.innerHTML = '<div class="empty-state">暂无投喂记录，来成为第一个投喂的人吧。</div>';
             return;
         }
-        // 只取前 4 条记录展示
         box.innerHTML = state.feedLogs.slice(0, 4).map(function (log) {
             var cat = findCat(log.cat_id);
             var name = cat ? cat.name : '猫咪 #' + log.cat_id;
@@ -600,33 +523,28 @@
         }).join('');
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 猫咪日记
-     * ==================================================================== */
-
     /**
-     * 为指定猫咪生成模拟日记条目
-     * 生成最近 3 天（今天、昨天、前天）的日记数据，
-     * 包含来访次数、时间段、心情、投喂量和停留时长
+     * 为指定猫咪生成模拟日记条目（模拟数据）
+     * 生成最近 3 天的日记数据，包含来访次数、时间段、心情、投喂数和停留时长
      * @param {Object} cat - 猫咪对象
-     * @returns {Array<Object>} 日记条目数组
+     * @returns {Array<Object>} 日记条目数组，每条包含 label、date、visits、slot、mood、feed、stay
      */
     function diaryEntriesFor(cat) {
-        var slots = ['清晨 6 点', '上午 10 点', '下午 3 点', '晚上 10 点']; // 时间段池
-        var moods = ['很安心', '有点调皮', '懒洋洋的', '精神很好', '吃得很香']; // 心情池
+        var slots = ['清晨 6 点', '上午 10 点', '下午 3 点', '晚上 10 点'];
+        var moods = ['很安心', '有点调皮', '懒洋洋的', '精神很好', '吃得很香'];
         var entries = [];
         for (var i = 0; i <= 2; i++) {
             var date = new Date();
-            date.setDate(date.getDate() - i);  // 往前推 i 天
-            var visits = 1 + ((cat.id + i) % 4);  // 模拟来访次数
+            date.setDate(date.getDate() - i);
+            var visits = 1 + ((cat.id + i) % 4);
             entries.push({
                 label: i === 0 ? '今天' : i === 1 ? '昨天' : dateLabel(date),
                 date: date,
                 visits: visits,
-                slot: slots[(cat.id + i) % slots.length],       // 时间段（循环取）
-                mood: moods[(cat.id * 2 + i) % moods.length],   // 心情（循环取）
-                feed: visits * 2,    // 投喂次数 = 来访次数 × 2
-                stay: visits * 15    // 停留时长 = 来访次数 × 15 分钟
+                slot: slots[(cat.id + i) % slots.length],
+                mood: moods[(cat.id * 2 + i) % moods.length],
+                feed: visits * 2,
+                stay: visits * 15
             });
         }
         return entries;
@@ -634,16 +552,16 @@
 
     /**
      * 渲染猫咪日记区域
-     * 展示当前猫咪的日记条目和缩略图（含用户上传的照片）
+     * 展示当前猫咪的日记条目（今天/昨天/前天）和缩略图列表
+     * 若用户上传了照片且匹配当前猫咪，则在缩略图列表最前方插入用户照片
+     * 目标 DOM：#diaryCatName, #diaryTime, #diaryEntries, #diaryThumbs
      */
     function renderDiary() {
         var cat = currentCat();
         if (!cat) return;
         $('diaryCatName').textContent = cat.emoji + ' ' + cat.name;
-        // 生成模拟的进入猫屋时间
         $('diaryTime').textContent = (8 + (cat.id % 3)) + ':' + (10 + (cat.id * 7) % 40) + ' 进入猫屋';
 
-        // 渲染日记条目列表
         var entries = diaryEntriesFor(cat);
         $('diaryEntries').innerHTML = entries.map(function (entry) {
             return '' +
@@ -655,43 +573,35 @@
                 '</div>';
         }).join('');
 
-        // 生成缩略图（预设场景 + 用户上传照片）
         var clips = ['进食', '晒太阳', '巡视', '打盹'];
         var thumbs = clips.map(function (label) {
             return '<div class="thumb" title="' + label + '">' + cat.emoji + '</div>';
         });
-        // 如果用户上传了当前猫咪的照片，插入到缩略图列表最前面
         if (state.diaryPhoto && state.diaryPhoto.catId === cat.id) {
             thumbs.unshift('<div class="thumb diary-photo" title="用户共创照片"><img src="' + state.diaryPhoto.url + '" alt="用户上传的猫咪照片"></div>');
         }
         $('diaryThumbs').innerHTML = thumbs.join('');
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 猫咪卡片
-     * ==================================================================== */
-
     /**
-     * 生成猫咪标签的 HTML
-     * 根据猫咪状态生成绝育、健康、可领养等标签
+     * 生成猫咪标签 HTML 片段
+     * 包含绝育状态标签（已绝育/待绝育）、健康状态标签、可领养标签
      * @param {Object} cat - 猫咪对象
      * @returns {string} 标签 HTML 字符串
      */
     function catTagsHtml(cat) {
         var html = '';
-        // 绝育状态标签（已绝育=绿色，待绝育=橙色警告）
         html += '<span class="tag ' + (cat.neutered ? 'ok' : 'warn') + '">' + (cat.neutered ? '已绝育' : '待绝育') + '</span>';
-        // 健康状态标签
         html += '<span class="tag ' + (cat.health === '健康' ? 'ok' : 'warn') + '">' + esc(cat.health) + '</span>';
-        // 可领养标签（仅当可领养时显示）
         if (cat.adoptionReady) html += '<span class="tag pink">可领养</span>';
         return html;
     }
 
     /**
-     * 生成单个猫咪卡片的 HTML
+     * 生成猫咪卡片完整 HTML
+     * 包含猫咪头像、基本信息、标签、投喂次数，可选显示性格描述和领养申请按钮
      * @param {Object} cat - 猫咪对象
-     * @param {boolean} withApply - 是否显示「申请领养」按钮和性格描述
+     * @param {boolean} withApply - 是否显示"申请领养"按钮和性格描述
      * @returns {string} 卡片 HTML 字符串
      */
     function catCardHtml(cat, withApply) {
@@ -699,7 +609,7 @@
             '<article class="cat-card" data-cat="' + cat.id + '">' +
                 '<div class="cat-visual">' + cat.emoji + '</div>' +
                 '<div class="cat-info">' +
-                    '<h4>' + esc(cat.name) + ' <span class="muted" style="font-weight:400;">"' + esc(cat.nickname) + '"</span></h4>' +
+                    '<h4>' + esc(cat.name) + ' <span class="muted" style="font-weight:400;">“' + esc(cat.nickname) + '”</span></h4>' +
                     '<p>' + cat.gender + ' · ' + esc(cat.age) + ' · ' + esc(cat.color) + '</p>' +
                     '<p>📍 ' + esc(cat.location) + '</p>' +
                     '<div class="tags">' + catTagsHtml(cat) + '</div>' +
@@ -716,17 +626,18 @@
      */
     function filteredCats() {
         if (state.filter === 'adoption') {
-            return state.cats.filter(function (cat) { return cat.adoptionReady; });  // 只看可领养
+            return state.cats.filter(function (cat) { return cat.adoptionReady; });
         }
         if (state.filter === 'neutered') {
-            return state.cats.filter(function (cat) { return cat.neutered; });       // 只看已绝育
+            return state.cats.filter(function (cat) { return cat.neutered; });
         }
-        return state.cats;  // 显示全部
+        return state.cats;
     }
 
     /**
-     * 渲染猫咪列表区域
-     * 根据筛选条件展示猫咪卡片网格，并显示筛选结果计数
+     * 渲染猫咪档案列表区域
+     * 根据筛选条件展示猫咪卡片，并更新计数文本
+     * 目标 DOM：#catsCount, #catsGrid
      */
     function renderCats() {
         var list = filteredCats();
@@ -736,13 +647,14 @@
             return;
         }
         $('catsGrid').innerHTML = list.map(function (cat) {
-            return catCardHtml(cat, false);  // 列表卡片不显示领养按钮
+            return catCardHtml(cat, false);
         }).join('');
     }
 
     /**
      * 渲染可领养猫咪区域
-     * 专门展示可领养的猫咪列表，附带领养申请按钮
+     * 仅展示 adoptionReady 为 true 的猫咪，卡片包含"申请领养"按钮
+     * 目标 DOM：#adoptCount, #adoptCats
      */
     function renderAdoptable() {
         var list = state.cats.filter(function (cat) { return cat.adoptionReady; });
@@ -752,18 +664,14 @@
             return;
         }
         $('adoptCats').innerHTML = list.map(function (cat) {
-            return catCardHtml(cat, true);  // 领养区域卡片显示领养按钮和性格描述
+            return catCardHtml(cat, true);
         }).join('');
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 排行榜
-     * ==================================================================== */
-
     /**
      * 渲染投喂排行榜
-     * 按投喂次数降序排列，展示前 5 名猫咪
-     * 前三名使用奖牌 emoji（🥇🥈🥉），其余显示序号
+     * 按投喂次数降序排列，取前 5 名展示，前三名显示奖牌 emoji
+     * 目标 DOM：#leaderboardList
      */
     function renderLeaderboard() {
         var list = state.cats.slice().sort(function (a, b) { return b.feedCount - a.feedCount; }).slice(0, 5);
@@ -771,7 +679,7 @@
             $('leaderboardList').innerHTML = '<div class="empty-state">暂无排行数据</div>';
             return;
         }
-        var medals = ['🥇', '🥈', '🥉'];  // 前三名奖牌
+        var medals = ['🥇', '🥈', '🥉'];
         $('leaderboardList').innerHTML = list.map(function (cat, index) {
             return '' +
                 '<div class="leader-row" data-cat="' + cat.id + '">' +
@@ -782,18 +690,12 @@
         }).join('');
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 动态与通知
-     * ==================================================================== */
-
     /**
-     * 合并本地活动和 API 通知，生成统一的动态列表
-     * 本地活动（用户操作产生的记录）排在前面，API 通知紧随其后
-     * 最多返回 5 条记录
-     * @returns {Array<Object>} 动态条目数组
+     * 合并本地活动动态和 API 通知，生成统一的活动列表
+     * 本地活动（用户操作产生）排在前面，API 通知在后，最多返回 5 条
+     * @returns {Array<Object>} 活动条目数组，每条含 icon、text、tag、time
      */
     function activityItems() {
-        // 将 API 通知转换为统一格式
         var apiItems = state.notifications.map(function (item) {
             var icon = item.type === 'feed' ? '🍖' : item.type === 'emergency' ? '🚨' : '🔔';
             var tag = item.type === 'feed' ? '投喂' : item.type === 'emergency' ? '紧急' : '系统';
@@ -804,13 +706,13 @@
                 time: formatRelative(item.time)
             };
         });
-        // 本地活动在前，API 通知在后，截取前 5 条
         return state.localActivities.concat(apiItems).slice(0, 5);
     }
 
     /**
-     * 渲染动态列表区域
-     * 展示最近的社区动态（投喂、反馈、系统通知等）
+     * 渲染社区动态列表
+     * 展示投喂、反馈、通知等活动的混合列表
+     * 目标 DOM：#activityList
      */
     function renderActivities() {
         var items = activityItems();
@@ -830,47 +732,45 @@
 
     /**
      * 渲染通知红点状态
-     * 当存在未读通知时显示红点，否则隐藏
+     * 存在未读通知时显示红点，否则隐藏
+     * 目标 DOM：#notifyDot
      */
     function renderNotifications() {
         var dot = $('notifyDot');
-        // 检查是否存在未读通知
         if (dot) dot.hidden = !state.notifications.some(function (item) { return !item.read; });
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 资源流向与数据洞察
-     * ==================================================================== */
-
     /**
-     * 渲染资源流向条形图
-     * 展示已绝育与未绝育猫咪的比例分布
+     * 渲染资源分配流向图
+     * 展示已绝育/未绝育猫咪的比例条，用于可视化资源分配策略
+     * 目标 DOM：#flowUnneutered, #flowNeutered, #flowRatio
      */
     function renderResourceFlow() {
         var total = state.cats.length;
         var unneutered = state.cats.filter(function (cat) { return !cat.neutered; }).length;
-        var unPct = total ? Math.round(unneutered / total * 100) : 0;  // 未绝育占比
-        var okPct = total ? 100 - unPct : 0;                            // 已绝育占比
+        var unPct = total ? Math.round(unneutered / total * 100) : 0;
+        var okPct = total ? 100 - unPct : 0;
 
         var unEl = $('flowUnneutered');
         var okEl = $('flowNeutered');
-        unEl.style.width = unPct + '%';  // 设置未绝育条形宽度
-        okEl.style.width = okPct + '%';  // 设置已绝育条形宽度
+        unEl.style.width = unPct + '%';
+        okEl.style.width = okPct + '%';
         unEl.textContent = '未绝育 ' + unPct + '%';
         okEl.textContent = '已绝育 ' + okPct + '%';
         $('flowRatio').textContent = '未绝育优先 · ' + unneutered + ' / ' + total + ' 只';
     }
 
     /**
-     * 渲染 AI × IoT 数据洞察区域
-     * 展示设备同步状态、AI 识别统计和政府治理反馈
+     * 渲染 AI × IoT 管理概览区域
+     * 展示设备同步状态、AI 投喂分析、政府治理反馈三项洞察信息
+     * 目标 DOM：#insightDevice, #insightAI, #insightGov
      */
     function renderInsight() {
         var totalFeeds = state.stats.total_feeds != null
             ? Number(state.stats.total_feeds)
             : state.cats.reduce(function (sum, cat) { return sum + cat.feedCount; }, 0);
-        var healthAlerts = state.cats.filter(function (cat) { return cat.health !== '健康'; });  // 健康异常猫咪
-        var emergency = state.notifications.filter(function (item) { return item.type === 'emergency'; }).length;  // 紧急通知数
+        var healthAlerts = state.cats.filter(function (cat) { return cat.health !== '健康'; });
+        var emergency = state.notifications.filter(function (item) { return item.type === 'emergency'; }).length;
 
         $('insightDevice').textContent = state.cats.length + ' 个猫咪点位已建档，摄像头、投喂器与环境传感器数据持续同步。';
         $('insightAI').textContent = '累计完成 ' + fmt(totalFeeds) + ' 次投喂记录，' + healthAlerts.length + ' 只猫咪需要持续观察。';
@@ -879,7 +779,9 @@
 
     /**
      * 渲染侧边栏摘要信息
-     * 包括 AI 识别摘要、设备在线状态和健康提醒
+     * 展示 AI 识别摘要、设备同步状态和健康提醒
+     * 健康提醒分两级：有异常猫咪时显示"轻度健康提醒"（橙色），否则显示"健康状态良好"
+     * 目标 DOM：#summaryAI, #summaryDevice, #summaryHealthDot, #summaryHealthTitle, #summaryHealthText
      */
     function renderSidebar() {
         var totalFeeds = state.stats.total_feeds != null
@@ -894,26 +796,21 @@
         var title = $('summaryHealthTitle');
         var text = $('summaryHealthText');
         if (healthAlerts.length) {
-            // 有健康异常时显示警告状态
             dot.className = 'dot-status alert';
             title.textContent = '轻度健康提醒';
-            text.textContent = healthAlerts.map(function (cat) { return '"' + cat.name + '"' + cat.health; }).join('、') + '，建议继续观察。';
+            text.textContent = healthAlerts.map(function (cat) { return '“' + cat.name + '”' + cat.health; }).join('、') + '，建议继续观察。';
         } else {
-            // 全部健康时显示正常状态
             dot.className = 'dot-status';
             title.textContent = '健康状态良好';
             text.textContent = '当前所有猫咪健康记录正常，未发现异常。';
         }
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 失踪猫咪横幅
-     * ==================================================================== */
-
     /**
-     * 渲染失踪猫咪提醒横幅
-     * 当有猫咪连续 7 天以上未出现时，显示提醒横幅
-     * 用户可以关闭横幅，关闭状态记录在 state.missingDismissed 中
+     * 渲染失踪猫咪横幅警告
+     * 当有猫咪连续 7 天以上未出现时显示警告横幅，提示用户上报位置
+     * 用户可关闭横幅（通过 state.missingDismissed 标记）
+     * 目标 DOM：#missingBanner, #missingBannerText
      */
     function renderMissingBanner() {
         var banner = $('missingBanner');
@@ -922,19 +819,15 @@
             banner.hidden = true;
             return;
         }
-        // 找出最大未出现天数
         var maxDays = Math.max.apply(null, missing.map(function (cat) { return cat.missingDays; }));
-        $('missingBannerText').textContent = '"' + missing.map(function (cat) { return cat.name; }).join('、') +
-            '" 已 ' + maxDays + ' 天未出现。如果看到它们，请及时上报位置。';
+        $('missingBannerText').textContent = '“' + missing.map(function (cat) { return cat.name; }).join('、') +
+            '” 已 ' + maxDays + ' 天未出现。如果看到它们，请及时上报位置。';
         banner.hidden = false;
     }
 
-    /* ====================================================================
-     * 渲染函数 —— 用户信息与领养进度
-     * ==================================================================== */
-
     /**
-     * 渲染总控函数：调用所有子渲染函数完成页面整体更新
+     * 全量渲染所有界面区域
+     * 按顺序调用所有 render* 函数，用于初始化和数据刷新后的一次性更新
      */
     function renderAll() {
         renderStats();
@@ -957,25 +850,25 @@
     }
 
     /**
-     * 渲染用户头像和昵称
-     * 已登录时显示用户首字头像和昵称，未登录时显示默认值
+     * 渲染用户信息区域
+     * 显示用户头像（取昵称首字）和欢迎语，未登录时显示默认文案
+     * 目标 DOM：#userAvatar, #userName
      */
     function renderUser() {
         var user = state.user;
-        // 头像取昵称首字，未登录时显示「爱」
         $('userAvatar').textContent = user ? String(user.nickname || '爱').slice(0, 1) : '爱';
         $('userName').textContent = user ? user.nickname : '你好，爱心用户';
     }
 
     /**
-     * 渲染领养进度追踪
-     * 从 localStorage 读取领养申请记录，展示当前所处的领养阶段
+     * 渲染领养进度追踪区域
+     * 从 localStorage 读取领养申请记录，展示四阶段进度条（线上试养→月度过渡→稳定期→终身关怀）
      * 无申请记录时显示空状态提示
+     * 目标 DOM：#adoptTrackEmpty, #adoptTrackProgress
      */
     function renderAdoptionProgress() {
         var empty = $('adoptTrackEmpty');
         var progress = $('adoptTrackProgress');
-        // 尝试从 localStorage 恢复领养申请数据
         var app = null;
         try {
             app = JSON.parse(localStorage.getItem(STORAGE.adoption) || 'null');
@@ -988,7 +881,6 @@
             progress.innerHTML = '';
             return;
         }
-        // 有领养记录，显示进度步骤
         empty.hidden = true;
         progress.hidden = false;
         progress.innerHTML = '' +
@@ -997,7 +889,7 @@
             '</p>' +
             '<div class="track-steps">' +
                 ADOPT_STAGES.map(function (stage, index) {
-                    var cls = index === 0 ? 'active' : '';  // 第一阶段高亮
+                    var cls = index === 0 ? 'active' : '';
                     return '<div class="track-step ' + cls + '">' +
                         '<div class="track-dot">' + stage.icon + '</div>' +
                         '<div class="track-name">' + stage.name + '</div>' +
@@ -1008,23 +900,20 @@
             '<p class="track-hint">第 7 天志愿者将上门初访，请保持电话畅通。</p>';
     }
 
-    /* ====================================================================
-     * 猫咪详情 / 领养
-     * ==================================================================== */
+    /* ---------------- 猫咪详情弹窗 / 领养申请 ---------------- */
 
     /**
-     * 生成猫咪失踪响应 SOP（标准操作流程）的 HTML
-     * 根据失踪天数判定响应级别和应采取的行动
-     * @param {Object} cat - 猫咪对象（需包含 missingDays 字段）
+     * 生成猫咪失踪响应 SOP（标准操作流程）HTML
+     * 根据失踪天数判定响应级别：正常 / 预警(5天) / 正式响应(7天) / 升级响应(14天)
+     * 包含判定标准说明、寻猫文案示例和志愿者操作指南
+     * @param {Object} cat - 猫咪对象
      * @returns {string} SOP 详情 HTML 字符串
      */
     function missingSopHtml(cat) {
         var days = cat.missingDays;
-        // 根据失踪天数确定响应级别
         var level = days >= 14 ? '升级响应' : days >= 7 ? '正式响应' : days >= 5 ? '预警' : '正常';
-        // 根据级别确定应采取的行动
         var action = days >= 14
-            ? '已结案，标记"失踪 / 离区"'
+            ? '已结案，标记“失踪 / 离区”'
             : days >= 7
                 ? '社区推送寻猫消息 + 志愿者轻量介入'
                 : days >= 5
@@ -1045,7 +934,7 @@
                     '<li><strong>升级响应：</strong>连续 14 天未出现 → 标记失踪 / 离区</li>' +
                 '</ul>' +
                 '<h4>🐾 寻猫文案示例</h4>' +
-                '<p>🐾 【猫咪失踪提醒】您身边的"' + esc(cat.name) + '"' +
+                '<p>🐾 【猫咪失踪提醒】您身边的“' + esc(cat.name) + '”' +
                     (days > 0 ? '已 ' + days + ' 天未出现。' : '近期活跃，状态正常。') +
                     '如果您在小区看到它，请点击上报位置或照片。无需主动搜索，路过时留意即可。</p>' +
                 '<h4>🧑‍⚕️ 志愿者操作（轻量）</h4>' +
@@ -1059,16 +948,15 @@
     }
 
     /**
-     * 显示猫咪详情弹窗
-     * 展示猫咪的完整信息，包含三个标签页：基本信息、猫咪日记、失踪响应
-     * 底部提供切换直播、投喂、申请领养等操作按钮
-     * @param {number} catId - 要查看的猫咪 ID
+     * 打开猫咪详情弹窗
+     * 展示猫咪基本信息、日记、失踪响应三个标签页，底部提供切换直播/投喂/领养操作按钮
+     * 弹窗内的标签页切换通过事件委托实现
+     * @param {number} catId - 目标猫咪 ID
      */
     function showCatDetail(catId) {
         var cat = findCat(catId);
         if (!cat) return;
 
-        // 生成详情弹窗中的日记条目 HTML
         var diaryHtml = diaryEntriesFor(cat).map(function (entry) {
             return '<div class="diary-entry">' +
                 '<div class="diary-entry-head"><span>📅 ' + entry.label + '</span><span>' + entry.slot + '</span></div>' +
@@ -1077,24 +965,21 @@
             '</div>';
         }).join('');
 
-        // 打开详情弹窗（非宽屏模式）
         openModal(
             '<div class="detail-head">' +
                 '<div class="detail-avatar">' + cat.emoji + '</div>' +
                 '<div>' +
                     '<h2>' + esc(cat.name) + '</h2>' +
-                    '<p class="detail-nick">"' + esc(cat.nickname) + '" · ' + cat.gender + ' · ' + esc(cat.age) + '</p>' +
+                    '<p class="detail-nick">“' + esc(cat.nickname) + '” · ' + cat.gender + ' · ' + esc(cat.age) + '</p>' +
                     '<p class="detail-desc">' + esc(cat.desc) + '</p>' +
                     '<div class="detail-tags">' + catTagsHtml(cat) + '</div>' +
                 '</div>' +
             '</div>' +
-            // 三个标签页切换按钮
             '<div class="detail-tabs">' +
                 '<button class="detail-tab active" type="button" data-tab="overview">📋 基本信息</button>' +
                 '<button class="detail-tab" type="button" data-tab="diary">📖 猫咪日记</button>' +
                 '<button class="detail-tab" type="button" data-tab="missing">🔔 失踪响应</button>' +
             '</div>' +
-            // 基本信息面板
             '<div class="detail-pane" data-pane="overview">' +
                 '<div class="insight-grid">' +
                     '<div class="mini-panel"><strong>位置</strong><p>' + esc(cat.location) + '</p></div>' +
@@ -1103,11 +988,8 @@
                     '<div class="mini-panel"><strong>绝育与领养</strong><p>' + (cat.neutered ? '已绝育' : '待绝育') + ' · ' + (cat.adoptionReady ? '可申请领养' : '暂不可领养') + '</p></div>' +
                 '</div>' +
             '</div>' +
-            // 日记面板（默认隐藏）
             '<div class="detail-pane" data-pane="diary" hidden>' + diaryHtml + '</div>' +
-            // 失踪响应面板（默认隐藏）
             '<div class="detail-pane" data-pane="missing" hidden>' + missingSopHtml(cat) + '</div>' +
-            // 底部操作按钮
             '<div class="detail-actions">' +
                 '<button class="btn btn-primary" type="button" data-act="switch">切换到它的直播</button>' +
                 '<button class="btn btn-soft" type="button" data-act="feed">🍖 投喂它</button>' +
@@ -1115,39 +997,32 @@
             '</div>'
         );
 
-        // 绑定标签页切换事件
         var tabs = document.querySelectorAll('.detail-tab');
         var panes = document.querySelectorAll('.detail-pane');
         Array.prototype.forEach.call(tabs, function (tab) {
             tab.addEventListener('click', function () {
-                // 移除所有标签的 active 状态，再激活当前标签
                 Array.prototype.forEach.call(tabs, function (item) { item.classList.remove('active'); });
                 tab.classList.add('active');
-                // 根据标签的 data-tab 属性切换对应面板的显示/隐藏
                 Array.prototype.forEach.call(panes, function (pane) {
                     pane.hidden = pane.getAttribute('data-pane') !== tab.getAttribute('data-tab');
                 });
             });
         });
 
-        // 绑定底部操作按钮事件
         var actions = $('modalBody').querySelectorAll('[data-act]');
         Array.prototype.forEach.call(actions, function (btn) {
             btn.addEventListener('click', function () {
                 var act = btn.getAttribute('data-act');
                 if (act === 'switch') {
-                    // 切换到该猫咪的直播画面
                     switchCat(cat.id);
                     closeModal();
                     scrollToSection('liveSection');
                 } else if (act === 'feed') {
-                    // 切换到该猫咪并直接投喂
                     switchCat(cat.id);
                     closeModal();
                     scrollToSection('liveSection');
                     feedCurrentCat();
                 } else if (act === 'adopt') {
-                    // 打开领养申请表单
                     openAdoptForm(cat.id);
                 }
             });
@@ -1155,32 +1030,31 @@
     }
 
     /**
-     * 计算领养匹配评分
-     * 根据领养动机、居住情况和养宠经验综合评估匹配度
+     * 计算领养人 AI 匹配评分（模拟算法）
+     * 基础分 50，根据领养动机、住房类型、养宠经验累加分数
      * @param {string} reason - 领养动机文本
-     * @param {string} housing - 居住类型（own/rent/dorm/family）
-     * @param {string} experience - 养宠经验（yes/no）
-     * @returns {number} 匹配分数（20~98 之间）
+     * @param {string} housing - 住房类型：'own' | 'rent' | 'dorm' | 'family'
+     * @param {string} experience - 养宠经验：'yes' | 'no'
+     * @returns {number} 评分，范围 [20, 98]
      */
     function matchScoreFor(reason, housing, experience) {
-        var score = 50;  // 基础分
-        // 根据领养动机中的关键词加分
+        var score = 50;
         if (/陪伴|爱/.test(reason)) score += 15;
         if (/救助|流浪/.test(reason)) score += 10;
         if (/责任/.test(reason)) score += 5;
-        // 根据居住类型加分
-        if (housing === 'own') score += 10;     // 自有住房加分最多
-        if (housing === 'family') score += 5;   // 与家人同住次之
-        // 根据养宠经验加分
+        if (housing === 'own') score += 10;
+        if (housing === 'family') score += 5;
         if (experience === 'yes') score += 10;
-        return clamp(score, 20, 98);  // 限制在 20~98 区间
+        return clamp(score, 20, 98);
     }
 
     /**
      * 打开领养申请表单弹窗
-     * 包含个人信息、居住情况、养宠经验、AI 匹配评分和承诺确认等模块
-     * 表单提交前进行完整的字段验证
-     * @param {number} catId - 要申请领养的猫咪 ID
+     * 表单包含个人信息、居住情况、养宠经验、承诺确认四个板块
+     * 内置 AI 匹配评分实时更新（监听输入变化自动计算）
+     * 提交时进行前端校验，通过后调用 /api/adopt/apply 接口
+     * 成功后将申请信息存入 localStorage 并刷新领养进度
+     * @param {number} catId - 目标猫咪 ID
      */
     function openAdoptForm(catId) {
         var cat = findCat(catId);
@@ -1190,7 +1064,6 @@
             return;
         }
 
-        // 打开宽屏模式的领养申请表单弹窗
         openModal(
             '<h2>🏠 领养申请表 · ' + esc(cat.name) + '</h2>' +
             '<p class="modal-sub">提交后进入 D1-D7 线上试养，志愿者将在第 7 天上门初访。</p>' +
@@ -1214,7 +1087,6 @@
                     '<label class="field">之前养过什么宠物<input id="apPets" type="text" maxlength="128" placeholder="如：猫、狗等"></label>' +
                     '<label class="field full">养宠动机 *<textarea id="apReason" maxlength="800" rows="3" placeholder="请简述您想领养猫咪的原因…"></textarea></label>' +
                 '</div>' +
-                // AI 匹配评分区域
                 '<div class="match-box">' +
                     '<div class="match-head"><span>🤖 AI 匹配评分</span><strong id="matchScore">--</strong></div>' +
                     '<div class="match-bar"><div class="match-fill" id="matchFill"></div></div>' +
@@ -1232,10 +1104,9 @@
                     '<button class="btn btn-primary" type="submit">提交申请</button>' +
                 '</div>' +
             '</form>',
-            true  // 宽屏模式
+            true
         );
 
-        // 获取表单元素和评分相关元素的引用
         var form = $('adoptForm');
         var reason = $('apReason');
         var housing = $('apHousing');
@@ -1244,10 +1115,6 @@
         var fillEl = $('matchFill');
         var textEl = $('matchText');
 
-        /**
-         * 更新 AI 匹配评分显示
-         * 根据用户填写的动机、居住类型和经验实时计算并展示匹配度
-         */
         function updateMatch() {
             var hasInput = reason.value.trim() || housing.value || experience.value;
             if (!hasInput) {
@@ -1259,7 +1126,6 @@
             var score = matchScoreFor(reason.value, housing.value, experience.value);
             scoreEl.textContent = score + '/100';
             fillEl.style.width = score + '%';
-            // 根据分数段显示不同的评价和颜色
             if (score >= 80) {
                 textEl.textContent = '✨ 匹配度优秀，您很可能是理想的领养人。';
                 fillEl.style.background = 'linear-gradient(90deg, var(--sage), #b5caaf)';
@@ -1272,14 +1138,12 @@
             }
         }
 
-        // 监听输入变化，实时更新匹配评分
         [reason, housing, experience].forEach(function (el) {
             el.addEventListener('input', updateMatch);
             el.addEventListener('change', updateMatch);
         });
-        updateMatch();  // 初始化时计算一次
+        updateMatch();
 
-        // 表单提交处理
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
             var name = $('apName').value.trim();
@@ -1287,7 +1151,6 @@
             var phone = $('apPhone').value.trim();
             var adoptionReason = reason.value.trim();
 
-            // 必填字段验证
             if (!name || !phone || !adoptionReason) {
                 showToast('请填写姓名、电话与领养动机');
                 return;
@@ -1300,13 +1163,11 @@
                 showToast('请完整填写居住情况与养宠经验');
                 return;
             }
-            // 承诺条款必须全部勾选
             if (!$('ckTerms').checked || !$('ckNeuter').checked || !$('ckDeposit').checked || !$('ckChain').checked) {
                 showToast('请勾选全部承诺条款');
                 return;
             }
 
-            // 组装申请人信息
             var applicant = {
                 name: name,
                 age: age,
@@ -1320,7 +1181,6 @@
                 adoptionReason: adoptionReason
             };
 
-            // 禁用提交按钮，防止重复提交
             var submitBtn = form.querySelector('[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.textContent = '提交中…';
@@ -1330,12 +1190,10 @@
             } catch (err) {
                 result = { success: false, message: '网络异常，请稍后重试' };
             }
-            // 恢复提交按钮状态
             submitBtn.disabled = false;
             submitBtn.textContent = '提交申请';
 
             if (result.success) {
-                // 将领养申请信息保存到 localStorage，用于渲染领养进度
                 localStorage.setItem(STORAGE.adoption, JSON.stringify({
                     catId: cat.id,
                     catName: cat.name,
@@ -1353,7 +1211,7 @@
 
     /**
      * 打开领养须知弹窗
-     * 展示领养的基本条件和要求，包括绝育、回访、保障金等条款
+     * 展示领养条件、绝育要求、保障金、区块链存证等须知条款
      */
     function openAdoptNotice() {
         openModal(
@@ -1372,20 +1230,18 @@
         );
     }
 
-    /* ====================================================================
-     * 弹窗管理 —— 分享 / 投诉 / 通知 / 登录
-     * ==================================================================== */
+    /* ---------------- 弹窗功能：分享 / 投诉 / 通知 / 登录 ---------------- */
 
     /**
      * 打开分享弹窗
-     * 提供微信、微博、复制链接等分享方式
+     * 提供微信、微博、复制链接三种分享方式，展示当前直播间链接
      */
     function openShareModal() {
         var cat = currentCat();
         var link = window.location.href;
         openModal(
             '<h2>📤 分享直播间</h2>' +
-            '<p class="modal-sub">把"' + esc(cat ? cat.name : '猫咪') + '"的实时画面分享给朋友。</p>' +
+            '<p class="modal-sub">把“' + esc(cat ? cat.name : '猫咪') + '”的实时画面分享给朋友。</p>' +
             '<div class="form-grid">' +
                 '<button class="btn btn-soft" type="button" data-share="wechat">💬 微信</button>' +
                 '<button class="btn btn-soft" type="button" data-share="weibo">📢 微博</button>' +
@@ -1399,12 +1255,11 @@
     }
 
     /**
-     * 打开社区投诉/建议提交弹窗
-     * 支持关联猫咪、选择问题类型、标记紧急事件
-     * 提交后自动生成治理建议，7 天反馈、14 天结案
+     * 打开社区投诉/建议弹窗
+     * 表单包含关联猫咪、问题类型、问题描述、是否紧急等字段
+     * 提交后调用 /api/report 接口，成功时将反馈加入本地活动列表并刷新
      */
     function openReportModal() {
-        // 生成猫咪选择下拉选项
         var options = state.cats.map(function (cat) {
             return '<option value="' + cat.id + '">' + esc(cat.name) + ' · ' + esc(cat.location) + '</option>';
         }).join('');
@@ -1432,7 +1287,6 @@
             '</form>'
         );
 
-        // 表单提交处理
         $('reportForm').addEventListener('submit', async function (event) {
             event.preventDefault();
             var description = $('reportText').value.trim();
@@ -1459,7 +1313,6 @@
             submitBtn.disabled = false;
             submitBtn.textContent = '提交';
             if (result.success) {
-                // 将反馈记录添加到本地活动列表
                 state.localActivities.unshift({
                     icon: payload.is_emergency ? '🚨' : '📝',
                     text: '你提交了社区' + (payload.is_emergency ? '紧急' : '') + '反馈：' + description,
@@ -1471,7 +1324,7 @@
                     : '✅ 反馈已提交，系统将生成治理建议');
                 closeModal();
                 renderActivities();
-                loadNotifications();  // 刷新通知列表
+                loadNotifications();
             } else {
                 showToast('❌ ' + (result.message || '提交失败'));
             }
@@ -1479,8 +1332,8 @@
     }
 
     /**
-     * 打开通知消息弹窗
-     * 展示所有通知消息（投喂、紧急、系统通知），打开后自动标记为已读
+     * 打开消息通知弹窗
+     * 展示所有通知列表（投喂/紧急/系统），打开后自动将所有通知标记为已读
      */
     function openNotificationsModal() {
         var items = state.notifications;
@@ -1501,22 +1354,22 @@
             '<div class="modal-actions"><button class="btn btn-primary" type="button" data-close>知道了</button></div>'
         );
 
-        // 打开后自动标记所有通知为已读
         state.notifications.forEach(function (item) { item.read = true; });
         renderNotifications();
     }
 
     /**
-     * 打开登录/注册弹窗
-     * 已登录时显示用户信息面板（含退出按钮），未登录时显示手机号+验证码登录表单
-     * 测试验证码为 8888
+     * 打开登录/用户信息弹窗
+     * 两种状态：
+     * - 已登录：展示用户信息（手机号、积分、投喂次数），提供退出登录按钮
+     * - 未登录：展示手机号+验证码登录表单，提交后调用 /api/auth/login 接口
+     *   登录成功后将 token 和用户信息存入 localStorage 并刷新界面
      */
     function openLoginModal() {
-        // 已登录状态：显示用户信息
         if (state.user) {
             openModal(
                 '<h2>👤 我的账号</h2>' +
-                '<p class="modal-sub">当前以"' + esc(state.user.nickname) + '"的身份参与守护。</p>' +
+                '<p class="modal-sub">当前以“' + esc(state.user.nickname) + '”的身份参与守护。</p>' +
                 '<div class="insight-grid">' +
                     '<div class="mini-panel"><strong>手机号</strong><p>' + esc(state.user.phone || '未绑定') + '</p></div>' +
                     '<div class="mini-panel"><strong>积分</strong><p>' + fmt(state.user.points || 0) + ' 分</p></div>' +
@@ -1530,7 +1383,6 @@
             return;
         }
 
-        // 未登录状态：显示登录表单
         openModal(
             '<h2>👤 登录 / 注册</h2>' +
             '<p class="modal-sub">手机号 + 验证码登录，测试验证码为 8888。</p>' +
@@ -1546,7 +1398,6 @@
             '</form>'
         );
 
-        // 登录表单提交处理
         $('loginForm').addEventListener('submit', async function (event) {
             event.preventDefault();
             var phone = $('loginPhone').value.trim();
@@ -1563,7 +1414,6 @@
             submitBtn.disabled = false;
             submitBtn.textContent = '登录';
             if (result.success && result.user) {
-                // 登录成功：保存用户信息和令牌到 state 和 localStorage
                 state.user = result.user;
                 localStorage.setItem(STORAGE.token, result.token || '');
                 localStorage.setItem(STORAGE.user, JSON.stringify(result.user));
@@ -1576,13 +1426,11 @@
         });
     }
 
-    /* ====================================================================
-     * 行为/事件处理函数
-     * ==================================================================== */
+    /* ---------------- 用户行为与交互逻辑 ---------------- */
 
     /**
      * 平滑滚动到指定页面区域
-     * @param {string} id - 目标区域的 DOM 元素 ID
+     * @param {string} id - 目标区域的 DOM id
      */
     function scrollToSection(id) {
         var section = document.getElementById(id);
@@ -1590,9 +1438,9 @@
     }
 
     /**
-     * 切换当前选中的猫咪
-     * 更新 state.currentCatId 并刷新直播面板和日记区域
-     * @param {number} catId - 要切换到的猫咪 ID
+     * 切换当前选中猫咪
+     * 更新 currentCatId 并重新渲染直播区域和日记区域
+     * @param {number} catId - 目标猫咪 ID
      */
     function switchCat(catId) {
         var cat = findCat(catId);
@@ -1603,8 +1451,9 @@
     }
 
     /**
-     * 直播面板猫咪 emoji 弹跳动画
-     * 投喂时触发，给猫咪 emoji 添加短暂的弹跳效果
+     * 为直播区域的猫咪 emoji 添加弹跳动画
+     * 通过添加/移除 CSS 类 'bounce' 实现 260ms 的缩放动效
+     * 目标 DOM：#liveCatEmoji
      */
     function animateLiveCat() {
         var emoji = $('liveCatEmoji');
@@ -1613,19 +1462,21 @@
     }
 
     /**
-     * 为当前选中的猫咪投喂
-     * 调用后端 API 记录投喂，同时更新本地状态并刷新相关 UI
-     * 若 API 不可用，则在本地记录投喂（离线容错）
-     * @async
+     * 执行投喂操作
+     * 1. 播放猫咪弹跳动画
+     * 2. 调用 /api/feed 接口提交投喂请求
+     * 3. 接口成功时更新猫咪投喂次数；失败时本地累加（离线容错）
+     * 4. 将投喂记录加入本地活动列表
+     * 5. 刷新所有受影响的界面区域
+     * 6. 异步拉取最新统计、投喂记录和通知
      * @returns {Promise<void>}
      */
     async function feedCurrentCat() {
         var cat = currentCat();
         if (!cat) return;
         var pack = state.selectedPack;
-        animateLiveCat();  // 触发弹跳动画
+        animateLiveCat();
 
-        // 调用后端投喂 API
         var result;
         try {
             result = await apiPost('/api/feed', {
@@ -1639,26 +1490,22 @@
 
         var amount = pack.amount;
         if (result.success) {
-            // API 成功：使用后端返回的最新投喂次数
             cat.feedCount = Number(result.feed_count != null ? result.feed_count : cat.feedCount + amount);
             showToast('已为 ' + cat.name + ' 投喂 ' + amount + ' 份 · ' + pack.label);
         } else {
-            // API 失败：本地递增投喂次数（离线容错）
             cat.feedCount += amount;
             state.stats.total_feeds = Number(state.stats.total_feeds || 0) + amount;
             showToast((result.message || '接口暂不可用') + '，已本地记录这次投喂');
         }
 
-        // 将本次投喂添加到本地活动日志
         state.localActivities.unshift({
             icon: '🍖',
-            text: '你为"' + cat.name + '"投喂了 ' + pack.label + '（' + amount + ' 份）',
+            text: '你为“' + cat.name + '”投喂了 ' + pack.label + '（' + amount + ' 份）',
             tag: '投喂',
             time: '刚刚'
         });
-        if (state.localActivities.length > 8) state.localActivities.length = 8;  // 限制本地活动数量
+        if (state.localActivities.length > 8) state.localActivities.length = 8;
 
-        // 刷新所有受投喂影响的 UI 区域
         renderLive();
         renderStats();
         renderCats();
@@ -1668,14 +1515,13 @@
         renderSidebar();
         renderInsight();
 
-        // 异步刷新后端数据（统计、投喂记录、通知）
         await Promise.allSettled([refreshStats(), loadFeedLogs(), loadNotifications()]);
     }
 
     /**
      * 从后端刷新统计数据
-     * 静默失败，保持现有数据不变
-     * @async
+     * 调用 /api/stats 获取最新统计，成功后重新渲染统计、侧边栏和概览区域
+     * 失败时保持现有数据不变
      * @returns {Promise<void>}
      */
     async function refreshStats() {
@@ -1694,8 +1540,7 @@
 
     /**
      * 从后端加载投喂记录
-     * 最多获取 6 条记录，失败时保持现有数据
-     * @async
+     * 调用 /api/feed-logs 获取最近 6 条记录，失败时保持现有数据
      * @returns {Promise<void>}
      */
     async function loadFeedLogs() {
@@ -1709,9 +1554,8 @@
     }
 
     /**
-     * 从后端加载通知消息
-     * 失败时保持现有通知数据
-     * @async
+     * 从后端加载通知列表
+     * 调用 /api/notifications 获取通知，成功后刷新红点、动态和概览区域
      * @returns {Promise<void>}
      */
     async function loadNotifications() {
@@ -1728,7 +1572,7 @@
 
     /**
      * 从 localStorage 恢复用户登录状态
-     * 页面刷新后自动恢复用户的登录信息
+     * 解析存储的用户信息 JSON，若数据无效则设为 null
      */
     function restoreUser() {
         var user = null;
@@ -1742,10 +1586,11 @@
 
     /**
      * 绑定所有静态事件监听器
-     * 包括按钮点击、搜索、导航、筛选、文件上传、弹窗交互等
+     * 包括：投喂按钮、导航按钮、搜索框、筛选器、猫咪卡片点击、地图标记点击、
+     * 排行榜点击、照片上传、弹窗关闭、键盘快捷键（ESC 关闭弹窗）、
+     * 直播卡片跳转、分享/投诉/通知/登录按钮等
      */
     function bindStaticEvents() {
-        /* --- 顶部操作按钮 --- */
         if ($('feedBtn')) $('feedBtn').addEventListener('click', feedCurrentCat);
 
         $('heroFeedBtn').addEventListener('click', function () {
@@ -1762,51 +1607,36 @@
         if ($('catInfoBtn')) $('catInfoBtn').addEventListener('click', function () {
             if (state.currentCatId) showCatDetail(state.currentCatId);
         });
-
-        /* --- 日记区域按钮 --- */
         $('diaryRefreshBtn').addEventListener('click', function () {
             if (!state.cats.length) return;
-            // 切换到下一只猫咪（循环）
             var index = state.cats.findIndex(function (cat) { return cat.id === state.currentCatId; });
             var next = state.cats[(index + 1) % state.cats.length];
             switchCat(next.id);
             showToast('已刷新猫咪动态');
         });
-
-        /* --- 通知与登录按钮 --- */
         $('notifyBtn').addEventListener('click', openNotificationsModal);
         $('loginBtn').addEventListener('click', openLoginModal);
-
-        /* --- 地图与分享按钮 --- */
         $('mapLiveBtn').addEventListener('click', function () {
             scrollToSection('liveSection');
             showToast('已定位到当前猫屋直播');
         });
         if ($('shareLiveBtn')) $('shareLiveBtn').addEventListener('click', openShareModal);
-
-        /* --- 投诉与领养须知按钮 --- */
         $('openReportBtn').addEventListener('click', openReportModal);
         $('adoptNoticeBtn').addEventListener('click', openAdoptNotice);
         $('adoptNoticeBtn2').addEventListener('click', openAdoptNotice);
-
-        /* --- 失踪横幅关闭按钮 --- */
         $('missingBannerClose').addEventListener('click', function () {
             state.missingDismissed = true;
             $('missingBanner').hidden = true;
         });
 
-        /* --- 弹窗关闭事件 --- */
         $('closeModalBtn').addEventListener('click', closeModal);
-        // 点击弹窗遮罩层关闭
         $('modal').addEventListener('click', function (event) {
             if (event.target === $('modal')) closeModal();
         });
-        // 按 Escape 键关闭弹窗
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') closeModal();
         });
 
-        /* --- 搜索功能 --- */
         $('searchInput').addEventListener('keydown', function (event) {
             if (event.key !== 'Enter') return;
             var keyword = event.target.value.trim();
@@ -1814,7 +1644,6 @@
                 showToast('请输入猫咪或猫屋关键词');
                 return;
             }
-            // 在猫咪名称、昵称、位置中搜索匹配项
             var hit = state.cats.filter(function (cat) {
                 return cat.name.indexOf(keyword) >= 0 ||
                     cat.nickname.indexOf(keyword) >= 0 ||
@@ -1825,14 +1654,12 @@
                 scrollToSection('liveSection');
                 showToast('找到 ' + hit.name + '，已切换到对应信息');
             } else {
-                showToast('没有找到"' + keyword + '"，可以试试"雪球"或"图书馆"');
+                showToast('没有找到“' + keyword + '”，可以试试“雪球”或“图书馆”');
             }
         });
 
-        /* --- 顶部导航菜单 --- */
         Array.prototype.forEach.call(document.querySelectorAll('#menu button'), function (btn) {
             btn.addEventListener('click', function () {
-                // 切换导航按钮的 active 状态
                 Array.prototype.forEach.call(document.querySelectorAll('#menu button'), function (item) {
                     item.classList.remove('active');
                 });
@@ -1841,22 +1668,19 @@
             });
         });
 
-        /* --- 直播卡片点击跳转到 /live 页面（排除内部按钮/链接点击） --- */
+        /* 直播卡片点击入口：跳转到 /live，排除内部按钮/链接点击 */
         Array.prototype.forEach.call(document.querySelectorAll('[data-live-entry]'), function (card) {
             card.addEventListener('click', function (e) {
                 var tag = (e.target.tagName || '').toUpperCase();
-                // 排除按钮、链接和输入框的点击事件
                 if (tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || e.target.closest('button') || e.target.closest('a')) return;
                 window.location.href = '/live';
             });
         });
 
-        /* --- 猫咪列表筛选 --- */
         $('catsFilter').addEventListener('click', function (event) {
             var chip = event.target.closest('.filter-chip');
             if (!chip) return;
             state.filter = chip.getAttribute('data-filter');
-            // 切换筛选按钮的 active 状态
             Array.prototype.forEach.call(document.querySelectorAll('#catsFilter .filter-chip'), function (item) {
                 item.classList.remove('active');
             });
@@ -1864,17 +1688,15 @@
             renderCats();
         });
 
-        /* --- 猫咪卡片点击查看详情 --- */
         $('catsGrid').addEventListener('click', function (event) {
             var card = event.target.closest('.cat-card');
             if (card) showCatDetail(Number(card.getAttribute('data-cat')));
         });
 
-        /* --- 领养区域：区分领养申请按钮和卡片详情点击 --- */
         $('adoptCats').addEventListener('click', function (event) {
             var applyBtn = event.target.closest('[data-apply]');
             if (applyBtn) {
-                event.stopPropagation();  // 阻止冒泡，避免触发卡片点击
+                event.stopPropagation();
                 openAdoptForm(Number(applyBtn.getAttribute('data-apply')));
                 return;
             }
@@ -1882,7 +1704,6 @@
             if (card) showCatDetail(Number(card.getAttribute('data-cat')));
         });
 
-        /* --- 地图标记点击切换到对应猫咪 --- */
         $('mapMarkers').addEventListener('click', function (event) {
             var marker = event.target.closest('[data-cat]');
             if (!marker) return;
@@ -1890,7 +1711,6 @@
             scrollToSection('liveSection');
         });
 
-        /* --- 排行榜点击切换到对应猫咪 --- */
         $('leaderboardList').addEventListener('click', function (event) {
             var row = event.target.closest('[data-cat]');
             if (!row) return;
@@ -1898,7 +1718,6 @@
             scrollToSection('liveSection');
         });
 
-        /* --- 参与区域（投喂/领养/志愿者）点击和键盘事件 --- */
         $('joinSection').addEventListener('click', function (event) {
             var item = event.target.closest('[data-action]');
             if (item) handleJoinAction(item.getAttribute('data-action'));
@@ -1912,9 +1731,8 @@
             }
         });
 
-        /* --- 日记照片上传 --- */
         $('uploadPhotoBtn').addEventListener('click', function () {
-            $('diaryUpload').click();  // 触发隐藏的文件选择器
+            $('diaryUpload').click();
         });
         $('diaryUpload').addEventListener('change', function (event) {
             var file = event.target.files && event.target.files[0];
@@ -1923,7 +1741,6 @@
                 showToast('请选择图片文件');
                 return;
             }
-            // 释放上一个 Object URL，避免内存泄漏
             if (state.diaryPhoto && state.diaryPhoto.url) {
                 URL.revokeObjectURL(state.diaryPhoto.url);
             }
@@ -1934,34 +1751,29 @@
             renderDiary();
             var cat = currentCat();
             if (cat) {
-                // 添加照片上传活动记录
                 state.localActivities.unshift({
                     icon: '📷',
-                    text: '你上传的照片经 AI 识别匹配到"' + cat.name + '"，已加入猫咪日记',
+                    text: '你上传的照片经 AI 识别匹配到“' + cat.name + '”，已加入猫咪日记',
                     tag: '共创',
                     time: '刚刚'
                 });
                 renderActivities();
-                showToast('AI 识别完成：照片已加入"' + cat.name + '"的日记');
+                showToast('AI 识别完成：照片已加入“' + cat.name + '”的日记');
             }
-            event.target.value = '';  // 清空文件选择器，允许重复选择同一文件
+            event.target.value = '';
         });
 
-        /* --- 弹窗内部通用事件委托（关闭、复制、分享、退出） --- */
         $('modalBody').addEventListener('click', function (event) {
-            // 关闭按钮
             var close = event.target.closest('[data-close]');
             if (close) {
                 closeModal();
                 return;
             }
-            // 复制链接按钮
             var copy = event.target.closest('[data-copy]');
             if (copy) {
                 copyText(window.location.href);
                 return;
             }
-            // 分享平台按钮
             var share = event.target.closest('[data-share]');
             if (share) {
                 var platform = share.getAttribute('data-share');
@@ -1972,7 +1784,6 @@
                 }
                 return;
             }
-            // 退出登录按钮
             var logout = event.target.closest('[data-logout]');
             if (logout) {
                 localStorage.removeItem(STORAGE.token);
@@ -1986,8 +1797,11 @@
     }
 
     /**
-     * 处理「参与守护」区域的快捷操作
-     * @param {string} action - 操作类型（feed/adopt/volunteer）
+     * 处理"参与守护"区域的操作按钮点击
+     * @param {string} action - 操作类型：'feed'（投喂）| 'adopt'（领养）| 'volunteer'（志愿者）
+     * - feed：滚动到直播投喂区域
+     * - adopt：滚动到领养区域
+     * - volunteer：弹出志愿者招募说明弹窗
      */
     function handleJoinAction(action) {
         if (action === 'feed') {
@@ -2003,27 +1817,23 @@
                 '<ul class="sop-note" style="padding-left:18px;display:grid;gap:8px;">' +
                     '<li>每周至少参与 1 次巡查或回访</li>' +
                     '<li>发现异常时通过社区共治中心提交反馈</li>' +
-                    '<li>遵守"不捕捉、不驱赶、不遗弃"的原则</li>' +
+                    '<li>遵守“不捕捉、不驱赶、不遗弃”的原则</li>' +
                 '</ul>' +
                 '<div class="modal-actions"><button class="btn btn-primary" type="button" data-close>我知道了</button></div>'
             );
         }
     }
 
-    /* ====================================================================
-     * 数据加载与初始化
-     * ==================================================================== */
+    /* ---------------- 初始化流程 ---------------- */
 
     /**
-     * 从后端并行加载所有初始数据
-     * 同时请求猫咪列表、统计数据、通知消息和投喂记录，
-     * 任一接口失败不影响其他数据的加载
-     * 若猫咪列表接口失败，自动切换为兜底演示数据
-     * @async
+     * 并行加载所有初始数据
+     * 同时请求猫咪列表、统计数据、通知列表、投喂记录四个接口
+     * 任一接口失败不影响其他数据加载（使用 Promise.allSettled）
+     * 猫咪列表失败时降级使用 FALLBACK_CATS 模拟数据
      * @returns {Promise<void>}
      */
     async function loadData() {
-        // 并行发起 4 个 API 请求
         var results = await Promise.allSettled([
             apiGet('/api/cats'),
             apiGet('/api/stats'),
@@ -2036,7 +1846,6 @@
         var notifications = results[2].status === 'fulfilled' ? results[2].value : null;
         var logs = results[3].status === 'fulfilled' ? results[3].value : null;
 
-        // 处理猫咪数据：优先使用 API 数据，失败时使用兜底数据
         if (Array.isArray(cats) && cats.length) {
             state.cats = cats.map(normalizeCat);
         } else {
@@ -2044,7 +1853,6 @@
             state.usedFallback = true;
         }
 
-        // 处理统计数据：优先使用 API 数据，失败时从猫咪列表计算
         if (stats && typeof stats === 'object' && stats.total_feeds != null) {
             state.stats = stats;
         } else {
@@ -2056,25 +1864,27 @@
             };
         }
 
-        // 处理通知和投喂记录
         state.notifications = Array.isArray(notifications) ? notifications : [];
         state.feedLogs = Array.isArray(logs) ? logs : [];
     }
 
     /**
      * 应用初始化入口
-     * 恢复用户状态 → 绑定事件 → 加载数据 → 首次渲染
-     * 在 DOMContentLoaded 事件触发时执行
-     * @async
+     * 执行顺序：
+     * 1. 恢复用户登录状态（从 localStorage）
+     * 2. 绑定所有事件监听器
+     * 3. 加载后端数据（失败时降级为模拟数据）
+     * 4. 默认选中第一只猫咪
+     * 5. 全量渲染界面
+     * 6. 若使用了模拟数据则弹出提示
      * @returns {Promise<void>}
      */
     async function init() {
-        restoreUser();         // 从 localStorage 恢复登录状态
-        bindStaticEvents();    // 绑定所有事件监听器
+        restoreUser();
+        bindStaticEvents();
         try {
-            await loadData();  // 从后端加载数据
+            await loadData();
         } catch (err) {
-            // 数据加载全部失败时的兜底处理
             state.cats = FALLBACK_CATS.map(normalizeCat);
             state.stats = {
                 total_cats: state.cats.length,
@@ -2085,19 +1895,17 @@
             state.usedFallback = true;
         }
 
-        // 默认选中第一只猫咪
         if (state.cats.length) {
             state.currentCatId = state.cats[0].id;
         }
 
-        renderAll();  // 首次全量渲染
+        renderAll();
 
-        // 如果使用了兜底数据，提示用户
         if (state.usedFallback) {
             showToast('接口暂不可用，已切换为演示数据', 3600);
         }
     }
 
-    // 页面 DOM 加载完成后启动应用
+    /* 页面 DOM 加载完成后启动初始化 */
     document.addEventListener('DOMContentLoaded', init);
 })();
