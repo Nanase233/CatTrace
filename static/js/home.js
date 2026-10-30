@@ -1910,4 +1910,27 @@
 
     /* 页面 DOM 加载完成后启动初始化 */
     document.addEventListener('DOMContentLoaded', init);
+
+    /* === 返回顶部按钮逻辑 === */
+    /* 监听滚动事件，滚动超过 300px 时显示按钮 */
+    /* 点击按钮后平滑滚动到页面顶部 */
+    var backToTopBtn = document.getElementById('backToTop');
+    if (backToTopBtn) {
+        /* 滚动监听：判断是否显示返回顶部按钮 */
+        window.addEventListener('scroll', function () {
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+
+        /* 点击事件：平滑滚动到顶部 */
+        backToTopBtn.addEventListener('click', function () {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
 })();

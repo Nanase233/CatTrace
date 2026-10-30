@@ -279,7 +279,7 @@ a {
 /* === Hero 区域网格：左侧主卡（1.65fr）+ 右侧地图卡（0.85fr，最小 300px）=== */
 .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.85fr);
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.8fr);
     gap: 20px;
 }
 
@@ -351,7 +351,7 @@ a {
 
 /* Hero 文案区域：位于左侧，z-index:2 确保文字在装饰元素之上 */
 .hero-copy {
-    padding: 34px 34px 30px;
+    padding: 24px 24px 24px; 
     position: relative;
     z-index: 2;
 }
@@ -366,10 +366,12 @@ a {
 
 /* Hero 主标题：3rem 大字号，紧凑行高 1.18，负字间距增强视觉冲击力 */
 .hero-copy h1 {
-    font-size: 2.6rem; /* 或者 2.5rem、2.8rem，慢慢试 */
-    line-height: 1.2;  /* 稍微放宽一点点行高，看起来不那么挤 */
+    font-size: 2.6rem; 
+    line-height: 1.18;  /* 稍微放宽一点点行高，看起来不那么挤 */
     margin-bottom: 14px;
     letter-spacing: -0.03em; 
+    width: 100%; 
+    display: block; 
 }
 
 /* Hero 描述文字：辅助色，限制最大宽度 420px 保证可读性 */
@@ -2180,4 +2182,56 @@ a {
     }
     .user-chip { padding: 0 10px; }
     .user-chip #userName { display: none; }
+}
+
+/* === 返回顶部按钮 === */
+/* 固定在右下角的圆形按钮，初始隐藏，滚动后显示 */
+.back-to-top {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--pink-deep, #c97a8e));
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(214, 141, 162, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    z-index: 999;
+}
+
+/* 按钮显示状态：滚动超过 300px 后添加 .show 类 */
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* 悬停效果：放大 + 加深阴影 */
+.back-to-top:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(214, 141, 162, 0.5);
+}
+
+/* 点击效果 */
+.back-to-top:active {
+    transform: translateY(0);
+}
+
+/* 移动端调整按钮位置和大小 */
+@media (max-width: 600px) {
+    .back-to-top {
+        right: 16px;
+        bottom: 16px;
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
 }
