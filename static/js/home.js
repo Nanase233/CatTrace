@@ -1912,13 +1912,13 @@
     document.addEventListener('DOMContentLoaded', init);
 
     /* === 返回顶部按钮逻辑 === */
-    /* 监听滚动事件，滚动超过 300px 时显示按钮 */
+    /* 监听滚动事件，滚动超过 100px 时显示按钮 */
     /* 点击按钮后平滑滚动到页面顶部 */
     var backToTopBtn = document.getElementById('backToTop');
     if (backToTopBtn) {
         /* 滚动监听：判断是否显示返回顶部按钮 */
         window.addEventListener('scroll', function () {
-            if (window.scrollY > 300) {
+            if (window.scrollY > 100) {
                 backToTopBtn.classList.add('show');
             } else {
                 backToTopBtn.classList.remove('show');
