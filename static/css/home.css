@@ -653,13 +653,13 @@ a {
 /* === 内容主网格：左侧主内容区（2.3fr）+ 右侧边栏（1fr）===
    - 左侧最小宽度 0 防止内容溢出
    - 右侧最小 280px 保证侧边栏可用性
-   - align-items: start 防止两列等高拉伸
+   - align-items: stretch 让两列等高，消除右侧下方空白
 */
 .content-grid {
     display: grid;
     grid-template-columns: minmax(0, 2.3fr) minmax(280px, 1fr);
     gap: 20px;
-    align-items: start;
+    align-items: stretch;
 }
 
 /* 左/右侧模块堆叠容器：使用响应式间距 clamp() */
