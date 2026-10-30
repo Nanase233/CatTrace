@@ -34,7 +34,7 @@
     --panel-strong: #ffffff;
     --line: #efe4df;
     --text: #4f4749;
-    --muted: #9a8f92;
+    --muted: #666;
     --pink: #d88da3;
     --pink-deep: #c8708b;
     --pink-soft: #f5dce4;
@@ -724,6 +724,8 @@ a {
     background:
         radial-gradient(circle at 70% 32%, rgba(244, 214, 182, 0.18), transparent 18%),
         linear-gradient(180deg, #705540 0%, #583f31 58%, #352722 100%);
+    width: 100%; 
+    box-sizing: border-box;
 }
 
 /* 直播视频内边框装饰：模拟屏幕暗角和光效 */
@@ -2194,12 +2196,12 @@ a {
     height: 48px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(135deg, var(--primary), var(--pink-deep, #c97a8e));
+    background: linear-gradient(135deg, #b8687e, #9a4f65);
     color: #fff;
     font-size: 1.4rem;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(214, 141, 162, 0.4);
+    box-shadow: 0 4px 16px rgba(154, 79, 101, 0.4);
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px);
