@@ -349,64 +349,6 @@
                         </div>
                     </article>
 
-                    <!-- ===== 公益参与 + 最新动态（双列网格） ===== -->
-                    <!-- #joinSection 双列网格区域，包含公益参与入口和最新动态列表 -->
-                    <div class="dual-grid" id="joinSection">
-                        <!-- .join-card 公益参与卡片 -->
-                        <article class="panel join-card">
-                            <!-- 卡片头部 -->
-                            <div class="card-head">
-                                <div>
-                                    <h3>💗 公益参与</h3>
-                                    <small>用你的行动，为流浪猫创造更好的未来</small>
-                                </div>
-                                <small>更多 →</small>
-                            </div>
-                            <!-- .join-grid 参与方式网格，每个 .join-item 代表一种参与方式 -->
-                            <div class="join-grid">
-                                <!-- data-action="feed" 投喂入口，JS 通过 data-action 识别操作类型并触发对应流程 -->
-                                <!-- role="button" tabindex="0" 无障碍属性，使 div 可被键盘聚焦和激活 -->
-                                <div class="join-item" data-action="feed" role="button" tabindex="0">
-                                    <div class="icon" style="background:var(--pink-soft);color:var(--pink-deep);">🍖</div>
-                                    <h4>我要投喂</h4>
-                                    <p>透明参与每一次守护</p>
-                                </div>
-                                <!-- data-action="adopt" 领养入口 -->
-                                <div class="join-item" data-action="adopt" role="button" tabindex="0">
-                                    <div class="icon" style="background:#fdeff1;color:#d47a95;">💞</div>
-                                    <h4>寻找领养</h4>
-                                    <p>给它一个家</p>
-                                </div>
-                                <!-- data-action="volunteer" 志愿者入口 -->
-                                <div class="join-item" data-action="volunteer" role="button" tabindex="0">
-                                    <div class="icon" style="background:var(--sage-soft);color:#6f8d6e;">🤝</div>
-                                    <h4>加入志愿者</h4>
-                                    <p>一起参与守护</p>
-                                </div>
-                            </div>
-                            <!-- .join-banner 公益宣传横幅 -->
-                            <div class="join-banner">
-                                <p>让爱心不再是一个人的事，<br>而是一群人的力量。</p>
-                            </div>
-                        </article>
-
-                        <!-- .activity-card 最新动态卡片 -->
-                        <article class="panel activity-card">
-                            <!-- 卡片头部 -->
-                            <div class="card-head">
-                                <div>
-                                    <h3>📰 最新动态</h3>
-                                    <small>投喂、识别、设备运行与社区反馈</small>
-                                </div>
-                                <small>更多 →</small>
-                            </div>
-                            <!-- #activityList 动态列表容器，JS 动态渲染平台最新活动记录 -->
-                            <div class="activity-list" id="activityList"></div>
-                            <!-- 底部温暖文案 -->
-                            <div class="activity-footer">因为有你，<br>城市更温暖 ♡</div>
-                        </article>
-                    </div>
-
                     <!-- ===== 社区共治中心区域 ===== -->
                     <!-- #govSection 社区共治中心，也是导航"社区共治"按钮的滚动目标 -->
                     <article class="panel gov-card" id="govSection">
@@ -581,6 +523,59 @@
                         </div>
                         <!-- #leaderboardList 人气榜列表容器，JS 动态渲染按投喂次数排序的猫咪列表 -->
                         <div class="leader-list" id="leaderboardList"></div>
+                    </article>
+
+                    <!-- ===== 公益参与卡片（从左侧移入） ===== -->
+                    <article class="panel side-card join-card">
+                        <!-- 卡片头部 -->
+                        <div class="card-head">
+                            <div>
+                                <h3>💗 公益参与</h3>
+                                <small>用你的行动，为流浪猫创造更好的未来</small>
+                            </div>
+                            <small>更多 →</small>
+                        </div>
+                        <!-- .join-grid 参与方式网格，每个 .join-item 代表一种参与方式 -->
+                        <div class="join-grid">
+                            <!-- data-action="feed" 投喂入口，JS 通过 data-action 识别操作类型并触发对应流程 -->
+                            <div class="join-item" data-action="feed" role="button" tabindex="0">
+                                <div class="icon" style="background:var(--pink-soft);color:var(--pink-deep);">🍖</div>
+                                <h4>我要投喂</h4>
+                                <p>透明参与每一次守护</p>
+                            </div>
+                            <!-- data-action="adopt" 领养入口 -->
+                            <div class="join-item" data-action="adopt" role="button" tabindex="0">
+                                <div class="icon" style="background:#fdeff1;color:#d47a95;">💞</div>
+                                <h4>寻找领养</h4>
+                                <p>给它一个家</p>
+                            </div>
+                            <!-- data-action="volunteer" 志愿者入口 -->
+                            <div class="join-item" data-action="volunteer" role="button" tabindex="0">
+                                <div class="icon" style="background:var(--sage-soft);color:#6f8d6e;">🤝</div>
+                                <h4>加入志愿者</h4>
+                                <p>一起参与守护</p>
+                            </div>
+                        </div>
+                        <!-- .join-banner 公益宣传横幅 -->
+                        <div class="join-banner">
+                            <p>让爱心不再是一个人的事，<br>而是一群人的力量。</p>
+                        </div>
+                    </article>
+
+                    <!-- ===== 最新动态卡片（从左侧移入） ===== -->
+                    <article class="panel side-card activity-card">
+                        <!-- 卡片头部 -->
+                        <div class="card-head">
+                            <div>
+                                <h3>📰 最新动态</h3>
+                                <small>投喂、识别、设备运行与社区反馈</small>
+                            </div>
+                            <small>更多 →</small>
+                        </div>
+                        <!-- #activityList 动态列表容器，JS 动态渲染平台最新活动记录 -->
+                        <div class="activity-list" id="activityList"></div>
+                        <!-- 底部温暖文案 -->
+                        <div class="activity-footer">因为有你，<br>城市更温暖 ♡</div>
                     </article>
                 </aside>
             </section>
