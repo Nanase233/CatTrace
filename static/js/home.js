@@ -483,17 +483,19 @@
     function renderLive() {
         var cat = currentCat();
         if (!cat) return;
-        $('liveCatTitle').textContent = cat.name + '的实时画面';
-        $('liveCatLocation').textContent = cat.location + ' · ' + (cat.health === '健康' ? '猫咪状态良好' : '建议持续观察');
-        $('viewerCount').textContent = fmt(cat.views) + ' 人浏览';
-        $('liveFeedCount').textContent = fmt(cat.feedCount) + ' 次';
-        $('liveTemp').textContent = (21.8 + (cat.id % 5) * 0.6).toFixed(1) + '°C';
-        $('liveHumidity').textContent = (54 + (cat.id % 6) * 2) + '%';
-        $('liveHealth').textContent = healthLabel(cat.health);
-        $('liveCatEmoji').textContent = cat.emoji;
-        $('aiStatus').textContent = cat.name + ' · AI 已识别';
-        $('mapSpotName').textContent = cat.location;
-        $('mapSpotDesc').innerHTML = '猫咪数 ' + cat.visits + ' 只<br>累计投喂 ' + fmt(cat.feedCount) + ' 次';
+        /* 以下元素在首页精简后已移除，仅存在于 /live 页面，需做 null 检查 */
+        var el;
+        if ((el = $('liveCatTitle'))) el.textContent = cat.name + '的实时画面';
+        if ((el = $('liveCatLocation'))) el.textContent = cat.location + ' · ' + (cat.health === '健康' ? '猫咪状态良好' : '建议持续观察');
+        if ((el = $('viewerCount'))) el.textContent = fmt(cat.views) + ' 人浏览';
+        if ((el = $('liveFeedCount'))) el.textContent = fmt(cat.feedCount) + ' 次';
+        if ((el = $('liveTemp'))) el.textContent = (21.8 + (cat.id % 5) * 0.6).toFixed(1) + '°C';
+        if ((el = $('liveHumidity'))) el.textContent = (54 + (cat.id % 6) * 2) + '%';
+        if ((el = $('liveHealth'))) el.textContent = healthLabel(cat.health);
+        if ((el = $('liveCatEmoji'))) el.textContent = cat.emoji;
+        if ((el = $('aiStatus'))) el.textContent = cat.name + ' · AI 已识别';
+        if ((el = $('mapSpotName'))) el.textContent = cat.location;
+        if ((el = $('mapSpotDesc'))) el.innerHTML = '猫咪数 ' + cat.visits + ' 只<br>累计投喂 ' + fmt(cat.feedCount) + ' 次';
     }
 
     /**
