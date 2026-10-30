@@ -1906,12 +1906,7 @@
         if (state.usedFallback) {
             showToast('接口暂不可用，已切换为演示数据', 3600);
         }
-    }
 
-    /* 页面 DOM 加载完成后启动初始化 */
-    document.addEventListener('DOMContentLoaded', function() {
-        init();
-        
         /* === 返回顶部按钮逻辑 === */
         /* 监听滚动事件，滚动超过 100px 时显示按钮 */
         /* 点击按钮后平滑滚动到页面顶部 */
@@ -1934,5 +1929,8 @@
                 });
             });
         }
-    });
+    }
+
+    /* 页面 DOM 加载完成后启动初始化 */
+    document.addEventListener('DOMContentLoaded', init);
 })();
