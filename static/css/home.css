@@ -366,10 +366,10 @@ a {
 
 /* Hero 主标题：3rem 大字号，紧凑行高 1.18，负字间距增强视觉冲击力 */
 .hero-copy h1 {
-    font-size: 3rem;
-    line-height: 1.18;
+    font-size: 2.6rem; /* 或者 2.5rem、2.8rem，慢慢试 */
+    line-height: 1.2;  /* 稍微放宽一点点行高，看起来不那么挤 */
     margin-bottom: 14px;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.03em; 
 }
 
 /* Hero 描述文字：辅助色，限制最大宽度 420px 保证可读性 */
@@ -669,12 +669,12 @@ a {
 }
 
 /* 右侧栏使用 flex 布局，拉伸到与左侧等高，避免下方空白 */
-.right-stack {
+/* 优先级高于 .sidebar 的 display: grid */
+.right-stack.sidebar {
     display: flex;
     flex-direction: column;
-    gap: clamp(16px, 2vw, 24px);
+    gap: clamp(14px, 1.8vw, 20px);
     align-self: stretch;
-    height: 100%;
 }
 
 /* 右侧栏最后一个卡片自动扩展填充剩余空间 */
@@ -2146,7 +2146,7 @@ a {
     .side-row { gap: 6px; }
     .hero-art { min-height: 220px; }
     /* 单列布局时重置右侧栏高度，避免拉伸 */
-    .right-stack { height: auto; }
+    .right-stack.sidebar { height: auto; }
 }
 
 @media (max-width: 600px) {
