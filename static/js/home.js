@@ -726,8 +726,13 @@
             return '' +
                 '<div class="activity-row">' +
                     '<div class="activity-avatar">' + item.icon + '</div>' +
-                    '<div><p>' + esc(item.text) + '</p><div class="muted" style="font-size:0.76rem;margin-top:4px;">' + item.time + '</div></div>' +
-                    '<span class="activity-tag">' + item.tag + '</span>' +
+                    '<div style="min-width:0;">' +
+                        '<p title="' + esc(item.text) + '">' + esc(item.text) + '</p>' +
+                        '<div class="activity-meta">' +
+                            '<span class="activity-tag">' + item.tag + '</span>' +
+                            '<span class="muted">' + item.time + '</span>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>';
         }).join('');
     }
