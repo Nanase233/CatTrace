@@ -5,14 +5,14 @@
 > **新成员先看 [docs/接手流程.md](./docs/接手流程.md)**：要装哪些软件、怎么拉代码、
 > 怎么分工、提 PR 前必做哪些检查，一条条列好了。
 
-运行平台：Raspberry Pi 4 Model B（`pi4-cat` / `192.168.31.252`，Debian 13，Python 3.13）
+运行平台：Raspberry Pi 4 Model B（SSH 别名 `pi-cat`，Debian 13，Python 3.13）。局域网 IP 会变，以现场 `hostname -I` 为准（实测记录里是 `10.1.41.171`）。
 
 ---
 
 ## 0. 三十秒上手
 
 ```bash
-git clone git@github.com:chenglian07/TNR.git && cd TNR
+git clone https://github.com/chenglian07/CatTrace.git && cd CatTrace
 python3 -m venv --system-site-packages .venv      # Pi 上必须带 --system-site-packages，否则看不到 picamera2
 source .venv/bin/activate                          # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -76,7 +76,7 @@ catvision/
 不管认领哪一块，前三步都一样：
 
 ```bash
-git clone git@github.com:chenglian07/TNR.git && cd TNR
+git clone https://github.com/chenglian07/CatTrace.git && cd CatTrace
 python3 -m venv --system-site-packages .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest -q && python -m pipeline.runner --source synthetic:60 --mock-all   # 看到 PIPELINE OK 再往下
@@ -168,6 +168,8 @@ python -m pipeline.runner --source synthetic:30 --mock-all --mock-intact  # 演�
 python -m pipeline.runner --source synthetic:30 --mock-all --mock-multi-cat-ratio 1.0  # 演多猫 → 不投粮
 python -m pipeline.runner --source csi://0 --fps 2 --db catvision.db --jsonl events.jsonl
 
+# 摄像头网页：实时画面 + 猫/非猫 + 剪耳（绝育）判定，浏览器打开 http://<Pi-IP>:8000/
+python scripts/pi_phone_demo.py --rotate 180 --port 8000 --stream-fps 8 --fps 2 --threads 1
 bash scripts/setup_pi.sh                       # 树莓派一键部署
 bash scripts/install_pi_kiosk.sh               # 桌面图标：Chromium kiosk 全屏打开摄像头页面
 python scripts/record_frames.py --source csi://0 --fps 2 --seconds 300 --out datasets/raw/2026-10-22
@@ -190,14 +192,16 @@ python scripts/record_frames.py --source csi://0 --fps 2 --seconds 300 --out dat
 ## 7. 分支与提交
 
 ```
-main        保护分支，只接受 dev 的 PR
-dev         集成分支，各模块往这里合
-feat/<模块>-<简述>    例：feat/earnotch-flip-augmentation
+main                    主干（受保护），只通过 PR 合入
+feat/<模块>-<简述>       功能分支，例：feat/earnotch-flip-augmentation
 ```
 
 - 提交信息：`模块: 做了什么` → `earnotch: 加入水平翻转左右标签互换`
 - PR 要求：CI 全绿 + 1 名非本模块 reviewer
-- **改 `contracts/` 需另外两个模块 approve**，并更新 `contracts/CHANGELOG.md`（CI 会检查）
+- **改 `contracts/` 需另外两个模块 approve**，并更新 `contracts/CHANGELOG.md`（CI 的 `contract-guard` 会检查）
+
+> 早期流程里还有一个 `dev` 集成分支，目前仓库里并没有维护它（`.github/workflows/ci.yml`
+> 的 `push.branches` 还留着 `dev`，属于历史遗留）；要恢复的话再统一约定。
 
 ### 在树莓派上更新代码
 
@@ -224,5 +228,6 @@ Pi 只能拉不能推 —— 代码一律从开发机 push。
 | [`modules/earnotch/README.md`](modules/earnotch/README.md) | 耳标模块完整交接 | 耳标识别 |
 | [`docs/部署.md`](docs/部署.md) | Pi 环境 + 故障排查 | 摄像头与联调 |
 | [`docs/pi-kiosk.md`](docs/pi-kiosk.md) | 桌面 kiosk：网页全屏 + 剪耳判定 + 排障 | 摄像头与联调 |
+| [`docs/live-stream.md`](docs/live-stream.md) | 摄像头画面接进网页直播间（Flask 同源代理）的完整链路 | 摄像头与联调 |
 | [`docs/pi-kiosk-实测记录.md`](docs/pi-kiosk-实测记录.md) | 2026-10-31 实测记录与摄像头 CSI 超时 | 摄像头与联调 |
 | [`docs/camera-selection.md`](docs/camera-selection.md) | 选型决策 | 摄像头与联调 |
