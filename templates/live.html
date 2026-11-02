@@ -24,6 +24,21 @@
     <!-- ===== 云直播页面专属内联样式 ===== -->
     <style>
         /* === 云直播页面专属样式 === */
+        /* 视觉对齐首页 Blush & Sage 体系：
+           - 三层暖色渐变页面背景（粉色/鼠尾草绿光晕 + 奶油底色）
+           - 卡片大圆角 22~24px + 半透明白渐变背景
+           - 暖棕色调柔和阴影 rgba(123,97,101,...)
+           - 悬停上浮 + 阴影加深的「悬浮感」交互 */
+
+        /* 页面背景覆盖 style.css 的纯色 --bg，与首页 body 完全一致 */
+        body {
+            background:
+                radial-gradient(circle at left bottom, rgba(216,141,163,0.16), transparent 22%),
+                radial-gradient(circle at right top, rgba(159,181,157,0.14), transparent 20%),
+                linear-gradient(180deg, #fffaf8 0%, #fbf7f3 100%);
+            min-height: 100vh;
+            color: #4f4749;
+        }
 
         /* .live-page 直播页面主容器：限制最大宽度 1440px，居中显示 */
         .live-page { max-width: 1440px; margin: 0 auto; padding: 24px 20px 60px; }
@@ -45,15 +60,16 @@
         /* .live-main 左侧直播主区域：纵向弹性布局 */
         .live-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
-        /* .live-video-wrap 视频容器：16:9 宽高比，圆角，溢出隐藏，渐变背景模拟猫屋场景 */
+        /* .live-video-wrap 视频容器：16:9 宽高比，大圆角与首页面板一致，暖色阴影 */
         .live-video-wrap {
             position: relative;
             width: 100%;
             aspect-ratio: 16 / 9;
-            border-radius: var(--radius);
+            border-radius: 24px;
             overflow: hidden;
             background: linear-gradient(180deg, #5a4030 0%, #3d2d20 40%, #2a1f18 100%);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 18px 40px rgba(123, 97, 101, 0.16);
+            border: 1px solid rgba(239, 228, 223, 0.9);
         }
         /* .live-video-wrap::before 视频容器装饰层：模拟光晕和顶部高光效果 */
         .live-video-wrap::before {
@@ -170,18 +186,29 @@
         .cat-switcher::-webkit-scrollbar { height: 4px; }
         .cat-switcher::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* .switch-card 猫屋切换卡片：纵向排列 emoji + 名称 + 状态，可点击切换 */
+        /* .switch-card 猫屋切换卡片：纵向排列 emoji + 名称 + 状态，可点击切换
+           圆角 + 暖色边框 + 悬停上浮，对齐首页卡片交互 */
         .switch-card {
             flex-shrink: 0;
             display: flex; flex-direction: column; align-items: center; gap: 6px;
-            padding: 10px 14px; border-radius: 16px;
-            background: var(--bg-card); border: 2px solid var(--border);
-            cursor: pointer; transition: all var(--transition);
+            padding: 12px 16px; border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255,253,251,0.95), rgba(250,246,242,0.92));
+            border: 1px solid rgba(239, 228, 223, 0.9);
+            box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
+            cursor: pointer; transition: all 0.25s ease;
             min-width: 80px;
         }
-        .switch-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-        /* .switch-card.active 当前选中卡片：主题色边框和浅色背景 */
-        .switch-card.active { border-color: var(--primary); background: var(--primary-light); }
+        .switch-card:hover {
+            border-color: rgba(216, 141, 163, 0.55);
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(123, 97, 101, 0.14);
+        }
+        /* .switch-card.active 当前选中卡片：粉色渐变底 + 品牌色边框 */
+        .switch-card.active {
+            border-color: #d88da3;
+            background: linear-gradient(135deg, #fdf1f5, #fff8fa);
+            box-shadow: 0 10px 24px rgba(216, 141, 163, 0.18);
+        }
         .switch-card .emoji { font-size: 1.6rem; }
         .switch-card .name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
         .switch-card .status { font-size: 0.68rem; color: var(--text-muted); }
@@ -189,11 +216,14 @@
         /* .live-sidebar 右侧边栏：纵向弹性布局 */
         .live-sidebar { display: flex; flex-direction: column; gap: 16px; }
 
+        /* 卡片通用风格（对齐首页 .panel）：半透明白渐变 + 大圆角 + 暖棕柔和阴影 */
         /* .house-info-card 猫屋信息卡片 */
         .house-info-card {
-            background: var(--bg-card); border-radius: var(--radius);
-            padding: 20px; box-shadow: var(--shadow);
-            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,253,251,0.95), rgba(250,246,242,0.92));
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
+            border: 1px solid rgba(239, 228, 223, 0.9);
         }
         /* .house-info-header 猫屋信息头部：图标 + 名称/编号 + 在线状态 */
         .house-info-header {
@@ -235,20 +265,22 @@
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 10px; margin-top: 12px;
         }
-        /* .metric-item 单个指标项：渐变背景卡片 */
+        /* .metric-item 单个指标项：暖色渐变小卡片，圆角与首页内部卡片一致 */
         .metric-item {
-            padding: 10px 12px; border-radius: 12px;
+            padding: 10px 12px; border-radius: 16px;
             background: linear-gradient(135deg, #fffaf8, #f8f4f1);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(239, 228, 223, 0.9);
         }
         .metric-label { font-size: 0.72rem; color: var(--text-muted); }
         .metric-value { font-size: 1rem; font-weight: 700; color: var(--secondary); margin-top: 2px; }
 
         /* .feed-section 远程投喂区域 */
         .feed-section {
-            background: var(--bg-card); border-radius: var(--radius);
-            padding: 20px; box-shadow: var(--shadow);
-            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,253,251,0.95), rgba(250,246,242,0.92));
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
+            border: 1px solid rgba(239, 228, 223, 0.9);
         }
         .feed-section h4 {
             font-size: 1rem; margin-bottom: 12px;
@@ -260,33 +292,43 @@
             display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 8px; margin-bottom: 14px;
         }
-        /* .feed-pkg 单个投喂套餐卡片：价格 + 标签 + 描述 */
+        /* .feed-pkg 单个投喂套餐卡片：价格 + 标签 + 描述，悬停上浮 */
         .feed-pkg {
-            padding: 10px 8px; border-radius: 14px;
-            border: 1.5px solid var(--border);
-            background: #fff; text-align: center;
-            cursor: pointer; transition: all var(--transition);
+            padding: 10px 8px; border-radius: 16px;
+            border: 1px solid rgba(239, 228, 223, 0.9);
+            background: linear-gradient(180deg, #fffefc, #faf6f2);
+            text-align: center;
+            cursor: pointer; transition: all 0.25s ease;
         }
-        .feed-pkg:hover { border-color: var(--primary); }
-        /* .feed-pkg.active 当前选中套餐：主题色边框 + 粉色渐变背景 + 阴影 */
+        .feed-pkg:hover {
+            border-color: rgba(216, 141, 163, 0.55);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(123, 97, 101, 0.1);
+        }
+        /* .feed-pkg.active 当前选中套餐：粉色渐变 + 品牌色边框 + 粉色柔和阴影 */
         .feed-pkg.active {
-            border-color: var(--primary);
-            background: linear-gradient(135deg, #fff3f7, #fffdfd);
-            box-shadow: 0 6px 16px rgba(216,141,163,0.14);
+            border-color: #d88da3;
+            background: linear-gradient(135deg, #fdf1f5, #fffdfd);
+            box-shadow: 0 10px 24px rgba(216, 141, 163, 0.2);
         }
         .feed-pkg .price { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
         .feed-pkg .desc { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
         .feed-pkg .amount { font-size: 0.65rem; color: var(--text-muted); }
 
-        /* .feed-btn 投喂按钮：全宽，主题色背景 */
+        /* .feed-btn 投喂按钮：胶囊形 + 品牌粉渐变 + 彩色投影，与首页 .btn-primary 一致 */
         .feed-btn {
-            width: 100%; padding: 12px; border: none; border-radius: 16px;
-            background: var(--primary); color: #fff;
+            width: 100%; padding: 13px; border: none; border-radius: 999px;
+            background: linear-gradient(135deg, #d88da3, #e3a5b8);
+            color: #fff;
             font-size: 0.95rem; font-weight: 700; cursor: pointer;
-            transition: all var(--transition);
+            box-shadow: 0 12px 24px rgba(216, 141, 163, 0.26);
+            transition: 0.25s ease;
             font-family: var(--font);
         }
-        .feed-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(216,141,163,0.4); }
+        .feed-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 28px rgba(216, 141, 163, 0.32);
+        }
         /* .feed-btn:disabled 禁用状态：半透明，禁止光标 */
         .feed-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
@@ -321,9 +363,11 @@
         /* .interaction-feed 实时互动流区域：弹性布局，高度自适应 */
         .live-col--chat { align-self: stretch; }
         .interaction-feed {
-            background: var(--bg-card); border-radius: var(--radius);
-            padding: 20px; box-shadow: var(--shadow);
-            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,253,251,0.95), rgba(250,246,242,0.92));
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
+            border: 1px solid rgba(239, 228, 223, 0.9);
             display: flex; flex-direction: column;
             flex: 1 1 auto; min-height: 0;
         }
@@ -341,11 +385,12 @@
         .feed-list::-webkit-scrollbar { width: 4px; }
         .feed-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* .feed-item 单条互动消息：图标 + 内容 + 标签 */
+        /* .feed-item 单条互动消息：图标 + 内容 + 标签，暖白圆角行 */
         .feed-item {
             display: flex; align-items: center; gap: 10px;
-            padding: 10px 12px; border-radius: 12px;
-            background: var(--bg); font-size: 0.84rem;
+            padding: 10px 12px; border-radius: 16px;
+            background: linear-gradient(135deg, #fffaf8, #f8f4f1);
+            font-size: 0.84rem;
             min-width: 0; line-height: 1.5;
         }
         .feed-item-icon { font-size: 1.1rem; flex-shrink: 0; }
@@ -377,15 +422,21 @@
             display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
         }
-        /* .activity-card 单张 AI 动态卡片：可点击，hover 时上浮 */
+        /* .activity-card 单张 AI 动态卡片：可点击，hover 时上浮 + 阴影加深 */
         .activity-card {
             min-width: 0; width: 100%;
-            background: var(--bg-card); border-radius: var(--radius);
-            padding: 16px; box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            cursor: pointer; transition: all var(--transition);
+            background: linear-gradient(180deg, rgba(255,253,251,0.95), rgba(250,246,242,0.92));
+            border-radius: 22px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
+            border: 1px solid rgba(239, 228, 223, 0.9);
+            cursor: pointer; transition: all 0.25s ease;
         }
-        .activity-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--primary); }
+        .activity-card:hover {
+            box-shadow: 0 18px 40px rgba(123, 97, 101, 0.12);
+            transform: translateY(-4px);
+            border-color: rgba(216, 141, 163, 0.55);
+        }
         /* .activity-card-header 动态卡片头部：头像 + 名称 + 时间 */
         .activity-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         /* .activity-avatar 猫咪头像：圆形渐变背景 */
@@ -423,9 +474,11 @@
         }
         /* .analytics-card 数据分析卡片：纵向弹性布局，最小高度 220px */
         .analytics-card {
-            background: var(--bg-card); border-radius: var(--radius);
-            padding: 20px; box-shadow: var(--shadow);
-            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,253,251,0.95), rgba(250,246,242,0.92));
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
+            border: 1px solid rgba(239, 228, 223, 0.9);
             display: flex; flex-direction: column;
             min-width: 0; min-height: 220px;
         }
