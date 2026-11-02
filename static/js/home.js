@@ -708,7 +708,7 @@
                 time: formatRelative(item.time)
             };
         });
-        return state.localActivities.concat(apiItems).slice(0, 5);
+        return state.localActivities.concat(apiItems).slice(0, 8);
     }
 
     /**

@@ -1079,11 +1079,14 @@ a {
     grid-template-rows: auto 1fr auto;
 }
 
+/* 动态列表：占据卡片 1fr 行填满侧栏剩余高度
+   - 取消固定 max-height，改为最小高度 0 + 滚动，防止溢出 */
 .activity-list {
     display: grid;
     gap: 12px;
-    max-height: 350px; /* 高度根据实际情况调整 */
-    overflow-y: auto; 
+    align-content: start;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 /* 活动行：两列网格（头像 | 内容），窄栏适配
