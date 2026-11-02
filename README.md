@@ -279,4 +279,11 @@ python scripts/verify_catvision.py
 
 ---
 
+## 许可证
+
+本项目以 [MIT 许可证](./LICENSE) 发布：可以自由使用、修改、分发，包括商业用途，
+只需在副本中保留版权声明与许可声明。
+
+---
+
 CatTrace 项目组 -- [chenglian07/CatTrace](https://github.com/chenglian07/CatTrace)

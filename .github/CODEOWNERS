@@ -1,0 +1,48 @@
+# CODEOWNERS —— PR 自动指派 reviewer
+#
+# 分工（2026-11）：
+#   @chenglian07      负责人 / 统筹（默认 owner，兜底所有未指派路径）
+#   @yuxinLi2007      摄像头与联调（采集、pipeline、脚本、部署）
+#   @huang2399        猫脸识别
+#   @ZhouXiaoShan499  剪耳识别
+#   网页端设计        待补 GitHub 用户名（见文末）
+#
+# 语法：<路径模式>  <@用户名>；后出现的规则覆盖前面的，所以先写通配、再写具体目录。
+# 注意：本文件只负责「自动请求 review」，真正强制「必须 approve」要开分支保护
+#       （Settings → Branches → Require review from Code Owners）。
+
+# 默认：负责人统筹所有未单独指派的路径（models/、tests/、根目录配置等）
+*                         @chenglian07
+
+# 契约变更：摄像头 / 猫脸 / 剪耳三侧都受影响。按 docs/接手流程.md 第三节，
+# 改 contracts/ 需要另外两个模块 owner approve，所以这里直接请四位都看。
+contracts/                @chenglian07 @yuxinLi2007 @huang2399 @ZhouXiaoShan499
+
+# ---- 摄像头与联调 ----
+modules/camera/           @yuxinLi2007
+pipeline/                 @yuxinLi2007
+scripts/                  @yuxinLi2007
+deploy/                   @yuxinLi2007
+
+# ---- 猫脸识别 ----
+modules/catface/          @huang2399
+
+# ---- 剪耳识别 ----
+modules/earnotch/         @ZhouXiaoShan499
+
+# ---- 网页端设计 ----
+# Flask 平台、前端页面与直播代理
+app.py                    @Nanase233
+live_proxy.py             @Nanase233
+self_learning.py          @Nanase233
+templates/                @Nanase233
+static/                   @Nanase233
+demo.html                 @Nanase233
+
+# ---- 文档与工程配置：负责人兜底 ----
+docs/                     @chenglian07
+.github/                  @chenglian07
+*.md                      @chenglian07
+pyproject.toml            @chenglian07
+requirements.txt          @chenglian07
+requirements/             @chenglian07
