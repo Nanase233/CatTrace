@@ -153,10 +153,6 @@ CatTrace/
 |   +-- business-plan.md    # 本文档
 +-- templates/              # Flask 前端模板
 +-- static/                 # 静态资源
-+-- collaborators/          # 协作者原始代码（保留未修改）
-    +-- mao-main/           # 主项目原始版本
-    +-- 项目猫-MVP/          # MVP 原型版本
-    +-- esp32s3_realtime_camera/  # ESP32-S3 固件
 ```
 
 ---
