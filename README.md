@@ -268,14 +268,11 @@ python scripts/verify_catvision.py
 
 ---
 
-## 协作者代码
+## 项目前身（1.0 存档）
 
-`collaborators/` 目录保留了各协作者的原始代码和文档，未经修改：
+CatTrace 的前身是个人项目阶段的「城市流浪猫计划」（仓库 [chenglian07/mao](https://github.com/chenglian07/mao)）：单体 Flask 平台，无 AI 能力。演进为小组项目后，代码与文档在本仓库重组为「Web 平台 + CatVision 子系统」。
 
-| 目录 | 内容 |
-|------|------|
-| collaborators/mao-main | 主项目原始版本（含 MeowGuard 时期文档） |
-| collaborators/项目猫-MVP | MVP 原型版本（含猫脸识别等实验功能） |
+早期协作者快照（原 `collaborators/mao-main`、`collaborators/项目猫-MVP`）已从工作区移除，需要时可用 `git log --all -- collaborators/` 或 `git checkout <commit> -- collaborators` 从历史中取回。
 
 ---
 

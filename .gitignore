@@ -76,3 +76,8 @@ test_data/
 dataset_v1/
 splits/
 train/runs/
+
+# 本地临时分析产物与 pytest 临时目录（不进版本库）
+_analysis/
+pytest-cache-files-*/
+pt_base/
