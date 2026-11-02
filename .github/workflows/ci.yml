@@ -42,6 +42,52 @@ jobs:
           grep -q "t-0001" /tmp/d0.txt
           grep -q "FEED_DISPENSE" /tmp/d0.txt
 
+  test-models:
+    # 上面那个 test job 只装 .[dev]，onnxruntime 在 [pi] 里，所以需要模型的单测会安静地
+    # skip 掉——tests/fixtures 里的图片曾被 CRLF 规范化改坏、挂了很久没人发现，就是因为它
+    # 只在装了 onnxruntime 的机器上才会失败。这个 job 把推理依赖装上，逼这些测试真跑。
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: 安装（含 onnxruntime）
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" onnxruntime
+
+      - name: 模型单测（不允许因缺依赖而 skip）
+        run: |
+          pytest tests/test_cat_classifier.py -q -rs | tee /tmp/models.txt
+          if grep -qi "skipped" /tmp/models.txt; then
+            echo "::error::模型测试被跳过 —— 检查 onnxruntime 是否装上、models/cat_vs_notcat.onnx 是否还在"
+            exit 1
+          fi
+
+  package-check:
+    # tests/conftest.py 会手动把仓库根和 contracts/python 塞进 sys.path，所以即使
+    # [tool.setuptools] 的映射写错，pytest 也照样全绿。这个 job 用非 -e 安装，再从仓库外的
+    # 目录 import，才能真正验证打出来的包里有什么。
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: 以 wheel 方式安装（注意不是 -e）
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[dev]"
+
+      - name: 从仓库外 import（conftest 兜不住这里）
+        working-directory: ${{ runner.temp }}
+        run: python -c "import catvision_contracts, modules, pipeline, mocks; print('packaging ok')"
+
   contract-guard:
     # 改了契约文件但没改 CHANGELOG 就拦下来
     runs-on: ubuntu-latest
