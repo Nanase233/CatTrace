@@ -28,7 +28,7 @@ CatTrace 的视觉识别流程从摄像头图像采集开始，经过猫脸检�
 |------|---------|------|
 | 摄像头图像采集 | ✅ 已实现 | 支持 CSI、USB、RTSP、文件回放、合成数据源五种接入方式 |
 | 猫脸检测与个体识别 | ⏳ 占位实现 | 接口协议已定义（`contracts/`），核心识别逻辑待开发，当前使用 Mock 跑通链路 |
-| 剪耳（绝育）识别 | 🔶 可运行基线 | `modules/earnotch:EarNotchModel` 已接入 ONNX 模型（整图级二分类 + 左右耳启发式），test acc 0.896；**不是** ROI 分类，见 [docs/earnotch.md](./docs/earnotch.md) |
+| 剪耳（绝育）识别 | 🔶 可运行基线 | `modules/earnotch:EarNotchModel` 已接入 ONNX 模型（整图级二分类 + 左右耳启发式），convnext_tiny288 权重 test acc 0.896；树莓派默认的 resnet18 权重为 0.750。**不是** ROI 分类，见 [docs/earnotch.md](./docs/earnotch.md) |
 | 投票聚合与结果稳定 | ✅ 已实现 | 跨帧投票聚合，多数票决定个体身份，避免单帧误判 |
 
 **重要说明**：猫脸检测仍是占位实现，全链路验证（`PIPELINE OK`）默认仍用 Mock 模拟猫脸结果。剪耳模块已有真实模型，但需要猫脸关键点才能裁耳，因此单独跑时用 `--catface mocks:MockCatFaceModule` 提供合法关键点。
@@ -37,7 +37,7 @@ CatTrace 的视觉识别流程从摄像头图像采集开始，经过猫脸检�
 
 TNR（Trap-Neuter-Return）是国际通行的流浪猫科学管理方法。CatTrace 尝试通过技术手段辅助 TNR 流程：
 
-- **剪耳状态判断**（可运行基线）：通过 `modules/earnotch:EarNotchModel` 判断猫咪是否已绝育。当前是用整图训练的过渡模型（test acc 0.896，未绝育误判为已绝育 7.4%），左右耳为启发式判断；接真 ROI 后必须重训并重校阈值，详见 [docs/earnotch.md](./docs/earnotch.md)。
+- **剪耳状态判断**（可运行基线）：通过 `modules/earnotch:EarNotchModel` 判断猫咪是否已绝育。当前是用整图训练的过渡模型（convnext_tiny288：test acc 0.896，未绝育被判已绝育 7.4%；树莓派默认的 resnet18：0.750 / 33.3%），左右耳为启发式判断；接真 ROI 后必须重训并重校阈值，详见 [docs/earnotch.md](./docs/earnotch.md)。
 - **猫咪档案管理**：记录每只猫的基本信息、健康数据、绝育状态和互动历史。
 - **TNR 决策逻辑**：当系统收到疑似未绝育的识别结果（置信度 ≥ 0.80）时，基于预设规则生成 TNR 任务建议。当前该流程使用 Mock 模拟输入驱动，识别结果不代表真实 AI 判断；系统不能独立作出最终救助决策，所有建议须经人工确认后执行。
 - **救助记录追溯**：投喂、举报、医疗等全链路数据透明可追溯。
@@ -51,6 +51,7 @@ CatTrace 的 CatVision 模块设计为在树莓派等边缘设备上运行：
 - **多源摄像头接入**：支持 CSI（树莓派官方摄像头）、USB、RTSP、文件回放和合成数据源，对下游统一为 `FramePacket` 接口（"源等价"原则）。
 - **帧率控制与内存管理**：固定 2~3 fps 抽帧，帧暂存于内存盘（`/dev/shm`），只保留最近 120 帧。
 - **模块化流水线**：采集 → 识别 → 聚合 → 决策 → 事件总线，各环节通过 `contracts/` 接口契约解耦。
+- **网页实时直播**：树莓派把 CSI 画面推成 MJPEG（`scripts/pi_phone_demo.py`），Flask 用同源 `/api/live/*` 代理给首页直播间，手机、电脑都能看；断流或画面冻结时自动退回占位动画。详见 [docs/live-stream.md](./docs/live-stream.md)。
 
 **树莓派实测记录**（树莓派 4B，1GB 内存，IMX219 CSI 摄像头）：
 
@@ -154,8 +155,9 @@ flowchart LR
 | 模型效果评估 | 📋 规划中 | 独立评估体系待建立 |
 | 模型版本管理 | 📋 规划中 | 版本记录和回滚机制待建立 |
 | 自动化模型更新 | 📋 规划中 | MVP 阶段不做自动模型更新 |
-| 树莓派部署 | 🔶 部分实现 | 采集和 Mock 全链路已通过；供电待解决；真实模型待部署 |
-| 与 Flask 平台联调 | 📋 规划中 | CatVision 检测事件接入 Web 平台待实现 |
+| 树莓派部署 | 🔶 部分实现 | 采集、真实模型（猫/非猫 + 剪耳）与网页 kiosk 已在 Pi 4B 上跑通；供电欠压和 CSI 出流超时仍待解决，见 [实测记录](./docs/pi-kiosk-实测记录.md) |
+| 网页实时直播（MJPEG 同源代理） | ✅ 已实现 | 树莓派 `/stream` → Flask `/api/live/*` → 首页直播间；断流/冻结自动回退，未配地址时整体关闭 |
+| 与 Flask 平台联调 | 🔶 部分实现 | 直播画面已接入首页直播间；CatVision 的 `DetectionEvent` 与剪耳结论尚未接入 Web 平台 |
 
 > 状态说明：✅ 已实现 · 🔶 部分实现 · ⏳ 占位实现 · 📋 规划中 · ❓ 待验证
 
@@ -166,13 +168,28 @@ flowchart LR
 ### Flask Web 平台（推荐）
 
 ```bash
-python --version   # 需要 3.6+
+python --version   # 需要 3.10+（见 pyproject.toml 的 requires-python）
 pip install -r requirements.txt
 python app.py
 # 浏览器打开 http://localhost:5000
 ```
 
-页面路由：`/`（首页直播）、`/cats`（猫咪档案）、`/diary`（日记）、`/adopt`（领养中心）。
+页面路由：`/`（首页直播）、`/cats`（猫咪档案）、`/diary`（日记）、`/adopt`（领养中心）、`/dashboard`（财务看板）。
+
+摄像头画面接进首页直播间是**可选**的，不配也能正常跑（显示占位动画）：
+
+```bash
+# 树莓派上启动摄像头服务（CSI → MJPEG）
+python scripts/pi_phone_demo.py --rotate 180 --port 8000 --stream-fps 8 --fps 2 --threads 1
+
+# 在跑 Flask 的那台机器上带地址启动
+export CATTRACE_LIVE_URL=http://<树莓派IP>:8000/stream
+export CATTRACE_LIVE_STATS=http://<树莓派IP>:8000/stats        # 可选：右上角识别徽标
+export CATTRACE_LIVE_SNAPSHOT=http://<树莓派IP>:8000/snapshot.jpg  # 可选：首屏单帧
+python app.py
+```
+
+完整链路、systemd 常驻和排障见 [docs/live-stream.md](./docs/live-stream.md)。
 
 ### CatVision 全链路验证（无需摄像头）
 
@@ -211,26 +228,16 @@ python scripts/verify_catvision.py
 |------|------|
 | [docs/user-guide.md](./docs/user-guide.md) | 用户说明书（面向使用者与评审） |
 | [docs/api.md](./docs/api.md) | REST API 完整接口文档 |
-| [docs/architecture.md](./docs/architecture.md) | 系统架构、模块关系和数据流 |
 | [docs/self-learning.md](./docs/self-learning.md) | 自学习模块：目标、边界、数据闭环、评价指标 |
 | [docs/earnotch.md](./docs/earnotch.md) | 剪耳识别：模型能力、阈值策略、指标与已知局限 |
 | [docs/pi-kiosk.md](./docs/pi-kiosk.md) | 树莓派桌面 kiosk：双击图标全屏看摄像头 + 剪耳（绝育）判定 |
+| [docs/live-stream.md](./docs/live-stream.md) | 树莓派摄像头接入网页直播间的完整链路与部署说明 |
 | [docs/roadmap.md](./docs/roadmap.md) | P0-P3 路线图与远期规划 |
 | [docs/business-plan.md](./docs/business-plan.md) | 市场分析、技术方案、产品范围 |
 | [docs/demo-guide.md](./docs/demo-guide.md) | demo.html 静态演示页使用说明 |
 | [docs/验证指南.md](./docs/验证指南.md) | 摄像头接入 + 模块联调五层验证说明 |
 | [docs/pi-kiosk-实测记录.md](./docs/pi-kiosk-实测记录.md) | 2026-10-31 实测：kiosk 部署、已修问题、摄像头 CSI 超时 |
 | [docs/接手流程.md](./docs/接手流程.md) | 新成员必读：环境搭建、分工、PR 流程 |
-
-### 分模块说明
-
-| 文档 | 内容 |
-|------|------|
-| [docs/live-stream.md](./docs/live-stream.md) | 树莓派摄像头接入网页直播间的完整链路与部署说明 |
-| [docs/modules/monitoring.md](./docs/modules/monitoring.md) | 实时直播与在线巡检 |
-| [docs/modules/feeding.md](./docs/modules/feeding.md) | 远程投喂与投喂追溯 |
-| [docs/modules/cat-profile.md](./docs/modules/cat-profile.md) | 猫咪档案与个体化救助 |
-| [docs/modules/community.md](./docs/modules/community.md) | 社区共治与支撑功能 |
 
 ### CatVision 模块文档
 
