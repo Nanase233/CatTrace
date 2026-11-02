@@ -1,1 +1,5 @@
+# Web 平台（Flask）运行时依赖，与 pyproject.toml 的 [project].dependencies 保持一致。
+# 树莓派 / CatVision 那一侧用 requirements/pi.txt（它会 -r base.txt 带上采集与推理依赖）。
+pydantic>=2.5
+Pillow>=10
 Flask>=2.0.0
