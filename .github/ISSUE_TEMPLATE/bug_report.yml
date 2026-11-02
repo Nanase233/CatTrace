@@ -1,0 +1,61 @@
+name: Bug 报告
+description: 链路跑不通、结果不对、页面报错
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提之前先跑 `python scripts/verify_catvision.py`，它会把问题定位到 L1~L5 的哪一层，
+        把输出贴到下面的「日志」里能省掉一轮来回。
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: 出问题的环节
+      options:
+        - 摄像头采集 / FramePacket
+        - 猫脸检测与个体识别
+        - 剪耳识别（earnotch）
+        - 聚合与决策（pipeline）
+        - Web 页面 / 直播代理
+        - 部署 / systemd / kiosk
+        - 契约（contracts）不一致
+        - 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象
+      description: 期望发生什么，实际发生了什么。有报错原文就贴原文。
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现命令
+      description: 从干净环境到出问题的最短步骤
+      render: shell
+      placeholder: |
+        python -m pipeline.runner --source synthetic:30 --mock-all
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      description: 平台 / Python 版本 / 有没有摄像头
+      placeholder: Windows 11 + Python 3.13 + 无摄像头，或 Pi 4B + Debian 13 + CSI 摄像头
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图
+      description: verify_catvision.py 的输出、PIPELINE 日志、页面截图
+      render: shell

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 接手流程（装软件、拉代码、分工边界、PR 流程）
+    url: https://github.com/chenglian07/CatTrace/blob/main/docs/%E6%8E%A5%E6%89%8B%E6%B5%81%E7%A8%8B.md
+    about: 新成员先看这个，里面写了每个人该装什么、只改哪些目录、提 PR 前必做哪些检查
+  - name: 验证指南（一条命令自证链路）
+    url: https://github.com/chenglian07/CatTrace/blob/main/docs/%E9%AA%8C%E8%AF%81%E6%8C%87%E5%8D%97.md
+    about: 跑 python scripts/verify_catvision.py，它会打印 L1~L5 哪一层没过
+  - name: 剪耳识别现状与边界
+    url: https://github.com/chenglian07/CatTrace/blob/main/docs/earnotch.md
+    about: 当前是整图级基线模型（不是 ROI 分类），指标与已知局限都写在这里

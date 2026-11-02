@@ -1,0 +1,56 @@
+name: 功能 / 模块提案
+description: 新能力、模型、接口或流程改动
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        跨模块的东西要写清楚「输入 → 输出」；只要动了 `contracts/`，
+        就得同步更新 `contracts/CHANGELOG.md`（CI 会拦）。
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及范围
+      options:
+        - modules/camera / pipeline
+        - modules/catface
+        - modules/earnotch
+        - contracts（接口契约）
+        - Web 端（页面 / 直播 / 档案管理）
+        - 部署与设备
+        - 文档与流程
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决什么问题
+      description: 描述现状的痛点，不要一上来就写方案
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议的做法
+      description: 输入 → 输出、边界在哪、用什么替代方案否决了它
+    validations:
+      required: true
+
+  - type: textarea
+    id: contract
+    attributes:
+      label: 是否影响契约
+      description: 需要新增或修改 contracts/v1 下的 schema 吗？改了谁会受影响？
+      placeholder: 不改契约 / 需要新增字段 xxx，影响 catface 与 earmark 两侧
+
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: 开工前确认
+      options:
+        - label: 能提供 Mock 实现（没有 Mock 就没有并行）
+        - label: 已经和受影响的模块 owner 对齐过

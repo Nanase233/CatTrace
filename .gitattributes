@@ -10,6 +10,8 @@ requirements/** text eol=lf
 models/MANIFEST.json text eol=lf
 pyproject.toml text eol=lf
 README-catvision.md text eol=lf
+LICENSE text eol=lf
+.github/** text eol=lf
 *.onnx binary
 *.db binary
 # 测试图片同样是二进制：不加这两行，tests/** 的 text eol=lf 规则会让 Git

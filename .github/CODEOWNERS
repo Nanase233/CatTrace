@@ -1,0 +1,28 @@
+# CODEOWNERS —— PR 自动指派 reviewer
+#
+# 语法：<路径模式>  <@用户名>
+# 后出现的规则覆盖前面的，所以先写通配、再写具体目录。
+# 注意：这个文件只负责「自动请求 review」，真正强制「必须 approve」要开分支保护（Settings → Branches）。
+
+# 默认 owner：任何 PR 都会请求维护者看一眼
+*                       @chenglian07
+
+# 契约变更：按 docs/接手流程.md 第三节，改 contracts/ 需要另外两个模块 owner 也 approve
+contracts/              @chenglian07
+
+# ---- 按实际分工填下面几行（把占位换成对应成员，然后取消注释）----
+# 历史提交里出现过的账号：@chenglian07 @huang2399 @yuxinLi2007 @ZhouXiaoShan499
+#
+# modules/camera/       @<摄像头与联调负责人>
+# modules/camera/sources/ @<摄像头与联调负责人>
+# pipeline/             @<摄像头与联调负责人>
+# scripts/              @<摄像头与联调负责人>
+# deploy/               @<摄像头与联调负责人>
+#
+# modules/catface/      @<猫脸识别负责人>
+# modules/earnotch/     @<剪耳识别负责人>
+#
+# app.py                @<前端/后端对接负责人>
+# templates/            @<前端/后端对接负责人>
+# static/               @<前端/后端对接负责人>
+# live_proxy.py         @<前端/后端对接负责人>
