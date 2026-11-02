@@ -18,9 +18,19 @@
 页面里：左边是实时画面（带判定和置信度），右边是最近 30 帧的记录。
 点「保存快照」会把当前帧存到 /dev/shm（内存盘，不写 SD 卡）。
 
+取帧与推理分两个线程：采集按 --stream-fps 持续出流，推理按 --fps 消费最新帧，
+推理慢不会卡住直播。对外两路流：
+
+    /stream             原始画面 MJPEG（网页直播间 / live_proxy.py 用，不带调试标注）
+    /stream?annotated=1 带 HUD 判定的 MJPEG（本机排障用）
+    /frame.jpg          单帧带判定（本机页面轮询这一路）
+
 树莓派桌面全屏（Chromium kiosk）用 /kiosk：只留画面，隐藏页头和记录表，
 适合双击桌面图标直接看。安装脚本见 scripts/install_pi_kiosk.sh。
     http://127.0.0.1:8000/kiosk
+
+树莓派 4B（1GB）实测：--threads 4 会占满约 312% CPU、首帧要等十几秒；
+改成 --threads 1 --stream-fps 8 --fps 2 后占用约 100%，首帧 1 秒左右。
 
 没有剪耳权重 / 不想跑第二级时加 --earnotch off，退回只看猫/非猫；
 没有摄像头时也能验证链路本身（拿图片当视频源）：
@@ -61,9 +71,15 @@ STATE = {
     "ear_enabled": False,
     "history": deque(maxlen=30),
     "jpeg": b"",
+    "stream_jpeg": b"",
+    "stream_fps": 0.0,
+    "stream_frames": 0,
     "raw": None,
     "started": time.time(),
 }
+# 采集线程发布新帧后唤醒所有直播连接；直播连接只在这一帧真正到达时写出，
+# 不用固定轮询，画面不会被消费慢的连接拖慢。Condition 复用 STATE_LOCK。
+FRAME_READY = threading.Condition(STATE_LOCK)
 
 
 def log(msg: str) -> None:
@@ -247,29 +263,61 @@ def open_camera(args):
     return frame, close
 
 
-LATEST_LOCK = threading.Lock()
+# 最新一帧只给推理线程用；读写都发生在 FRAME_READY 里（与 STATE 同一把锁），
+# 少一把锁就少一处顺序问题。
 LATEST = {"rgb": None, "seq": 0}
 
 
-def capture_frames(frame_fn) -> None:
-    """只负责取帧，保证摄像头永远有消费者。
+def capture_frames(args, frame_fn) -> None:
+    """只负责取帧 + 推流，保证摄像头永远有消费者。
 
     推理（剪耳 + TTA）一次要 1s 左右；如果取帧和推理在同一个循环里，
     这段时间 libcamera 的 buffer 没人 dequeue，1s 后就会报
     "Camera frontend has timed out!" 并永久阻塞。所以取帧独立成线程，
     始终只保留最新一帧，推理线程读最新帧。
+
+    取帧的同时把**原始画面**（不带调试标注）编码成 JPEG 交给 /stream：
+    网页直播间要的是干净画面，HUD 只烧在 /frame.jpg 和 ?annotated=1 上。
+    旋转也放在这里，LATEST 里的帧就已经是正的，推理线程不用再转一次。
     """
+    interval = 1.0 / args.stream_fps if args.stream_fps > 0 else 0.0
+    fps_smooth = 0.0
+    last = time.perf_counter()
     while True:
+        started = time.perf_counter()
         try:
             rgb = frame_fn()
         except Exception as exc:  # 单次取帧失败不杀线程
             log(f"取帧失败：{exc}")
             time.sleep(0.5)
             continue
-        with LATEST_LOCK:
+
+        if args.rotate == 180:
+            rgb = rgb[::-1, ::-1]
+        elif args.rotate == 90:
+            rgb = np.rot90(rgb, k=-1)
+        elif args.rotate == 270:
+            rgb = np.rot90(rgb, k=1)
+
+        jpg = encode(Image.fromarray(rgb), quality=args.jpeg_quality)
+
+        now = time.perf_counter()
+        dt = now - last
+        last = now
+        if dt > 0:
+            fps_smooth = 0.9 * fps_smooth + 0.1 * (1.0 / dt) if fps_smooth else 1.0 / dt
+
+        with FRAME_READY:
             LATEST["rgb"] = rgb
             LATEST["seq"] += 1
-        time.sleep(0.1)  # ~10fps，足够喂饱 libcamera
+            STATE["stream_jpeg"] = jpg
+            STATE["stream_frames"] += 1
+            STATE["stream_fps"] = fps_smooth
+            FRAME_READY.notify_all()
+
+        wait = interval - (time.perf_counter() - started)
+        if wait > 0:
+            time.sleep(wait)  # 按 --stream-fps 限速，同时保证 libcamera 有人 dequeue
 
 
 def infer_loop(args, clf, notch) -> None:
@@ -277,7 +325,7 @@ def infer_loop(args, clf, notch) -> None:
     last = time.perf_counter()
     last_seq = 0
     while True:
-        with LATEST_LOCK:
+        with FRAME_READY:
             rgb = LATEST["rgb"]
             seq = LATEST["seq"]
         if rgb is None or seq == last_seq:
@@ -286,13 +334,6 @@ def infer_loop(args, clf, notch) -> None:
         last_seq = seq
 
         try:
-            if args.rotate == 180:
-                rgb = rgb[::-1, ::-1]
-            elif args.rotate == 90:
-                rgb = np.rot90(rgb, k=-1)
-            elif args.rotate == 270:
-                rgb = np.rot90(rgb, k=1)
-
             h, w = rgb.shape[:2]
             x0, y0, x1, y1 = crop_box(w, h, args.crop)
             roi = Image.fromarray(rgb[y0:y1, x0:x1])
@@ -327,7 +368,7 @@ def infer_loop(args, clf, notch) -> None:
             )
             jpg = encode(img)
 
-            with STATE_LOCK:
+            with FRAME_READY:
                 STATE["label"] = label
                 STATE["p_cat"] = p_cat
                 STATE["fps"] = fps_smooth
@@ -347,6 +388,8 @@ def infer_loop(args, clf, notch) -> None:
                         "p_notch": round(p_notch, 4) if p_notch is not None else None,
                     }
                 )
+                # 唤醒挂着的 ?annotated=1 连接
+                FRAME_READY.notify_all()
 
             if STATE["frames"] % 10 == 0:
                 extra = f" {verdict} p_notch={p_notch:.3f}" if p_notch is not None else ""
@@ -545,6 +588,8 @@ class Handler(BaseHTTPRequestHandler):
                     "fps": round(STATE["fps"], 2),
                     "frames": STATE["frames"],
                     "luma": round(STATE["luma"], 1),
+                    "stream_fps": round(STATE["stream_fps"], 2),
+                    "stream_frames": STATE["stream_frames"],
                     "verdict": STATE["verdict"],
                     "p_notch": STATE["p_notch"],
                     "notched": STATE["notched"],
@@ -569,25 +614,42 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(jpg)
 
         elif path.startswith("/stream"):
-            self.send_response(200)
-            self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
-            self.end_headers()
-            try:
-                while True:
-                    with STATE_LOCK:
-                        jpg = STATE["jpeg"]
-                    if jpg:
-                        self.wfile.write(b"--frame\r\n")
-                        self.wfile.write(b"Content-Type: image/jpeg\r\n")
-                        self.wfile.write(f"Content-Length: {len(jpg)}\r\n\r\n".encode())
-                        self.wfile.write(jpg)
-                        self.wfile.write(b"\r\n")
-                    time.sleep(0.15)
-            except (BrokenPipeError, ConnectionResetError):
-                pass
+            # ?annotated=1 发带 HUD 的帧；默认发原始画面给网页直播间
+            annotated = "annotated=1" in self.path or "hud=1" in self.path
+            self.send_mjpeg(annotated)
 
         else:
             self.send_error(404)
+
+    def send_mjpeg(self, annotated: bool) -> None:
+        """MJPEG 推流：等新帧到了才写，不做固定间隔轮询。
+
+        消费慢的连接只会让自己掉帧，不会拖慢采集线程，也不会像固定
+        sleep 那样把同一帧重复写出去。
+        """
+        key, counter = ("jpeg", "frames") if annotated else ("stream_jpeg", "stream_frames")
+        self.send_response(200)
+        self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.end_headers()
+        last = -1
+        try:
+            while True:
+                with FRAME_READY:
+                    if STATE[counter] == last:
+                        FRAME_READY.wait(timeout=2.0)
+                    jpg = STATE[key]
+                    seq = STATE[counter]
+                if not jpg or seq == last:
+                    continue
+                last = seq
+                self.wfile.write(b"--frame\r\n")
+                self.wfile.write(b"Content-Type: image/jpeg\r\n")
+                self.wfile.write(f"Content-Length: {len(jpg)}\r\n\r\n".encode())
+                self.wfile.write(jpg)
+                self.wfile.write(b"\r\n")
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def do_POST(self):
         if self.path != "/snapshot":
@@ -612,6 +674,9 @@ def main() -> int:
     ap.add_argument("--width", type=int, default=640)
     ap.add_argument("--height", type=int, default=480)
     ap.add_argument("--fps", type=float, default=5.0, help="推理帧率上限")
+    ap.add_argument("--stream-fps", type=float, default=8.0,
+                    help="直播推流帧率上限（Pi4 1GB 建议 8，再高没收益）")
+    ap.add_argument("--jpeg-quality", type=int, default=75, help="推流 JPEG 质量")
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--rotate", type=int, default=0, choices=(0, 90, 180, 270))
     ap.add_argument("--threshold", type=float, default=0.5, help="猫/非猫判定阈值")
@@ -663,7 +728,7 @@ def main() -> int:
         STATE["ear_enabled"] = notch is not None
 
     frame_fn, close_fn = open_camera(args)
-    threading.Thread(target=capture_frames, args=(frame_fn,), daemon=True).start()
+    threading.Thread(target=capture_frames, args=(args, frame_fn), daemon=True).start()
     threading.Thread(target=infer_loop, args=(args, clf, notch), daemon=True).start()
 
     if args.stall_timeout > 0:
