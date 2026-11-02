@@ -31,14 +31,13 @@ modules/catface/          @huang2399
 modules/earnotch/         @ZhouXiaoShan499
 
 # ---- 网页端设计 ----
-# TODO：把下面 6 行的 @你要填的用户名 换成网页端设计同学的 GitHub 用户名后取消注释。
-# 未填写时这些路径会落回上面的 * 默认 owner（负责人），不会漏 review，但指派人不对。
-# app.py                  @你要填的用户名
-# live_proxy.py           @你要填的用户名
-# self_learning.py        @你要填的用户名
-# templates/              @你要填的用户名
-# static/                 @你要填的用户名
-# demo.html               @你要填的用户名
+# Flask 平台、前端页面与直播代理
+app.py                    @Nanase233
+live_proxy.py             @Nanase233
+self_learning.py          @Nanase233
+templates/                @Nanase233
+static/                   @Nanase233
+demo.html                 @Nanase233
 
 # ---- 文档与工程配置：负责人兜底 ----
 docs/                     @chenglian07
