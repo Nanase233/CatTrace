@@ -216,7 +216,7 @@ python scripts/verify_catvision.py
 
 ### 静态演示页（零依赖）
 
-双击打开 `demo.html`，无需 Python、无需网络。详见 [docs/demo-guide.md](./docs/demo-guide.md)。
+双击打开 `demo.html`，无需 Python、无需网络；或在线预览：<https://chenglian07.github.io/CatTrace/demo.html>。详见 [docs/demo-guide.md](./docs/demo-guide.md)。
 
 ---
 
