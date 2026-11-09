@@ -165,7 +165,13 @@ flowchart LR
 
 ## 如何体验项目
 
-### Flask Web 平台（推荐）
+### 在线体验（无需安装）
+
+最新网页已上线，直接访问：**<https://cattrace.onrender.com>**
+
+> 免费托管，首次访问约 30~60 秒冷启动；数据为演示用，会定期重置。
+
+### Flask Web 平台（本地运行）
 
 ```bash
 python --version   # 需要 3.10+（见 pyproject.toml 的 requires-python）
@@ -216,7 +222,7 @@ python scripts/verify_catvision.py
 
 ### 静态演示页（零依赖）
 
-双击打开 `demo.html`，无需 Python、无需网络；或在线预览：<https://chenglian07.github.io/CatTrace/demo.html>。详见 [docs/demo-guide.md](./docs/demo-guide.md)。
+`demo.html` 是早期的产品原型静态演示（旧版界面），双击即可打开，无需 Python、无需网络；在线预览：<https://chenglian07.github.io/CatTrace/demo.html>。最新网页请访问上面的「在线体验」地址。详见 [docs/demo-guide.md](./docs/demo-guide.md)。
 
 ---
 
