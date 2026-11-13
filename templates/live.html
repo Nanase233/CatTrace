@@ -67,11 +67,14 @@
 
         button, input { font-family: inherit; }
 
-        /* 与首页完全一致的容器宽度，保证跨页面切换时导航栏不跳动 */
+        /* 直播页外层容器：占满浏览器可用宽度，只保留 24–32px 安全边距。
+           原先 max-width:1380px 是页面固定居中的根因，这里不再继承首页窄容器。 */
         .shell {
-            max-width: 1380px;
+            width: 100%;
+            max-width: none;
             margin: 0 auto;
-            padding: 20px 20px 36px;
+            padding: 20px clamp(24px, 2vw, 32px) 36px;
+            box-sizing: border-box;
         }
 
         /* 导航栏与主体间距统一为 20px */
@@ -114,7 +117,7 @@
         }
 
         /* ============================================================
-           3. 两栏舞台：左 65% / 右 35%
+           3. 两栏舞台：视频约 70% / 互动约 30%，随可用宽度自适应
            布局采用显式网格区域（display:contents 展开左栏），
            让互动栏与「播放器 + 信息 + 切换」三行等高，
            投喂 / 猫屋则作为跨栏功能带收在舞台底部，
@@ -122,8 +125,8 @@
            ============================================================ */
         .live-stage {
             display: grid;
-            /* 上半段 YouTube 式：视频占绝对多数，互动栏固定 340–380px */
-            grid-template-columns: minmax(0, 1fr) clamp(340px, 25vw, 380px);
+            /* 7fr : 3fr 纯比例自适应，不设固定聊天宽度；1024 以下仍为双栏 */
+            grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
             gap: var(--lp-gap);
             align-items: start;
         }
