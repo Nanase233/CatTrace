@@ -122,8 +122,8 @@
            ============================================================ */
         .live-stage {
             display: grid;
-            /* 视频优先：右侧互动栏固定 320–380px，其余宽度全部给播放器 */
-            grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 380px);
+            /* 上半段 YouTube 式：视频占绝对多数，互动栏固定 340–380px */
+            grid-template-columns: minmax(0, 1fr) clamp(340px, 25vw, 380px);
             gap: var(--lp-gap);
             align-items: start;
         }
@@ -167,7 +167,7 @@
         .lp-player {
             position: relative;
             aspect-ratio: 16 / 9;
-            border-radius: var(--lp-r-xl);
+            border-radius: 16px;
             overflow: hidden;
             isolation: isolate;
             /* 以播放器高度为参照缩放猫咪，避免大屏下主体偏小 */
@@ -178,11 +178,8 @@
                 radial-gradient(90% 80% at 88% 100%, rgba(159, 181, 157, 0.12), transparent 55%),
                 linear-gradient(160deg, #3b3531 0%, #322d2a 48%, #282523 100%);
             border: 1px solid rgba(255, 240, 244, 0.1);
-            /* 播放器是唯一使用重阴影的元素，强化“舞台”悬浮感 */
-            box-shadow:
-                0 0 0 1px rgba(214, 141, 162, 0.12),
-                0 26px 60px rgba(63, 48, 52, 0.2),
-                0 0 80px rgba(214, 141, 162, 0.08);
+            /* 参考 YouTube：靠面积而不是阴影主导，只保留极轻投影 */
+            box-shadow: 0 1px 2px rgba(48, 36, 40, 0.08);
             color: #fff;
         }
         /* 轻微暗角：让画面四角收拢，突出中央主体 */
@@ -748,6 +745,31 @@
             color: var(--lp-pink-deep);
             background: rgba(255, 255, 255, 0.9);
         }
+        /* 点赞 / 分享合并为一个浅灰胶囊，参考 YouTube 的操作分组 */
+        .lp-action-group {
+            display: inline-flex;
+            align-items: center;
+            height: 34px;
+            border: 1px solid var(--lp-line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.55);
+            overflow: hidden;
+        }
+        .lp-action-group .lp-action {
+            flex: 1 1 0;
+            justify-content: center;
+            height: 32px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+        .lp-action-group .lp-action + .lp-action {
+            border-left: 1px solid var(--lp-line);
+        }
+        .lp-action-group .lp-action:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
         .lp-action.is-pop { animation: lpPop 0.4s ease; }
 
         /* ============================================================
@@ -846,6 +868,43 @@
         /* ============================================================
            7. 远程投喂 + 猫屋信息（左栏底部并排）
            ============================================================ */
+        /* 下半段：猫迹猫屋管理（与上半段 YouTube 舞台形成明确分区） */
+        .lp-manage {
+            grid-column: 1 / -1;
+            grid-row: 4;
+            min-width: 0;
+            padding-top: 12px;
+            border-top: 1px solid rgba(239, 228, 223, 0.8);
+        }
+        .lp-manage-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .lp-manage-head h2 {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .lp-manage-head p {
+            margin-top: 2px;
+            color: var(--lp-muted);
+            font-size: 0.72rem;
+        }
+        .lp-manage-head > .lp-tag { margin-left: auto; }
+
+        /* 投喂 / 猫屋作为管理区内的两块扁平面板，不再单独悬浮 */
+        .lp-feed,
+        .lp-house {
+            border-radius: 18px;
+            box-shadow: none;
+        }
+
         .lp-support {
             display: grid;
             grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
@@ -1182,20 +1241,20 @@
             flex-direction: column;
             height: auto;
             overflow: hidden;
-            /* 互动栏退到第二层：奶油半透明表面，不再是一块高亮白卡 */
-            background: rgba(255, 252, 249, 0.72);
-            border: 1px solid rgba(239, 228, 223, 0.7);
-            border-radius: var(--lp-r-xl);
-            box-shadow: 0 2px 10px rgba(123, 97, 101, 0.04);
+            /* YouTube 式浅色文本面板：无阴影、细边框、低对比 */
+            background: #fbfaf8;
+            border: 1px solid rgba(239, 228, 223, 0.8);
+            border-radius: 14px;
+            box-shadow: none;
             min-width: 0;
             min-height: 0;
             /* 尺寸由左侧三行决定，聊天内容不参与网格固有高度计算 */
             contain: size;
         }
         .lp-chat-head {
-            padding: 16px 18px 12px;
-            border-bottom: 1px solid rgba(239, 228, 223, 0.85);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+            padding: 14px 14px 10px;
+            border-bottom: 1px solid rgba(239, 228, 223, 0.8);
+            background: transparent;
         }
         .lp-chat-top {
             display: flex;
@@ -1207,7 +1266,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             white-space: nowrap;
         }
@@ -1235,9 +1294,9 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-top: 4px;
+            margin-top: 3px;
             color: var(--lp-muted);
-            font-size: 0.72rem;
+            font-size: 0.7rem;
         }
 
         /* 消息列表：独立滚动，不带动页面 */
@@ -1245,9 +1304,9 @@
             display: flex;
             flex: 1 1 auto;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             min-height: 0;
-            padding: 12px 14px;
+            padding: 10px 12px;
             overflow-y: auto;
             overscroll-behavior: contain;
             scrollbar-width: thin;
@@ -1262,44 +1321,43 @@
             background: rgba(216, 141, 163, 0.3);
         }
 
-        /* 单条消息：用户气泡 / 投喂动态 / AI 系统通知 / 巡查 / 系统，形状与色系统一 */
+        /* 单条消息：YouTube 式文本流，类型只靠左侧细色条和标签区分 */
         .lp-msg {
             display: flex;
-            gap: 9px;
-            padding: 8px 10px;
-            border: 1px solid transparent;
-            border-radius: 16px;
+            gap: 8px;
+            padding: 6px 8px;
+            border: 0;
+            border-radius: 8px;
             animation: lpMsgIn 0.26s ease both;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: background 0.2s ease;
         }
         .lp-msg-avatar {
             display: grid;
             place-items: center;
             flex: 0 0 auto;
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             color: #fff;
-            font-size: 0.7rem;
+            font-size: 0.66rem;
             font-weight: 700;
             overflow: hidden;
-            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
         }
-        .lp-msg-avatar.is-icon { font-size: 0.86rem; }
+        .lp-msg-avatar.is-icon { font-size: 0.76rem; }
         .lp-msg-main { flex: 1 1 auto; min-width: 0; }
         .lp-msg-head {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: nowrap;
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             line-height: 1.35;
         }
         .lp-msg-user {
             flex: 0 1 auto;
             min-width: 0;
             color: var(--lp-ink);
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
@@ -1308,88 +1366,83 @@
         .lp-msg-tag {
             flex: 0 0 auto;
             margin-left: auto;
-            padding: 2px 7px;
+            padding: 1px 6px;
             border-radius: 999px;
-            font-size: 0.66rem;
+            font-size: 0.62rem;
             font-weight: 700;
-            line-height: 1.55;
+            line-height: 1.5;
         }
         .lp-msg-time {
             flex: 0 0 auto;
             color: var(--lp-muted);
-            font-size: 0.68rem;
+            font-size: 0.64rem;
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
         }
         .lp-msg-text {
-            margin-top: 4px;
+            margin-top: 2px;
             color: #5f5557;
-            font-size: 0.84rem;
-            line-height: 1.65;
+            font-size: 0.8rem;
+            line-height: 1.55;
             word-break: break-word;
             white-space: pre-wrap;
         }
 
-        /* 普通用户留言：干净的白底气泡 */
+        /* 普通用户留言：无气泡，直接是文本行 */
         .lp-msg.is-user {
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.94);
-            border-color: rgba(239, 228, 223, 0.9);
+            padding: 7px 8px;
+            background: transparent;
         }
-        .lp-msg.is-user .lp-msg-tag { background: #e8f1fb; color: #47719f; }
-        /* 投喂动态：奶油底 + 琥珀色强调，和投喂按钮的粉色区分开 */
+        .lp-msg.is-user .lp-msg-tag { display: none; }
+        /* 投喂动态：保留唯一需要强调的浅琥珀底 */
         .lp-msg.is-feed {
-            background: linear-gradient(135deg, #fdf8f1, #fffdf9);
-            border-color: rgba(224, 163, 62, 0.22);
-            box-shadow: inset 3px 0 0 rgba(224, 163, 62, 0.5);
+            background: rgba(253, 248, 241, 0.75);
+            box-shadow: inset 2px 0 0 rgba(224, 163, 62, 0.55);
         }
         .lp-msg.is-feed .lp-msg-avatar { background: linear-gradient(135deg, #f0c89b, #e0a33e); }
         .lp-msg.is-feed .lp-msg-tag { background: #fbf0de; color: #a8691f; }
-        /* AI 系统通知：鼠尾草绿底 + 左侧强调条 */
+        /* AI 系统通知：细绿条 + 极浅底 */
         .lp-msg.is-ai {
-            background: linear-gradient(135deg, #eff5ec, #f9fcf7);
-            border-color: rgba(159, 181, 157, 0.38);
-            box-shadow: inset 3px 0 0 rgba(159, 181, 157, 0.72);
+            background: rgba(239, 245, 236, 0.7);
+            box-shadow: inset 2px 0 0 rgba(159, 181, 157, 0.72);
         }
         .lp-msg.is-ai .lp-msg-avatar { background: linear-gradient(135deg, #a9c0a7, #86a283); }
         .lp-msg.is-ai .lp-msg-tag { background: #dce8d9; color: var(--lp-sage-deep); }
-        /* 志愿者巡查消息：雾蓝底 */
+        /* 志愿者巡查消息：细蓝条 */
         .lp-msg.is-volunteer {
-            background: linear-gradient(135deg, #eff4fb, #f9fbfe);
-            border-color: rgba(116, 185, 255, 0.26);
-            box-shadow: inset 3px 0 0 rgba(127, 170, 218, 0.55);
+            background: rgba(239, 244, 251, 0.65);
+            box-shadow: inset 2px 0 0 rgba(127, 170, 218, 0.55);
         }
         .lp-msg.is-volunteer .lp-msg-avatar { background: linear-gradient(135deg, #a3c5ea, #7ea9d8); }
         .lp-msg.is-volunteer .lp-msg-tag { background: #e3edfa; color: #47719f; }
-        /* 系统设备通知：中性米灰 */
+        /* 系统设备通知：细灰条 */
         .lp-msg.is-system {
-            background: #f8f4f0;
-            border-color: rgba(239, 228, 223, 0.9);
-            box-shadow: inset 3px 0 0 rgba(206, 194, 182, 0.7);
+            background: rgba(248, 244, 240, 0.62);
+            box-shadow: inset 2px 0 0 rgba(206, 194, 182, 0.7);
         }
         .lp-msg.is-system .lp-msg-avatar { background: linear-gradient(135deg, #c6b9ae, #ad9f94); }
         .lp-msg.is-system .lp-msg-tag { background: #efe6dd; color: var(--lp-muted); }
-        .lp-msg:hover { border-color: rgba(214, 141, 162, 0.4); }
+        .lp-msg:hover { background: rgba(214, 141, 162, 0.06); }
 
         /* 输入区 */
         .lp-composer {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 11px 13px;
-            border-top: 1px solid rgba(239, 228, 223, 0.85);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.82));
+            padding: 10px 12px;
+            border-top: 1px solid rgba(239, 228, 223, 0.8);
+            background: #fbfaf8;
         }
         .lp-composer input {
             flex: 1 1 auto;
             min-width: 0;
-            height: 40px;
-            padding: 0 15px;
+            height: 36px;
+            padding: 0 14px;
             border: 1px solid var(--lp-line);
             border-radius: 999px;
             background: #fff;
             color: var(--lp-ink);
-            font-size: 0.84rem;
+            font-size: 0.8rem;
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -1968,6 +2021,7 @@
             .lp-player,
             .lp-meta,
             .lp-switch,
+            .lp-manage,
             .lp-support,
             .lp-chat {
                 grid-column: auto;
@@ -1982,6 +2036,7 @@
                 height: clamp(420px, 62dvh, 540px);
             }
             .lp-switch { order: 4; }
+            .lp-manage { order: 5; }
             .lp-support { order: 5; }
         }
 
@@ -2003,7 +2058,7 @@
             .topbar { margin-bottom: 16px; }
             .live-page { gap: 20px; }
 
-            .lp-player { border-radius: var(--lp-r-lg); }
+            .lp-player { border-radius: 14px; }
             .lp-overlay-top { top: 10px; left: 10px; right: 10px; }
             .lp-live { padding: 3px 9px; font-size: 0.68rem; }
             .lp-ai { padding: 3px 8px; font-size: 0.66rem; }
@@ -2028,6 +2083,9 @@
 
             .lp-switch { padding: 0 2px; }
             .lp-switch-card { flex: 1 1 calc(50% - 4px); }
+
+            .lp-manage-head h2 { font-size: 0.95rem; }
+            .lp-manage-head p { font-size: 0.7rem; }
 
             .lp-feed, .lp-house, .lp-chart-card { padding: 14px; }
             .lp-packs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2205,8 +2263,10 @@
                     </div>
                     <div class="lp-meta-actions">
                         <button class="lp-follow" id="followBtn" aria-pressed="false">＋ 关注</button>
-                        <button class="lp-action" id="likeBtn" title="为猫咪点赞">👍 <span id="likeCount">600</span></button>
-                        <button class="lp-action" id="shareBtn" title="分享直播">↗ 分享</button>
+                        <div class="lp-action-group">
+                            <button class="lp-action" id="likeBtn" title="为猫咪点赞">👍 <span id="likeCount">600</span></button>
+                            <button class="lp-action" id="shareBtn" title="分享直播">↗ 分享</button>
+                        </div>
                     </div>
                 </section>
 
@@ -2219,8 +2279,16 @@
                     <div class="lp-switch-track" id="catSwitcher"></div>
                 </section>
 
-                <!-- 远程投喂 + 猫屋信息 -->
-                <div class="lp-support">
+                <!-- 下半段：猫迹猫屋管理（A+B 混合的下半部分） -->
+                <section class="lp-manage" aria-label="猫屋管理">
+                    <div class="lp-manage-head">
+                        <div>
+                            <h2>🏡 猫屋管理</h2>
+                            <p>远程投喂与猫屋状态联动，投喂后同步到实时互动</p>
+                        </div>
+                        <span class="lp-tag">演示设备</span>
+                    </div>
+                    <div class="lp-support">
 
                     <!-- 远程投喂：猫迹特色功能 -->
                     <section class="lp-feed lp-card" id="feedSection" aria-label="远程投喂">
@@ -2228,9 +2296,6 @@
                             <div>
                                 <h2>🍖 远程投喂</h2>
                                 <p>投喂成功后会同步到右侧实时互动</p>
-                            </div>
-                            <div class="lp-feed-tags">
-                                <span class="lp-tag">演示设备</span>
                             </div>
                         </div>
 
@@ -2280,7 +2345,8 @@
                         </dl>
                         <span class="lp-tag">温度 / 编号为模拟数据</span>
                     </section>
-                </div>
+                    </div>
+                </section>
             </div>
 
             <!-- ===== 右栏：实时互动 ===== -->
