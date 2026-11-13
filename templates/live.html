@@ -40,8 +40,8 @@
             --lp-muted: #7d7160;
             --lp-line: rgba(239, 228, 223, 0.9);
             --lp-card: linear-gradient(180deg, rgba(255, 253, 251, 0.96), rgba(250, 246, 242, 0.93));
-            --lp-shadow: 0 8px 24px rgba(123, 97, 101, 0.08);
-            --lp-shadow-lg: 0 18px 40px rgba(123, 97, 101, 0.14);
+            --lp-shadow: 0 6px 18px rgba(123, 97, 101, 0.07);
+            --lp-shadow-lg: 0 14px 30px rgba(123, 97, 101, 0.12);
             --lp-r-xl: 28px;
             --lp-r-lg: 22px;
             --lp-r-md: 16px;
@@ -115,7 +115,10 @@
 
         /* ============================================================
            3. 两栏舞台：左 65% / 右 35%
-           minmax(0, …) 防止聊天长文本把网格撑出横向滚动
+           布局采用显式网格区域（display:contents 展开左栏），
+           让互动栏与「播放器 + 信息 + 切换」三行等高，
+           投喂 / 猫屋则作为跨栏功能带收在舞台底部，
+           从根本上消除右栏下方的空白，同时不改变模块顺序。
            ============================================================ */
         .live-stage {
             display: grid;
@@ -124,10 +127,27 @@
             align-items: start;
         }
 
-        .live-primary {
-            display: flex;
-            flex-direction: column;
-            gap: var(--lp-gap);
+        /* 左栏本身不参与排版，其子元素直接成为舞台网格项 */
+        .live-primary { display: contents; }
+
+        .lp-player {
+            grid-column: 1;
+            grid-row: 1;
+            min-width: 0;
+        }
+        .lp-meta {
+            grid-column: 1;
+            grid-row: 2;
+            min-width: 0;
+        }
+        .lp-switch {
+            grid-column: 1;
+            grid-row: 3;
+            min-width: 0;
+        }
+        .lp-support {
+            grid-column: 1 / -1;
+            grid-row: 4;
             min-width: 0;
         }
 
@@ -151,10 +171,29 @@
             isolation: isolate;
             /* 以播放器高度为参照缩放猫咪，避免大屏下主体偏小 */
             container-type: size;
-            background: linear-gradient(180deg, #5a4030 0%, #3d2d20 45%, #241a14 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: var(--lp-shadow-lg);
+            /* 深棕改为暖灰棕，降低对比度，和奶油白页面更协调 */
+            background:
+                radial-gradient(120% 90% at 50% 0%, rgba(152, 118, 100, 0.3), transparent 62%),
+                linear-gradient(180deg, #4b3c34 0%, #3a2f2a 48%, #2c2521 100%);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: var(--lp-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.08);
             color: #fff;
+        }
+        /* 轻微暗角：让画面四角收拢，突出中央主体 */
+        .lp-player::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            box-shadow: inset 0 0 90px rgba(22, 14, 11, 0.32);
+        }
+        /* 接入真实/合成画面时减弱暗角，避免把本就不亮的画面压得更黑 */
+        .lp-player.is-stream::after {
+            box-shadow: inset 0 0 70px rgba(22, 14, 11, 0.16);
+        }
+        .lp-player.is-stream .lp-stream {
+            filter: brightness(1.03);
         }
         /* 全屏时铺满屏幕，去掉圆角 */
         .lp-player:fullscreen {
@@ -190,20 +229,20 @@
             position: absolute;
             inset: 0;
             background:
-                radial-gradient(ellipse at 50% 96%, rgba(255, 190, 140, 0.2), transparent 55%),
-                linear-gradient(180deg, transparent 60%, rgba(50, 31, 21, 0.5) 100%),
-                radial-gradient(circle at 50% 36%, rgba(255, 208, 160, 0.16), transparent 55%),
-                radial-gradient(circle at 82% 16%, rgba(216, 141, 163, 0.2), transparent 42%),
-                radial-gradient(circle at 12% 84%, rgba(159, 181, 157, 0.14), transparent 40%);
+                radial-gradient(ellipse at 50% 98%, rgba(255, 198, 152, 0.16), transparent 58%),
+                radial-gradient(circle at 50% 34%, rgba(255, 212, 172, 0.13), transparent 55%),
+                radial-gradient(circle at 80% 14%, rgba(216, 141, 163, 0.13), transparent 45%),
+                radial-gradient(circle at 12% 84%, rgba(159, 181, 157, 0.1), transparent 40%),
+                linear-gradient(180deg, rgba(96, 76, 64, 0.22), rgba(38, 30, 26, 0.55));
         }
         .lp-stage::after {
             content: "";
             position: absolute;
             inset: 0;
             background-image: repeating-linear-gradient(
-                0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 4px
+                0deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 4px
             );
-            opacity: 0.55;
+            opacity: 0.4;
         }
         /* 离线时整体压暗，避免看起来像“正常直播” */
         .lp-stage.is-offline { filter: saturate(0.65) brightness(0.72); }
@@ -242,36 +281,51 @@
             background: radial-gradient(ellipse, rgba(0, 0, 0, 0.38), transparent 70%);
         }
 
-        /* AI 追踪框：虚线外框 + 四角高亮 */
+        /* AI 追踪框：细线外框 + 四角高亮，降低存在感但不失科技感 */
         .lp-track {
             position: absolute;
             inset: 0;
-            border: 1px dashed rgba(232, 167, 186, 0.5);
-            border-radius: 18px;
+            border: 1px solid rgba(238, 178, 196, 0.34);
+            border-radius: 20px;
+            box-shadow: inset 0 0 24px rgba(216, 141, 163, 0.08);
         }
         .lp-corner {
             position: absolute;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #eda9bb;
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid rgba(240, 183, 199, 0.9);
         }
-        .lp-corner.tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-radius: 6px 0 0 0; }
-        .lp-corner.tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-radius: 0 6px 0 0; }
-        .lp-corner.bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-radius: 0 0 0 6px; }
-        .lp-corner.br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-radius: 0 0 6px 0; }
+        .lp-corner.tl { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-radius: 6px 0 0 0; }
+        .lp-corner.tr { top: -1px; right: -1px; border-left: 0; border-bottom: 0; border-radius: 0 6px 0 0; }
+        .lp-corner.bl { bottom: -1px; left: -1px; border-right: 0; border-top: 0; border-radius: 0 0 0 6px; }
+        .lp-corner.br { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-radius: 0 0 6px 0; }
         .lp-track-label {
             position: absolute;
             left: 50%;
-            top: -12px;
+            top: -13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             transform: translateX(-50%);
-            padding: 2px 9px;
+            padding: 3px 10px;
             border-radius: 999px;
-            background: rgba(24, 16, 14, 0.8);
-            border: 1px solid rgba(232, 167, 186, 0.45);
-            color: #f6c9d5;
-            font-size: 0.62rem;
+            background: rgba(34, 25, 22, 0.82);
+            border: 1px solid rgba(238, 178, 196, 0.32);
+            color: #f7d6df;
+            font-size: 0.66rem;
             font-weight: 600;
+            letter-spacing: 0.01em;
             white-space: nowrap;
+            backdrop-filter: blur(6px);
+        }
+        .lp-track-label::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f0a9bd;
+            box-shadow: 0 0 0 3px rgba(240, 169, 189, 0.16);
+            animation: lpBlink 2.4s ease-in-out infinite;
         }
 
         /* 模拟画面提示：位于控制栏上方，不遮挡猫咪主体 */
@@ -292,6 +346,28 @@
             text-overflow: ellipsis;
         }
         .lp-stage-hint:empty { display: none; }
+
+        /* 画面来源提示：合成信号 / 实时画面时显示在控制栏上方 */
+        .lp-player-note {
+            position: absolute;
+            left: 14px;
+            bottom: 74px;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            max-width: 74%;
+            padding: 4px 11px;
+            border-radius: 999px;
+            background: rgba(18, 14, 12, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.76);
+            font-size: 0.68rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(6px);
+        }
 
         /* 顶部覆盖层：LIVE + AI 状态 / 观看人数 */
         .lp-overlay-top {
@@ -360,6 +436,31 @@
             border-color: transparent;
             color: #fff;
         }
+        /* 画面来源标签：和 AI 标签并排，明确区分演示 / 合成 / 实时 / 离线 */
+        .lp-src {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: rgba(18, 14, 12, 0.42);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #f3e7e1;
+            font-size: 0.68rem;
+            font-weight: 600;
+            white-space: nowrap;
+            backdrop-filter: blur(6px);
+        }
+        .lp-src::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .lp-src.is-demo { color: #f0d6b4; background: rgba(56, 38, 27, 0.5); }
+        .lp-src.is-live { color: #ffd0db; background: rgba(92, 31, 46, 0.55); }
+        .lp-src.is-off { color: #ffc9c2; background: rgba(88, 30, 27, 0.55); }
         .lp-viewers {
             display: inline-flex;
             align-items: center;
@@ -386,23 +487,25 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            padding: 26px 14px 10px;
-            background: linear-gradient(180deg, transparent, rgba(16, 10, 8, 0.55) 45%, rgba(16, 10, 8, 0.82));
+            padding: 28px 14px 11px;
+            background: linear-gradient(180deg, transparent, rgba(24, 17, 14, 0.5) 48%, rgba(20, 14, 12, 0.78));
         }
         .lp-progress {
             position: relative;
-            height: 4px;
+            height: 3px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.2);
             cursor: pointer;
+            transition: height 0.2s ease;
         }
+        .lp-progress:hover { height: 5px; }
         .lp-progress-fill {
             position: absolute;
             inset: 0;
             overflow: hidden;
             border-radius: inherit;
-            background: linear-gradient(90deg, #e0536b, #f39ab0);
-            box-shadow: 0 0 12px rgba(240, 125, 146, 0.5);
+            background: linear-gradient(90deg, #df647e, #f0a3b4);
+            box-shadow: 0 0 10px rgba(240, 125, 146, 0.38);
         }
         /* 直播进度条上的流光，强调“正在直播” */
         .lp-progress-fill::before {
@@ -441,33 +544,37 @@
             flex: 0 0 auto;
             display: grid;
             place-items: center;
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.12);
             color: #fff;
             font-size: 0.84rem;
             cursor: pointer;
-            transition: background 0.2s ease, border-color 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
         }
-        .lp-ctrl:hover { background: rgba(255, 255, 255, 0.28); }
+        .lp-ctrl:hover {
+            background: rgba(255, 255, 255, 0.24);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
         .lp-ctrl.is-on {
             background: var(--lp-pink);
             border-color: transparent;
         }
         .lp-ctrl-text {
             width: auto;
-            padding: 0 10px;
+            padding: 0 11px;
             border-radius: 999px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
         }
         .lp-time {
-            margin-left: 2px;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.78);
+            margin-left: 3px;
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.72);
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }
@@ -676,7 +783,7 @@
         }
         .lp-switch-house {
             color: var(--lp-muted);
-            font-size: 0.66rem;
+            font-size: 0.68rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -687,7 +794,7 @@
             align-items: center;
             gap: 4px;
             color: var(--lp-sage-deep);
-            font-size: 0.62rem;
+            font-size: 0.65rem;
             font-weight: 600;
             white-space: nowrap;
         }
@@ -704,7 +811,7 @@
            ============================================================ */
         .lp-support {
             display: grid;
-            grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
             gap: var(--lp-gap);
             align-items: stretch;
         }
@@ -713,8 +820,8 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            padding: 18px;
+            gap: 13px;
+            padding: 20px;
             overflow: hidden;
             background: linear-gradient(180deg, #fff8fa, #fffdfb);
             border-color: rgba(216, 141, 163, 0.28);
@@ -774,6 +881,10 @@
             background: var(--lp-pink-soft);
             color: var(--lp-pink-deep);
         }
+        .lp-tag.warn {
+            background: #fbf0de;
+            color: #a8691f;
+        }
 
         /* 当前投喂对象 */
         .lp-feed-target {
@@ -806,12 +917,13 @@
             gap: 8px;
         }
         .lp-pack {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 1px;
             min-width: 0;
-            padding: 10px 6px;
+            padding: 11px 6px;
             border: 1px solid var(--lp-line);
             border-radius: var(--lp-r-md);
             background: #fff;
@@ -829,20 +941,36 @@
             background: linear-gradient(135deg, #fdf1f5, #fffdfd);
             box-shadow: 0 8px 20px rgba(216, 141, 163, 0.18);
         }
+        /* 选中档位右上角的对勾，减少“只靠颜色判断”的不确定性 */
+        .lp-pack.is-active::after {
+            content: "✓";
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: grid;
+            place-items: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--lp-pink);
+            color: #fff;
+            font-size: 0.56rem;
+            font-weight: 700;
+        }
         .lp-pack .price {
             color: var(--lp-pink-deep);
-            font-size: 1.02rem;
+            font-size: 1.05rem;
             font-weight: 800;
             line-height: 1.25;
         }
         .lp-pack .label {
             color: var(--lp-ink-2);
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             white-space: nowrap;
         }
         .lp-pack .amount {
             color: var(--lp-muted);
-            font-size: 0.64rem;
+            font-size: 0.66rem;
             white-space: nowrap;
         }
 
@@ -852,20 +980,20 @@
             justify-content: center;
             gap: 8px;
             width: 100%;
-            padding: 13px 16px;
+            padding: 14px 16px;
             border: none;
             border-radius: 999px;
-            background: linear-gradient(135deg, var(--lp-pink), #e3a5b8);
+            background: linear-gradient(135deg, #d98ba2 0%, #e6aabb 52%, #d88da3 100%);
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 12px 24px rgba(216, 141, 163, 0.26);
+            box-shadow: 0 14px 28px rgba(216, 141, 163, 0.3);
             transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
         }
         .lp-feed-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 16px 28px rgba(216, 141, 163, 0.32);
+            box-shadow: 0 18px 32px rgba(216, 141, 163, 0.36);
         }
         .lp-feed-btn:disabled {
             opacity: 0.6;
@@ -874,11 +1002,11 @@
             box-shadow: none;
         }
         .lp-feed-btn .sub {
-            padding: 2px 8px;
+            padding: 3px 9px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.24);
             font-size: 0.7rem;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         /* 投喂状态：为空时不占高度，避免卡片底部出现空档 */
@@ -916,7 +1044,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            padding: 18px;
+            padding: 20px;
         }
         .lp-house-head {
             display: flex;
@@ -971,26 +1099,30 @@
         }
         .lp-house-grid {
             display: grid;
+            flex: 1 1 auto;
             grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-auto-rows: minmax(54px, 1fr);
             gap: 8px;
-            margin-top: auto;
         }
         .lp-house-grid > div {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             min-width: 0;
-            padding: 9px 10px;
+            padding: 10px 12px;
             border: 1px solid var(--lp-line);
             border-radius: 12px;
             background: #fffaf8;
         }
         .lp-house-grid dt {
             color: var(--lp-muted);
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             white-space: nowrap;
         }
         .lp-house-grid dd {
             margin: 2px 0 0;
             color: var(--lp-ink);
-            font-size: 0.86rem;
+            font-size: 0.9rem;
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
@@ -999,21 +1131,26 @@
 
         /* ============================================================
            8. 实时互动面板（右栏）
-           贴住视口高度并在内部滚动；页面滚动时保持可见
+           与左栏「播放器 + 信息 + 切换」三行等高，消息区独立滚动，
+           输入框固定在面板底部；面板本身不再脱离文档流
            ============================================================ */
         .lp-chat {
-            position: sticky;
-            top: 94px;
+            grid-column: 2;
+            grid-row: 1 / span 3;
+            align-self: stretch;
+            position: relative;
             display: flex;
             flex-direction: column;
-            height: clamp(520px, calc(100vh - 132px), 880px);
-            height: clamp(520px, calc(100dvh - 132px), 880px);
+            height: auto;
             overflow: hidden;
             background: var(--lp-card);
             border: 1px solid var(--lp-line);
             border-radius: var(--lp-r-xl);
             box-shadow: var(--lp-shadow);
             min-width: 0;
+            min-height: 0;
+            /* 尺寸由左侧三行决定，聊天内容不参与网格固有高度计算 */
+            contain: size;
         }
         .lp-chat-head {
             padding: 16px 18px 12px;
@@ -1085,40 +1222,43 @@
             background: rgba(216, 141, 163, 0.3);
         }
 
-        /* 单条消息 */
+        /* 单条消息：普通留言 / 投喂 / AI / 巡查 / 系统各自成体系 */
         .lp-msg {
             display: flex;
-            gap: 8px;
-            padding: 8px 9px;
+            gap: 9px;
+            padding: 9px 10px;
             border: 1px solid transparent;
-            border-radius: 14px;
+            border-radius: 16px;
             animation: lpMsgIn 0.26s ease both;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .lp-msg-avatar {
             display: grid;
             place-items: center;
             flex: 0 0 auto;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             color: #fff;
             font-size: 0.7rem;
             font-weight: 700;
             overflow: hidden;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
         }
-        .lp-msg-avatar.is-icon { font-size: 0.82rem; }
+        .lp-msg-avatar.is-icon { font-size: 0.86rem; }
         .lp-msg-main { flex: 1 1 auto; min-width: 0; }
         .lp-msg-head {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: wrap;
-            font-size: 0.72rem;
-            line-height: 1.3;
+            font-size: 0.73rem;
+            line-height: 1.35;
         }
         .lp-msg-user {
             max-width: 62%;
             color: var(--lp-ink);
+            font-size: 0.75rem;
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
@@ -1127,74 +1267,86 @@
         .lp-msg-tag {
             padding: 1px 6px;
             border-radius: 999px;
-            font-size: 0.6rem;
+            font-size: 0.61rem;
             font-weight: 700;
-            line-height: 1.6;
+            line-height: 1.7;
         }
         .lp-msg-time {
             margin-left: auto;
+            padding-left: 4px;
             color: var(--lp-muted);
-            font-size: 0.64rem;
+            font-size: 0.66rem;
             white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
         .lp-msg-text {
             margin-top: 3px;
-            color: var(--lp-ink-2);
-            font-size: 0.8rem;
-            line-height: 1.5;
+            color: #5f5557;
+            font-size: 0.82rem;
+            line-height: 1.6;
             word-break: break-word;
             white-space: pre-wrap;
         }
 
-        /* 投喂消息 */
+        /* 普通用户留言：干净的白底气泡 */
+        .lp-msg.is-user {
+            background: rgba(255, 255, 255, 0.92);
+            border-color: rgba(239, 228, 223, 0.85);
+        }
+        .lp-msg.is-user .lp-msg-tag { background: #f1ece7; color: var(--lp-muted); }
+        /* 远程投喂动态：粉色底 + 左侧强调条 */
         .lp-msg.is-feed {
-            background: linear-gradient(135deg, #fdf0f4, #fff9fb);
-            border-color: rgba(216, 141, 163, 0.22);
+            background: linear-gradient(135deg, #fdf1f5, #fffafc);
+            border-color: rgba(216, 141, 163, 0.26);
+            box-shadow: inset 3px 0 0 rgba(216, 141, 163, 0.55);
         }
         .lp-msg.is-feed .lp-msg-avatar { background: linear-gradient(135deg, #e79bb0, var(--lp-pink)); }
-        .lp-msg.is-feed .lp-msg-tag { background: #f7d9e2; color: #a9556f; }
-        /* AI 识别消息 */
+        .lp-msg.is-feed .lp-msg-tag { background: #f6d7e1; color: #a9556f; }
+        /* AI 系统通知：鼠尾草绿底 + 左侧强调条 */
         .lp-msg.is-ai {
-            background: linear-gradient(135deg, #eef4ea, #f8fbf6);
-            border-color: rgba(159, 181, 157, 0.35);
+            background: linear-gradient(135deg, #eff5ec, #f9fcf7);
+            border-color: rgba(159, 181, 157, 0.38);
+            box-shadow: inset 3px 0 0 rgba(159, 181, 157, 0.75);
         }
         .lp-msg.is-ai .lp-msg-avatar { background: linear-gradient(135deg, #a9c0a7, #86a283); }
-        .lp-msg.is-ai .lp-msg-tag { background: #dde9db; color: var(--lp-sage-deep); }
-        /* 志愿者巡查消息 */
+        .lp-msg.is-ai .lp-msg-tag { background: #dce8d9; color: var(--lp-sage-deep); }
+        /* 志愿者巡查消息：雾蓝底 */
         .lp-msg.is-volunteer {
-            background: linear-gradient(135deg, #eef3fb, #f8fafd);
-            border-color: rgba(116, 185, 255, 0.25);
+            background: linear-gradient(135deg, #eff4fb, #f9fbfe);
+            border-color: rgba(116, 185, 255, 0.26);
+            box-shadow: inset 3px 0 0 rgba(127, 170, 218, 0.55);
         }
         .lp-msg.is-volunteer .lp-msg-avatar { background: linear-gradient(135deg, #a3c5ea, #7ea9d8); }
         .lp-msg.is-volunteer .lp-msg-tag { background: #e3edfa; color: #47719f; }
-        /* 系统通知 */
+        /* 系统设备通知：中性米灰 */
         .lp-msg.is-system {
             background: #f8f4f0;
             border-color: rgba(239, 228, 223, 0.9);
+            box-shadow: inset 3px 0 0 rgba(206, 194, 182, 0.7);
         }
-        .lp-msg.is-system .lp-msg-avatar { background: #b9aca2; }
+        .lp-msg.is-system .lp-msg-avatar { background: linear-gradient(135deg, #c6b9ae, #ad9f94); }
         .lp-msg.is-system .lp-msg-tag { background: #efe6dd; color: var(--lp-muted); }
-        .lp-msg:hover { border-color: rgba(216, 141, 163, 0.35); }
+        .lp-msg:hover { border-color: rgba(216, 141, 163, 0.4); }
 
         /* 输入区 */
         .lp-composer {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 12px;
+            padding: 11px 13px;
             border-top: 1px solid rgba(239, 228, 223, 0.85);
-            background: rgba(255, 255, 255, 0.72);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.82));
         }
         .lp-composer input {
             flex: 1 1 auto;
             min-width: 0;
-            height: 38px;
-            padding: 0 14px;
+            height: 40px;
+            padding: 0 15px;
             border: 1px solid var(--lp-line);
             border-radius: 999px;
             background: #fff;
             color: var(--lp-ink);
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -1207,23 +1359,24 @@
             display: grid;
             place-items: center;
             flex: 0 0 auto;
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border: 1px solid var(--lp-line);
             border-radius: 50%;
             background: #fff;
             font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .lp-heart-btn:hover {
             transform: scale(1.06);
             border-color: rgba(216, 141, 163, 0.6);
+            box-shadow: 0 6px 14px rgba(216, 141, 163, 0.16);
         }
         .lp-send {
             flex: 0 0 auto;
-            height: 38px;
-            padding: 0 16px;
+            height: 40px;
+            padding: 0 18px;
             border: none;
             border-radius: 999px;
             background: linear-gradient(135deg, var(--lp-pink), #e3a5b8);
@@ -1231,10 +1384,18 @@
             font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 8px 16px rgba(216, 141, 163, 0.22);
+            transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .lp-send:hover:not(:disabled) { transform: translateY(-1px); }
-        .lp-send:disabled { opacity: 0.45; cursor: not-allowed; }
+        .lp-send:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(216, 141, 163, 0.28);
+        }
+        .lp-send:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
 
         /* 爱心飘浮层：覆盖聊天面板，不拦截点击 */
         .lp-heart-layer {
@@ -1348,6 +1509,34 @@
             white-space: nowrap;
         }
         .lp-tl-top strong { font-size: 0.84rem; }
+        .lp-tl-ic {
+            font-size: 0.82rem;
+            line-height: 1;
+        }
+        /* 事件类型用节点颜色区分：身份 / 进食 / 活动 / 异常 / 出现 / 历史 */
+        .lp-tl.is-identity .lp-tl-dot::before { border-color: var(--lp-pink); }
+        .lp-tl.is-feeding .lp-tl-dot::before { border-color: var(--lp-sage); }
+        .lp-tl.is-activity .lp-tl-dot::before { border-color: #8fb8e8; }
+        .lp-tl.is-appear .lp-tl-dot::before { border-color: #c7a5d6; }
+        .lp-tl.is-history .lp-tl-dot::before { border-color: #bfb2a6; }
+        .lp-tl.is-alert .lp-tl-dot::before {
+            border-color: #dfa23f;
+            background: #fff7e8;
+            box-shadow: 0 0 0 3px rgba(223, 162, 63, 0.14);
+        }
+        /* 异常提醒：暖琥珀底色 + 左侧强调，明确“待人工确认”而非诊断 */
+        .lp-tl.is-alert .lp-tl-card {
+            background: linear-gradient(135deg, #fff9ef, #fffdf9);
+            border-color: rgba(223, 162, 63, 0.35);
+            box-shadow: inset 3px 0 0 rgba(223, 162, 63, 0.55);
+        }
+        .lp-tl.is-alert:hover .lp-tl-card {
+            border-color: rgba(223, 162, 63, 0.55);
+            box-shadow: inset 3px 0 0 rgba(223, 162, 63, 0.55), 0 8px 20px rgba(123, 97, 101, 0.08);
+        }
+        .lp-tl.is-alert .lp-tl-text { color: #7a5a2a; }
+        .lp-tl.is-alert .lp-conf { color: #a8691f; }
+        .lp-tl.is-alert .lp-conf-bar b { background: linear-gradient(90deg, #dfa23f, #f0c783); }
         /* 虚线引导线：把标题与右侧置信度连起来，避免宽卡片中间出现大片空洞 */
         .lp-leader {
             flex: 1 1 40px;
@@ -1415,6 +1604,11 @@
             background: #fffaf8;
             text-align: center;
         }
+        .lp-stat.is-alert {
+            background: #fff9ef;
+            border-color: rgba(223, 162, 63, 0.3);
+        }
+        .lp-stat.is-alert strong { color: #a8691f; }
         .lp-stat strong {
             display: block;
             color: var(--lp-pink-deep);
@@ -1507,6 +1701,30 @@
             color: var(--lp-muted);
             font-size: 0.7rem;
             line-height: 1.6;
+        }
+        /* 待人工确认提示：让“异常提醒 ≠ 健康诊断”在概览卡里也清晰可见 */
+        .lp-ai-review {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            padding: 10px 12px;
+            border: 1px dashed rgba(223, 162, 63, 0.42);
+            border-radius: 12px;
+            background: #fff9ef;
+        }
+        .lp-ai-review > span {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .lp-ai-review p {
+            margin: 0;
+            color: #7a5a2a;
+            font-size: 0.72rem;
+            line-height: 1.55;
+        }
+        .lp-ai-review b {
+            color: #a8691f;
+            font-size: 0.76rem;
         }
 
         .lp-charts-grid {
@@ -1651,6 +1869,16 @@
            11. 响应式
            桌面双栏 → 960 以下单栏（聊天提前到信息栏之后）→ 640 以下紧凑
            ============================================================ */
+        /* 超宽屏：投喂卡横跨整行后，按钮收窄居中，避免出现过长的粉色条 */
+        @media (min-width: 1200px) {
+            .lp-feed-btn {
+                width: 100%;
+                max-width: 620px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
         /* 1024~1100：压缩导航，保持单行，避免和首页出现两套导航高度 */
         @media (max-width: 1100px) {
             .topbar .topbar-inner { padding: 0 14px; gap: 10px; }
@@ -1662,6 +1890,15 @@
             .topbar .menu { order: initial; width: auto; }
         }
 
+        /* 桌面端短视口：互动栏改为视口高度，优先保证输入框可见 */
+        @media (min-width: 961px) and (max-height: 820px) {
+            .lp-chat {
+                align-self: start;
+                height: calc(100vh - 132px);
+                height: calc(100dvh - 132px);
+            }
+        }
+
         /* ≤960：单列。用 display:contents 让子元素参与外层网格排序，
            移动端顺序 = 播放器 → 信息栏 → 实时互动 → 猫咪切换 → 投喂/猫屋 */
         @media (max-width: 960px) {
@@ -1669,13 +1906,19 @@
                 grid-template-columns: minmax(0, 1fr);
                 gap: var(--lp-gap);
             }
-            .live-primary { display: contents; }
+            .lp-player,
+            .lp-meta,
+            .lp-switch,
+            .lp-support,
+            .lp-chat {
+                grid-column: auto;
+                grid-row: auto;
+            }
             .lp-player { order: 1; }
             .lp-meta { order: 2; }
             .lp-chat {
                 order: 3;
-                position: relative;
-                top: auto;
+                align-self: auto;
                 height: clamp(420px, 62vh, 540px);
                 height: clamp(420px, 62dvh, 540px);
             }
@@ -1834,10 +2077,14 @@
                     <div class="lp-overlay-top">
                         <div class="lp-badges">
                             <span class="lp-live"><i></i>LIVE</span>
+                            <span class="lp-src is-demo" id="sourceBadge">演示画面</span>
                             <span class="lp-ai" id="aiStatus"><span id="aiStatusText">AI 模拟识别 · 咪咪</span><span class="lp-ai-conf" id="aiStatusConf"> 93.6%</span></span>
                         </div>
                         <span class="lp-viewers">👁 <b id="viewerCount">9,876</b><span class="lp-viewers-label"> 人正在观看</span></span>
                     </div>
+
+                    <!-- 画面来源提示：位于控制栏上方左侧，与顶部来源标签互相补充 -->
+                    <p class="lp-player-note" id="playerNote" hidden></p>
 
                     <!-- 底部覆盖层：进度条 + 控制栏 -->
                     <div class="lp-overlay-bottom">
@@ -1949,7 +2196,7 @@
                                 <dd id="houseFeedTotal">156 次</dd>
                             </div>
                             <div>
-                                <dt>💚 健康状态</dt>
+                                <dt>💚 健康档案</dt>
                                 <dd id="houseHealth">健康</dd>
                             </div>
                         </dl>
@@ -1987,7 +2234,7 @@
             <div class="lp-sec-head">
                 <h2>🐾 AI 猫咪动态</h2>
                 <span class="lp-tag">模拟识别</span>
-                <span class="lp-sec-note">AI 结果仅作辅助参考，救助决策需人工确认</span>
+                <span class="lp-sec-note">AI 结果仅作辅助参考，异常提醒需人工确认</span>
             </div>
             <div class="lp-ai-grid">
                 <div class="lp-card lp-timeline-card">
@@ -1998,7 +2245,7 @@
                     <div class="lp-ai-stats">
                         <div class="lp-stat"><strong>128</strong><span>识别次数</span></div>
                         <div class="lp-stat"><strong>96.4%</strong><span>平均置信度</span></div>
-                        <div class="lp-stat"><strong>3</strong><span>待人工确认</span></div>
+                        <div class="lp-stat is-alert"><strong>3</strong><span>待人工确认</span></div>
                     </div>
                     <div class="lp-ai-cat">
                         <span class="lp-ai-cat-avatar" id="aiSideAvatar">🐈</span>
@@ -2009,11 +2256,38 @@
                         <span class="lp-tag pink" id="aiSideConf">93.6%</span>
                     </div>
                     <div class="lp-coverage" id="aiCoverage"></div>
+                    <div class="lp-ai-review">
+                        <span aria-hidden="true">⚠️</span>
+                        <p><b>3 条提醒待人工确认</b><br>确认前仅作为行为观察，不升级为健康结论。</p>
+                    </div>
                     <p class="lp-ai-note">
-                        识别结果来自模拟数据，尚未接入真实视觉模型。涉及 TNR、医疗与领养决策时，
-                        请以现场人工核验和专业判断为准。
+                        识别结果来自模拟数据，尚未接入真实视觉模型。异常提醒只表示「需要人工复核」，
+                        不等同于健康诊断；涉及 TNR、医疗与领养决策时，请以现场人工核验和专业判断为准。
                     </p>
                 </aside>
+            </div>
+        </section>
+
+        <!-- ===== 猫屋数据分析 ===== -->
+        <!-- 说明：本区块与 renderCharts() 绑定，缺失会导致初始化中断，勿删除 -->
+        <section class="live-section" aria-label="猫屋数据分析">
+            <div class="lp-sec-head">
+                <h2>📊 猫屋数据分析</h2>
+                <span class="lp-tag">模拟数据</span>
+                <span class="lp-sec-note">近 7 天投喂与到访趋势</span>
+            </div>
+            <div class="lp-charts-grid">
+                <article class="lp-card lp-chart-card">
+                    <h3>本周投喂趋势</h3>
+                    <div class="lp-bars" id="feedChart"></div>
+                </article>
+                <article class="lp-card lp-chart-card">
+                    <h3>猫咪到访统计</h3>
+                    <div class="lp-pie-wrap">
+                        <div class="lp-pie" id="visitPie"></div>
+                        <div class="lp-legend" id="visitLegend"></div>
+                    </div>
+                </article>
             </div>
         </section>
     </main>
@@ -2114,7 +2388,7 @@
     var isPlaying = true;
     var isMuted = false;
     var isFeeding = false;
-    var camMode = 'demo';          // demo：模拟画面 / live：真实流 / offline：设备离线
+    var camMode = 'demo';          // demo：演示画面 / live：已配置直播 / offline：画面中断
     var followed = {};             // 已关注猫咪 id
     var elapsed = 2 * 3600 + 14 * 60 + 36;
 
@@ -2343,25 +2617,46 @@
             text.textContent = '设备离线';
             conf.textContent = '';
             badge.className = 'lp-ai is-off';
-        } else if (camMode === 'live') {
-            text.textContent = 'AI 实时识别 · ' + c.name;
-            conf.textContent = '';
-            badge.className = 'lp-ai';
-        } else {
-            text.textContent = 'AI 模拟识别 · ' + c.name;
-            conf.textContent = ' ' + c.confidence + '%';
-            badge.className = 'lp-ai';
+            return;
         }
+        // AI 识别目前始终是模拟能力，不随摄像头接入而宣称“真实识别”
+        text.textContent = 'AI 模拟识别 · ' + c.name;
+        conf.textContent = ' ' + c.confidence + '%';
+        badge.className = 'lp-ai';
+    }
+
+    /* 画面来源：明确区分演示画面 / 实时画面 / 离线 */
+    function updateSourceBadge() {
+        var badge = $('sourceBadge');
+        var note = $('playerNote');
+        var label = '演示画面';
+        var cls = 'is-demo';
+        var noteText = '';
+
+        if (camMode === 'offline') {
+            label = '设备离线';
+            cls = 'is-off';
+            noteText = '直播画面中断 · 正在尝试重连';
+        } else if (camMode === 'live') {
+            label = '实时画面';
+            cls = 'is-live';
+            noteText = '实时摄像头画面 · 猫屋现场';
+        }
+
+        badge.textContent = label;
+        badge.className = 'lp-src ' + cls;
+        note.textContent = noteText;
+        note.hidden = !noteText;
     }
 
     function updateHouseState() {
         var el = $('houseStatus');
-        if (camMode === 'live') {
-            el.className = 'lp-state is-online';
-            el.textContent = '设备在线';
-        } else if (camMode === 'offline') {
+        if (camMode === 'offline') {
             el.className = 'lp-state is-offline';
             el.textContent = '设备离线';
+        } else if (camMode === 'live') {
+            el.className = 'lp-state is-online';
+            el.textContent = '摄像头在线';
         } else {
             el.className = 'lp-state is-demo';
             el.textContent = '演示模式';
@@ -2439,6 +2734,7 @@
 
         updateFollow();
         updateAiBadge();
+        updateSourceBadge();
         updateHouseState();
         refreshOnline();
         document.title = c.name + ' 的直播 · 猫迹 CatTrace';
@@ -2450,26 +2746,30 @@
     function renderAiTimeline() {
         var c = currentCat();
         var nodes = [
-            { title: '身份识别', tag: '已确认', time: '10:32', conf: c.confidence, link: true,
+            { kind: 'identity', icon: '🎯', title: '身份识别', tag: '已确认', time: '10:32', conf: c.confidence, link: true,
               text: '确认来访者为「' + c.name + '」，与档案特征匹配' },
-            { title: '进食行为', tag: '已记录', time: '10:34', conf: 92.4,
-              text: '检测到持续进食 3 分 12 秒，摄食节奏正常' },
-            { title: '活动状态', tag: '已记录', time: '10:46', conf: 89.6,
+            { kind: 'feeding', icon: '🍽', title: '进食行为', tag: '已记录', time: '10:34', conf: 92.4,
+              text: '检测到持续进食 3 分 12 秒，摄食节奏处于日常区间' },
+            { kind: 'activity', icon: '🐾', title: '活动状态', tag: '已记录', time: '10:46', conf: 89.6,
               text: '在猫屋木台停留 12 分钟后离开画面' },
-            { title: '出现时间', tag: '规律', time: '09:08', conf: 97.1,
+            { kind: 'alert', icon: '⚠️', title: '异常提醒', tag: '待人工确认', time: '10:52', conf: 78.4,
+              text: '本次进食时长明显短于近 7 天均值，仅表示需要人工复核，不构成健康诊断' },
+            { kind: 'appear', icon: '👀', title: '出现时间', tag: '规律', time: '09:08', conf: 97.1,
               text: '今日第 2 次出现，比昨日提前约 40 分钟' },
-            { title: '历史识别', tag: '档案', time: '昨天 21:40', conf: 95.3,
+            { kind: 'history', icon: '🗂', title: '历史识别', tag: '档案', time: '昨天 21:40', conf: 95.3,
               text: '近 7 天识别 18 次，累计投喂 ' + c.feedCount + ' 次' }
         ];
 
         $('aiTimeline').innerHTML = nodes.map(function (n) {
-            return '<li class="lp-tl">' +
+            var tagClass = n.kind === 'alert' ? 'lp-tag warn' : 'lp-tag';
+            return '<li class="lp-tl is-' + n.kind + '">' +
                 '<span class="lp-tl-dot" aria-hidden="true"></span>' +
                 '<div class="lp-tl-card">' +
                     '<div class="lp-tl-top">' +
                         '<time>' + esc(n.time) + '</time>' +
+                        '<span class="lp-tl-ic" aria-hidden="true">' + n.icon + '</span>' +
                         '<strong>' + esc(n.title) + '</strong>' +
-                        '<span class="lp-tag">' + esc(n.tag) + '</span>' +
+                        '<span class="' + tagClass + '">' + esc(n.tag) + '</span>' +
                         '<i class="lp-leader" aria-hidden="true"></i>' +
                         '<span class="lp-conf">' +
                             '<i class="lp-conf-bar"><b style="width:' + n.conf + '%"></b></i>' +
@@ -2497,11 +2797,17 @@
        数据分析
        ============================================================ */
     function renderCharts() {
+        var chart = $('feedChart');
+        var pie = $('visitPie');
+        var legend = $('visitLegend');
+        // 任何原因导致区块缺失时直接跳过，不能让图表异常中断整页初始化
+        if (!chart || !pie || !legend) return;
+
         var days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         var values = [23, 31, 28, 35, 42, 38, 45];
         var max = Math.max.apply(null, values);
 
-        $('feedChart').innerHTML = days.map(function (day, i) {
+        chart.innerHTML = days.map(function (day, i) {
             var h = Math.round((values[i] / max) * 100);
             return '<div class="lp-bar-col">' +
                 '<span class="lp-bar-value">' + values[i] + '</span>' +
@@ -2523,8 +2829,8 @@
             return palette[i % palette.length] + ' ' + start + 'deg ' + end + 'deg';
         });
 
-        $('visitPie').style.background = 'conic-gradient(' + segments.join(', ') + ')';
-        $('visitLegend').innerHTML = cats.map(function (c, i) {
+        pie.style.background = 'conic-gradient(' + segments.join(', ') + ')';
+        legend.innerHTML = cats.map(function (c, i) {
             return '<div class="lp-legend-item">' +
                 '<i style="background:' + palette[i % palette.length] + '"></i>' +
                 '<span>' + esc(c.name) + '</span>' +
@@ -2757,19 +3063,24 @@
     }
 
     /* ============================================================
-       摄像头状态
-       直播能力由 main 上的 live_proxy.py 提供（/api/live/info、/api/live/stream）。
-       未配置远端地址时 info.enabled=false，直接进演示模式，不发多余请求。
+       直播状态
+       由 live_proxy.py 提供 /api/live/info 与 /api/live/stream：
+       info.enabled=false 时直接使用演示画面，不发多余请求。
        ============================================================ */
     function setCamMode(mode) {
+        var wasLive = camMode === 'live';
         camMode = mode;
         var img = $('liveStreamImg');
         var stage = $('demoStage');
+        $('liveVideo').classList.toggle('is-stream', mode === 'live');
 
         if (mode === 'live') {
             stage.hidden = true;
             img.hidden = false;
-            if (!img.getAttribute('src')) img.src = img.dataset.src;
+            // 首次接入或断线重连时强制新建 MJPEG 连接，避免沿用已结束的流
+            if (!wasLive || !img.getAttribute('src')) {
+                img.src = img.dataset.src + '?t=' + Date.now();
+            }
         } else {
             img.hidden = true;
             stage.hidden = false;
@@ -2777,10 +3088,11 @@
         }
 
         $('stageHint').textContent = mode === 'live' ? ''
-            : mode === 'offline' ? '摄像头离线，正在等待设备重连…'
-            : '演示画面 · 摄像头接入后自动切换真实直播流';
+            : mode === 'offline' ? '直播画面中断，正在尝试重连…'
+            : '演示画面 · 接入直播源后自动切换实时画面';
 
         updateAiBadge();
+        updateSourceBadge();
         updateHouseState();
     }
 
@@ -2794,7 +3106,10 @@
             return enabled;
         }
 
-        img.addEventListener('error', function () { setCamMode('offline'); });
+        // 已经显示过画面帧时，连接结束保留最后一帧，不突然退回演示层
+        img.addEventListener('error', function () {
+            if (!img.naturalWidth) setCamMode('offline');
+        });
 
         fetch('/api/live/info', { headers: { Accept: 'application/json' }, cache: 'no-store' })
             .then(function (res) {
