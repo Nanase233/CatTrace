@@ -180,11 +180,13 @@ a:hover { color: var(--brand-pink-dark); }
   box-shadow: 0 18px 28px rgba(216,141,163,0.32);
 }
 
-/* === 主内容区 === */
+/* === 主内容区：占满可用宽度，只保留 24–32px 安全边距 === */
 .home-main {
-  max-width: 1380px;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 20px 20px 36px;
+  padding: 20px clamp(24px, 2vw, 32px) 36px;
+  box-sizing: border-box;
 }
 
 /* === Hero 区域 ===

@@ -72,11 +72,13 @@ a {
     text-decoration: none;
 }
 
-/* === 页面主容器：最大宽度 1380px 居中，限制大屏上的内容拉伸 === */
+/* === 页面主容器：占满浏览器可用宽度，只保留 24–32px 安全边距 === */
 .shell {
-    max-width: 1380px;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
-    padding: 20px 20px 36px;
+    padding: 20px clamp(24px, 2vw, 32px) 36px;
+    box-sizing: border-box;
 }
 
 /* === 顶部导航栏：粘性定位 + 毛玻璃效果（backdrop-filter），始终悬浮在页面顶部 === */
@@ -273,7 +275,24 @@ a {
 /* 主内容栈：使用 clamp 实现响应式间距（24px ~ 36px，视口宽度自适应） */
 .main-stack {
     display: grid;
+    /* 明确一列 minmax(0,1fr)，避免 auto 轨道按 hero 的 max-content 撑出横向滚动 */
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(24px, 3vw, 36px);
+}
+
+/* 3 列布局中的网格项允许收缩，避免长标题把移动端撑出横向滚动 */
+.dashboard,
+.main-stack,
+.hero-grid,
+.hero-card,
+.hero-copy,
+.hero-art {
+    min-width: 0;
+}
+
+.hero-copy h1,
+.hero-copy p {
+    overflow-wrap: anywhere;
 }
 
 /* === Hero 区域网格：左侧主卡（1.65fr）+ 右侧地图卡（0.85fr，最小 300px）=== */
@@ -481,6 +500,7 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
     margin-bottom: 14px;
 }
 
@@ -667,7 +687,14 @@ a {
 /* 左/右侧模块堆叠容器：使用响应式间距 clamp() */
 .left-stack {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(16px, 2vw, 24px);
+}
+
+/* 堆叠/双列网格的子项允许收缩，避免卡片按内容最小宽度撑出横向滚动 */
+.left-stack > *,
+.dual-grid > * {
+    min-width: 0;
 }
 
 /* 右侧栏使用 flex 布局，拉伸到与左侧等高，避免下方空白 */
@@ -697,6 +724,7 @@ a {
 /* 双栏模块中核心功能卡片（直播、日记）保持合理比例 */
 .live-card,
 .diary-card {
+    min-width: 0;
     padding: clamp(16px, 2vw, 22px);
 }
 
@@ -1493,7 +1521,7 @@ a {
     .user-chip { padding: 0 10px; font-size: 0.82rem; }
     .avatar { width: 22px; height: 22px; font-size: 10px; }
     .hero-copy { padding: 20px 16px 16px; }
-    .hero-copy h1 { font-size: 1.5rem; line-height: 1.3; }
+    .hero-copy h1 { font-size: 1.5rem; line-height: 1.3; word-break: break-all; }
     .hero-copy p { font-size: 0.85rem; }
     .hero-actions { gap: 8px; margin: 16px 0 14px; }
     .btn { padding: 10px 16px; font-size: 0.9rem; }
@@ -1507,7 +1535,7 @@ a {
     .stat-card h4 { font-size: 1.4rem; }
     .stat-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 14px; }
     .card-head h3 { font-size: 1.05rem; }
-    .live-video { height: 200px; }
+    .live-video { min-height: 0; height: 200px; }
     .cat-stage .cat-hero { font-size: 4rem; }
     .live-tags { top: 10px; left: 10px; }
     .pill { padding: 4px 8px; font-size: 0.7rem; }

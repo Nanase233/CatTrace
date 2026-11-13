@@ -157,8 +157,22 @@ a:hover { color: var(--primary-dark); }
   font-size: 14px; font-weight: 700;
 }
 
-/* === 主内容区：居中限宽 === */
-.main-content { max-width: var(--container-max); margin: 0 auto; padding: 24px 20px 60px; }
+/* === 主内容区：占满可用宽度，只保留桌面 24–32px 边距 === */
+.main-content {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 24px clamp(24px, 2vw, 32px) 60px;
+  box-sizing: border-box;
+}
+
+/* 子页面顶栏直接挂在 body 下：桌面端与主内容保持同样的 24–32px 外边距 */
+@media (min-width: 601px) {
+  body > .topbar {
+    margin-left: clamp(24px, 2vw, 32px);
+    margin-right: clamp(24px, 2vw, 32px);
+  }
+}
 
 /* === 通用卡片：白底圆角阴影，hover 上浮 === */
 .card {
@@ -1208,7 +1222,7 @@ a:hover { color: var(--primary-dark); }
   .user-chip { height: 38px; padding: 0 10px; }
   .avatar { width: 26px; height: 26px; font-size: 12px; }
   /* 主内容区缩小内边距 */
-  .main-content { padding: 12px 10px 40px; }
+  .main-content { padding: 12px 16px 40px; }
   .hero { padding: 24px 14px; }
   /* 统计网格保持 2 列但缩小间距 */
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -1224,11 +1238,13 @@ a:hover { color: var(--primary-dark); }
 /* ============================================ */
 
 /* --- 首页布局容器 --- */
-/* 最外层容器：最大宽度限制 + 水平居中 + 内边距 */
+/* 最外层容器：占满可用宽度 + 24–32px 安全边距 */
 .shell {
-  max-width: var(--container-max);
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 20px 20px 36px;
+  padding: 20px clamp(24px, 2vw, 32px) 36px;
+  box-sizing: border-box;
 }
 
 /* 仪表盘主布局：单列 Grid */
@@ -2224,7 +2240,7 @@ a:hover { color: var(--primary-dark); }
 /* 策略：Hero 改单列、网格降列、缩小间距字号   */
 /* ------------------------------------------ */
 @media (max-width: 1024px) {
-  .shell { padding: 12px 12px 24px; }
+  .shell { padding: 12px clamp(24px, 2vw, 32px) 24px; }
   .topbar { border-radius: 20px; }
   /* Hero 改为单列堆叠（文案在上，插画在下） */
   .hero-grid { grid-template-columns: 1fr; }
