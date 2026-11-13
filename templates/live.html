@@ -210,71 +210,6 @@
             z-index: 1;
         }
 
-        /* 演示直播画面：完整猫屋监控场景，填充整个 16:9 画面 */
-        .lp-stage {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            --cat-fur: #d99a62;
-            --cat-stripe: #a96536;
-            --cat-belly: #f1cba4;
-            --cat-ear: #c97f63;
-            --cat-eye: #88a35f;
-        }
-        /* 监控画面的轻微色彩分级：顶部压暗、底部渐隐，保证覆盖层可读 */
-        .lp-stage::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            pointer-events: none;
-            background: linear-gradient(180deg, rgba(18, 13, 11, 0.2), transparent 26%, transparent 68%, rgba(10, 7, 6, 0.46));
-        }
-        /* 极淡扫描线，保留“监控画面”的质感 */
-        .lp-stage::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            pointer-events: none;
-            background-image: repeating-linear-gradient(
-                0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px
-            );
-            opacity: 0.16;
-        }
-        .lp-scene {
-            position: absolute;
-            inset: 0;
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        /* 猫毛色由切换逻辑写入 CSS 变量 */
-        .lp-cat-fur { fill: var(--cat-fur); }
-        .lp-cat-belly { fill: var(--cat-belly); }
-        .lp-cat-ear { fill: var(--cat-ear); }
-        .lp-cat-eye { fill: var(--cat-eye); }
-        .lp-cat-tail { fill: none; stroke: var(--cat-fur); }
-        .lp-cat-leg { fill: none; stroke: var(--cat-fur); }
-        .lp-cat-stripe { fill: none; stroke: var(--cat-stripe); }
-        /* 投喂成功时猫咪轻微起伏 */
-        .lp-scene-cat.is-nudged .lp-cat-art {
-            animation: lpCatNudge 0.32s ease;
-            transform-box: fill-box;
-            transform-origin: 50% 100%;
-        }
-        @keyframes lpCatNudge {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.018); }
-        }
-        /* AI 角标：只画四角，不盖住猫咪 */
-        .lp-scene-track { pointer-events: none; }
-        .lp-scene-label text {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            dominant-baseline: middle;
-        }
-        .lp-cam-hud { pointer-events: none; }
-
         /* 真实直播离线层：不显示演示素材 */
         .lp-offline {
             position: absolute;
@@ -302,25 +237,6 @@
             font-size: 0.76rem;
             line-height: 1.6;
         }
-
-        /* 模拟画面提示：位于控制栏上方，不遮挡猫咪主体 */
-        .lp-stage-hint {
-            position: absolute;
-            left: 50%;
-            bottom: 78px;
-            z-index: 2;
-            max-width: min(88%, 420px);
-            padding: 4px 12px;
-            transform: translateX(-50%);
-            border-radius: 999px;
-            background: rgba(18, 12, 10, 0.52);
-            color: rgba(255, 255, 255, 0.72);
-            font-size: 0.7rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .lp-stage-hint:empty { display: none; }
 
         /* 画面来源提示：合成信号 / 实时画面时显示在控制栏上方 */
         .lp-player-note {
@@ -2065,13 +1981,20 @@
 
             .lp-player { border-radius: 14px; }
             .lp-overlay-top { top: 10px; left: 10px; right: 10px; }
+            .lp-offline {
+                padding: 14px 16px 48px;
+                gap: 4px;
+            }
+            .lp-offline svg {
+                width: 32px;
+                height: 32px;
+                margin-bottom: 0;
+            }
+            .lp-offline strong { font-size: 0.88rem; }
+            .lp-offline p { font-size: 0.7rem; line-height: 1.5; }
             .lp-live { padding: 3px 9px; font-size: 0.68rem; }
             .lp-ai { padding: 3px 8px; font-size: 0.66rem; }
             .lp-viewers { padding: 3px 8px; font-size: 0.66rem; }
-            .lp-viewers { padding: 3px 8px; font-size: 0.66rem; }
-            .lp-scene-label { display: none; }
-            .lp-cam-hud { display: none; }
-            .lp-stage-hint { display: none; }
             .lp-overlay-bottom { padding: 20px 10px 8px; gap: 6px; }
             .lp-ctrl { width: 30px; height: 30px; font-size: 0.78rem; }
             .lp-ic { width: 14px; height: 14px; }
@@ -2128,7 +2051,6 @@
 
         /* 尊重系统的减少动效偏好 */
         @media (prefers-reduced-motion: reduce) {
-            .lp-scene-cat,
             .lp-progress-fill::before,
             .lp-live i,
             .lp-online i,
@@ -2184,244 +2106,15 @@
                     <img id="liveStreamImg" class="lp-stream" data-src="/api/live/stream"
                          alt="猫屋摄像头实时画面" hidden>
 
-                    <!-- 演示画面：完整猫屋监控场景（非居中卡通图标） -->
-                    <div class="lp-stage" id="demoStage">
-                        <svg class="lp-scene" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice"
-                             aria-hidden="true" focusable="false">
-                            <defs>
-                                <linearGradient id="lpWall" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0" stop-color="#5b4638"/>
-                                    <stop offset="1" stop-color="#34261f"/>
-                                </linearGradient>
-                                <linearGradient id="lpFloor" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0" stop-color="#6c4a35"/>
-                                    <stop offset="1" stop-color="#38251c"/>
-                                </linearGradient>
-                                <linearGradient id="lpWindow" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0" stop-color="#e3ead6"/>
-                                    <stop offset="0.55" stop-color="#abc2a5"/>
-                                    <stop offset="1" stop-color="#6f8a75"/>
-                                </linearGradient>
-                                <linearGradient id="lpBeam" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0" stop-color="#ffe9c2" stop-opacity="0.5"/>
-                                    <stop offset="1" stop-color="#ffe9c2" stop-opacity="0"/>
-                                </linearGradient>
-                                <linearGradient id="lpRug" x1="0" y1="0" x2="1" y2="1">
-                                    <stop offset="0" stop-color="#b8735f"/>
-                                    <stop offset="1" stop-color="#8c5145"/>
-                                </linearGradient>
-                                <radialGradient id="lpVignette" cx="0.5" cy="0.44" r="0.74">
-                                    <stop offset="0.5" stop-color="#000" stop-opacity="0"/>
-                                    <stop offset="1" stop-color="#000" stop-opacity="0.52"/>
-                                </radialGradient>
-                                <radialGradient id="lpLampGlow" cx="0.5" cy="0.5" r="0.5">
-                                    <stop offset="0" stop-color="#ffd9a0" stop-opacity="0.5"/>
-                                    <stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/>
-                                </radialGradient>
-                                <filter id="lpSoft" x="-40%" y="-40%" width="180%" height="180%">
-                                    <feGaussianBlur stdDeviation="10"/>
-                                </filter>
-                                <filter id="lpBlurSm" x="-30%" y="-30%" width="160%" height="160%">
-                                    <feGaussianBlur stdDeviation="4"/>
-                                </filter>
-                                <filter id="lpGrain">
-                                    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/>
-                                    <feColorMatrix type="saturate" values="0"/>
-                                </filter>
-                            </defs>
-
-                            <!-- 墙面与左侧纵深 -->
-                            <rect width="1280" height="720" fill="url(#lpWall)"/>
-                            <path d="M0 0 H190 L0 720 Z" fill="#2b1f19" opacity="0.62"/>
-                            <g stroke="#000" stroke-opacity="0.16" stroke-width="1">
-                                <path d="M220 0 V360 M300 0 V360 M380 0 V360 M460 0 V360
-                                         M540 0 V360 M620 0 V360 M700 0 V360 M780 0 V360
-                                         M860 0 V360 M940 0 V360 M1020 0 V360 M1100 0 V360 M1180 0 V360"/>
-                                <path d="M0 358 H1280"/>
-                            </g>
-
-                            <!-- 窗户与窗外树影 -->
-                            <g>
-                                <rect x="64" y="52" width="442" height="304" rx="8" fill="#251a14"/>
-                                <rect x="80" y="68" width="410" height="272" rx="4" fill="url(#lpWindow)"/>
-                                <g fill="#4f6f59" opacity="0.7">
-                                    <path d="M92 340 C86 286 112 258 132 244 C146 232 170 250 176 274 C182 300 166 322 160 340 Z"/>
-                                    <path d="M236 340 C230 290 256 264 280 252 C300 242 322 264 320 292 C318 316 300 332 296 340 Z"/>
-                                    <path d="M390 340 C384 296 404 272 424 262 C444 252 462 274 458 300 C454 322 438 334 434 340 Z"/>
-                                    <path d="M146 340 V262 M280 340 V270 M424 340 V280" stroke="#3f5b49" stroke-width="5"/>
-                                </g>
-                                <g stroke="#38271f" stroke-width="8">
-                                    <path d="M285 68 V340 M80 204 H490"/>
-                                </g>
-                                <rect x="64" y="52" width="442" height="304" rx="8" fill="none" stroke="#6f4d38" stroke-width="11"/>
-                                <rect x="58" y="346" width="454" height="13" rx="4" fill="#7d5941"/>
-                                <path d="M82 72 H488 V332 H82 Z" fill="none" stroke="#d8e0cb" stroke-opacity="0.18" stroke-width="2"/>
-                            </g>
-
-                            <!-- 地面与透视木纹 -->
-                            <rect x="0" y="360" width="1280" height="360" fill="url(#lpFloor)"/>
-                            <g stroke="#1f130e" stroke-opacity="0.4" stroke-width="2">
-                                <path d="M640 360 L-180 720 M640 360 L-40 720 M640 360 L120 720
-                                         M640 360 L280 720 M640 360 L440 720 M640 360 L600 720
-                                         M640 360 L760 720 M640 360 L920 720 M640 360 L1080 720
-                                         M640 360 L1240 720 M640 360 L1400 720"/>
-                                <path d="M0 418 H1280 M0 486 H1280 M0 566 H1280 M0 658 H1280"/>
-                            </g>
-                            <ellipse cx="300" cy="500" rx="250" ry="90" fill="#ffd9a0" opacity="0.07" filter="url(#lpSoft)"/>
-                            <path d="M98 352 L482 352 L764 720 L206 720 Z" fill="url(#lpBeam)" opacity="0.5"/>
-
-                            <!-- 地毯 -->
-                            <path d="M470 512 L1042 502 L1162 700 L372 700 Z" fill="url(#lpRug)" opacity="0.92"/>
-                            <path d="M470 512 L1042 502 L1162 700 L372 700 Z" fill="none" stroke="#e2bba6" stroke-opacity="0.35" stroke-width="3"/>
-                            <path d="M500 528 L1014 520 L1118 684 L408 684 Z" fill="none" stroke="#e2bba6" stroke-opacity="0.18" stroke-width="2"/>
-                            <path d="M560 544 H960 M540 576 H992 M520 608 H1024 M500 640 H1056" stroke="#e2bba6" stroke-opacity="0.1" stroke-width="2"/>
-
-                            <!-- 左侧猫窝 -->
-                            <g>
-                                <ellipse cx="560" cy="626" rx="88" ry="34" fill="#6a3d34" opacity="0.55" filter="url(#lpSoft)"/>
-                                <ellipse cx="560" cy="618" rx="82" ry="32" fill="#8c5145"/>
-                                <ellipse cx="560" cy="608" rx="68" ry="25" fill="#e0b9a5"/>
-                                <ellipse cx="560" cy="602" rx="53" ry="17" fill="#f3ddcc"/>
-                                <path d="M500 600 Q560 570 620 600" fill="none" stroke="#c98f77" stroke-width="3" opacity="0.6"/>
-                            </g>
-
-                            <!-- 猫碗与食垫 -->
-                            <g>
-                                <ellipse cx="724" cy="640" rx="82" ry="20" fill="#3d251d" opacity="0.55"/>
-                                <ellipse cx="724" cy="636" rx="78" ry="18" fill="#7a4f40"/>
-                                <ellipse cx="700" cy="626" rx="31" ry="10" fill="#d8d0c4"/>
-                                <path d="M669 626 Q700 650 731 626 L724 640 Q700 650 676 640 Z" fill="#b8ada0"/>
-                                <ellipse cx="700" cy="624" rx="23" ry="7" fill="#b97a4a"/>
-                                <ellipse cx="700" cy="622" rx="15" ry="5" fill="#8f5a37"/>
-                                <ellipse cx="752" cy="638" rx="25" ry="8" fill="#d8d0c4"/>
-                                <path d="M727 638 Q752 656 777 638 L770 648 Q752 660 734 648 Z" fill="#b8ada0"/>
-                                <ellipse cx="752" cy="636" rx="18" ry="5" fill="#8fb8b0" opacity="0.8"/>
-                            </g>
-
-                            <!-- 后墙置物架与绿植 -->
-                            <g>
-                                <rect x="560" y="252" width="330" height="12" rx="3" fill="#7a573f"/>
-                                <rect x="610" y="196" width="230" height="10" rx="3" fill="#6b4a36"/>
-                                <g>
-                                    <rect x="582" y="222" width="11" height="30" rx="2" fill="#b06b5a"/>
-                                    <rect x="597" y="226" width="9" height="26" rx="2" fill="#d3a56f"/>
-                                    <rect x="610" y="219" width="12" height="33" rx="2" fill="#7f9a86"/>
-                                    <rect x="626" y="228" width="8" height="24" rx="2" fill="#e0b9a5"/>
-                                </g>
-                                <g>
-                                    <path d="M700 252 h34 l-5 -26 h-24 Z" fill="#c98a6a"/>
-                                    <g fill="#6f8a63">
-                                        <path d="M717 226 C698 214 690 196 700 188 C714 194 720 210 717 226 Z"/>
-                                        <path d="M718 226 C738 214 746 196 736 188 C722 194 716 210 718 226 Z"/>
-                                        <path d="M717 216 C708 194 714 176 724 174 C732 184 728 204 717 216 Z"/>
-                                    </g>
-                                </g>
-                                <g>
-                                    <rect x="770" y="224" width="9" height="28" rx="2" fill="#8fb8b8"/>
-                                    <rect x="783" y="220" width="11" height="32" rx="2" fill="#c7a5d6"/>
-                                    <rect x="798" y="226" width="8" height="26" rx="2" fill="#e8c97a"/>
-                                </g>
-                                <g>
-                                    <path d="M840 252 h30 l-4 -22 h-22 Z" fill="#b8ada0"/>
-                                    <path d="M855 230 C844 216 846 200 856 196 C866 204 864 220 855 230 Z" fill="#7f9a86"/>
-                                </g>
-                            </g>
-
-                            <!-- 右侧猫爬架 -->
-                            <g>
-                                <rect x="1136" y="220" width="24" height="350" rx="6" fill="#8a6a4f"/>
-                                <g stroke="#6b4f3a" stroke-width="2" opacity="0.55">
-                                    <path d="M1139 240 H1157 M1139 262 H1157 M1139 284 H1157 M1139 306 H1157
-                                             M1139 328 H1157 M1139 350 H1157 M1139 372 H1157 M1139 394 H1157
-                                             M1139 416 H1157 M1139 438 H1157 M1139 460 H1157 M1139 482 H1157
-                                             M1139 504 H1157 M1139 526 H1157"/>
-                                </g>
-                                <rect x="1098" y="210" width="122" height="17" rx="6" fill="#a07a58"/>
-                                <rect x="1090" y="330" width="112" height="15" rx="6" fill="#9a7352"/>
-                                <rect x="1078" y="452" width="136" height="17" rx="6" fill="#a07a58"/>
-                                <path d="M1104 210 Q1158 168 1214 210" fill="none" stroke="#b08a66" stroke-width="9" stroke-linecap="round"/>
-                                <path d="M1160 468 Q1160 512 1186 520" fill="none" stroke="#8a6a4f" stroke-width="4"/>
-                                <circle cx="1186" cy="522" r="7" fill="#d3a56f"/>
-                            </g>
-
-                            <!-- 吊灯与暖光 -->
-                            <g>
-                                <line x1="900" y1="0" x2="900" y2="118" stroke="#241811" stroke-width="3"/>
-                                <path d="M864 118 H936 L918 160 H882 Z" fill="#c98a4f"/>
-                                <ellipse cx="900" cy="164" rx="26" ry="8" fill="#ffe0ae" opacity="0.55" filter="url(#lpSoft)"/>
-                                <ellipse cx="900" cy="560" rx="130" ry="36" fill="url(#lpLampGlow)" opacity="0.28"/>
-                            </g>
-
-                            <!-- 桌面小猫（随切换更新毛色） -->
-                            <g class="lp-scene-cat" id="sceneCat">
-                                <g class="lp-cat-art">
-                                    <ellipse cx="890" cy="622" rx="126" ry="16" fill="#120b08" opacity="0.45" filter="url(#lpSoft)"/>
-                                    <path class="lp-cat-tail" d="M970 574 C1036 566 1048 502 1014 462" stroke-width="22" stroke-linecap="round"/>
-                                    <path class="lp-cat-stripe" d="M1000 522 l-15 -10 M1029 492 l-17 -2 M1017 463 l-14 8" stroke-width="7" stroke-linecap="round"/>
-                                    <path class="lp-cat-fur" d="M812 520 C790 555 806 600 846 612 L966 612 C1002 600 1008 552 986 518 C958 500 842 498 812 520 Z"/>
-                                    <ellipse class="lp-cat-belly" cx="892" cy="584" rx="66" ry="30" opacity="0.95"/>
-                                    <path class="lp-cat-stripe" d="M850 512 C852 528 848 540 842 552 M882 504 C884 522 880 538 874 552 M916 504 C918 522 914 538 908 552 M948 510 C950 526 946 540 940 552" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
-                                    <path class="lp-cat-leg" d="M824 574 L818 616 M856 580 L852 618 M950 574 L956 618" stroke-width="18" stroke-linecap="round"/>
-                                    <ellipse class="lp-cat-belly" cx="816" cy="619" rx="12" ry="6"/>
-                                    <ellipse class="lp-cat-belly" cx="852" cy="620" rx="11" ry="6"/>
-                                    <ellipse class="lp-cat-belly" cx="958" cy="620" rx="13" ry="6"/>
-                                    <ellipse class="lp-cat-fur" cx="798" cy="494" rx="54" ry="46"/>
-                                    <path class="lp-cat-fur" d="M758 470 L746 426 L786 452 Z"/>
-                                    <path class="lp-cat-ear" d="M762 462 L754 438 L778 452 Z"/>
-                                    <path class="lp-cat-fur" d="M806 452 L834 424 L842 470 Z"/>
-                                    <path class="lp-cat-ear" d="M814 460 L832 440 L836 466 Z"/>
-                                    <ellipse class="lp-cat-belly" cx="792" cy="516" rx="25" ry="15"/>
-                                    <ellipse class="lp-cat-eye" cx="772" cy="492" rx="7" ry="9"/>
-                                    <ellipse class="lp-cat-eye" cx="814" cy="490" rx="7" ry="9"/>
-                                    <ellipse cx="772" cy="492" rx="2.2" ry="7" fill="#1a1412"/>
-                                    <ellipse cx="814" cy="490" rx="2.2" ry="7" fill="#1a1412"/>
-                                    <circle cx="769" cy="488" r="1.6" fill="#fff" opacity="0.8"/>
-                                    <circle cx="811" cy="486" r="1.6" fill="#fff" opacity="0.8"/>
-                                    <path d="M786 506 L798 506 L792 514 Z" fill="#c97f7a"/>
-                                    <path d="M792 514 v4 M792 518 q-6 6 -12 2 M792 518 q6 6 12 2" fill="none" stroke="#5a3a32" stroke-width="1.6" stroke-linecap="round"/>
-                                    <path class="lp-cat-stripe" d="M780 460 l4 14 M798 454 l0 14 M816 460 l-4 14" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
-                                    <path class="lp-cat-stripe" d="M750 500 l-14 -4 M752 510 l-14 4 M846 498 l14 -4 M844 510 l14 4" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
-                                    <g stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round">
-                                        <path d="M776 516 L736 508 M776 520 L734 522 M810 514 L850 506 M810 520 L852 524"/>
-                                    </g>
-                                    <path d="M766 534 Q798 548 830 534" fill="none" stroke="#8fb8e8" stroke-width="5" stroke-linecap="round"/>
-                                    <circle cx="798" cy="546" r="5" fill="#e8c97a"/>
-                                    <path d="M842 506 C900 494 966 504 990 528" fill="none" stroke="#ffd9a8" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
-                                </g>
-                            </g>
-
-                            <!-- AI 追踪：轻量角标，不遮挡猫咪主体 -->
-                            <g class="lp-scene-track" id="sceneTrack">
-                                <g fill="none" stroke="rgba(240,183,199,0.92)" stroke-width="2">
-                                    <path d="M735 442 V410 H768"/>
-                                    <path d="M1012 410 H1045 V442"/>
-                                    <path d="M735 598 V630 H768"/>
-                                    <path d="M1012 630 H1045 V598"/>
-                                </g>
-                                <g class="lp-scene-label">
-                                    <rect x="735" y="372" width="300" height="30" rx="15" fill="rgba(24,18,16,0.74)" stroke="rgba(238,178,196,0.32)"/>
-                                    <circle cx="752" cy="387" r="3.2" fill="#f0a9bd"/>
-                                    <text id="trackLabel" x="764" y="391" fill="#f7d6df" font-size="17" font-weight="600" letter-spacing="0.2">身份识别 · 咪咪 · 93.6%</text>
-                                </g>
-                            </g>
-
-                            <!-- 监控 HUD -->
-                            <g class="lp-cam-hud" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="11" letter-spacing="1.5" fill="rgba(255,255,255,0.52)">
-                                <circle cx="26" cy="596" r="3" fill="#e06a72"/>
-                                <text x="38" y="600">CAM 01 · A 区猫屋</text>
-                                <text x="1252" y="600" text-anchor="end">2026-11-13 10:28:52</text>
-                            </g>
-
-                            <!-- 前景虚化叶片 + 暗角 -->
-                            <g opacity="0.5" filter="url(#lpBlurSm)">
-                                <path d="M0 500 C44 486 82 530 74 592 C68 650 34 700 0 720 Z" fill="#2c4436"/>
-                                <path d="M38 548 C74 526 104 566 92 620 C82 666 54 700 20 720 C30 650 24 590 38 548 Z" fill="#3c5a46"/>
-                                <path d="M0 560 C24 540 48 560 52 600 C56 642 30 684 0 700 Z" fill="#24382d"/>
-                            </g>
-                            <rect width="1280" height="720" fill="url(#lpVignette)"/>
-                            <rect width="1280" height="720" filter="url(#lpGrain)" opacity="0.07" style="mix-blend-mode:overlay"/>
+                    <!-- 演示画面：与离线态同款深色空画面，不再显示猫屋场景 -->
+                    <div class="lp-offline lp-demo-stage" id="demoStage">
+                        <svg viewBox="0 0 48 48" aria-hidden="true">
+                            <rect x="7" y="14" width="25" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M32 20l9-5v18l-9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M9 9l30 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
-                        <p class="lp-stage-hint" id="stageHint" hidden></p>
+                        <strong id="demoTitle">演示画面</strong>
+                        <p>尚未接入摄像头<br>接入直播源后自动切换实时画面</p>
                     </div>
 
                     <!-- 真实直播离线层：不显示任何演示素材 -->
@@ -2742,14 +2435,6 @@
 
     var EMOJIS = ['🐈', '🐈‍⬛', '🐱', '🐈'];
 
-    /* 演示场景中猫咪的毛色：切换猫咪时写入 CSS 变量，场景猫随之换毛色 */
-    var SCENE_PALETTES = [
-        { fur: '#d99a62', stripe: '#a96536', belly: '#f1cba4', ear: '#c97f63', eye: '#88a35f' },
-        { fur: '#4f4d57', stripe: '#33313a', belly: '#8d8994', ear: '#3d3b44', eye: '#d9b35a' },
-        { fur: '#e9e3d8', stripe: '#cfc4b5', belly: '#fbf8f3', ear: '#d8b9b6', eye: '#7fa6c7' },
-        { fur: '#dfa35c', stripe: '#b77635', belly: '#f3d2a5', ear: '#c98a4e', eye: '#8fa25f' }
-    ];
-
     /* 将接口数据 / 兜底数据统一成直播页需要的字段 */
     function hydrate(cat, index) {
         var loc = String(cat.location || '');
@@ -3027,6 +2712,12 @@
     }
 
     /* 画面来源：明确区分演示画面 / 实时画面 / 离线 */
+    function playStateText() {
+        if (camMode === 'offline') return '已离线';
+        if (camMode === 'demo') return isPlaying ? '演示中' : '演示已暂停';
+        return isPlaying ? '直播中' : '已暂停';
+    }
+
     function updateSourceBadge() {
         var badge = $('sourceBadge');
         var note = $('playerNote');
@@ -3054,11 +2745,10 @@
         note.textContent = noteText;
         note.hidden = !noteText;
 
-        // 控制栏状态同步：离线时不再显示“直播中”
+        // 控制栏状态同步：演示态显示“演示中”，离线显示“已离线”
         var state = $('liveState');
         if (state) {
-            var stateText = camMode === 'offline' ? '已离线' : (isPlaying ? '直播中' : '已暂停');
-            state.querySelector('span').textContent = stateText;
+            state.querySelector('span').textContent = playStateText();
             state.classList.toggle('is-paused', camMode === 'offline' || !isPlaying);
         }
     }
@@ -3114,25 +2804,11 @@
         $('feedBtnSub').textContent = '¥' + selectedPack.price + ' · ' + selectedPack.amount;
     }
 
-    function setSceneCat(c) {
-        var stage = $('demoStage');
-        if (!stage) return;
-        var idx = cats.indexOf(c);
-        if (idx < 0) idx = 0;
-        var p = SCENE_PALETTES[idx % SCENE_PALETTES.length];
-        stage.style.setProperty('--cat-fur', p.fur);
-        stage.style.setProperty('--cat-stripe', p.stripe);
-        stage.style.setProperty('--cat-belly', p.belly);
-        stage.style.setProperty('--cat-ear', p.ear);
-        stage.style.setProperty('--cat-eye', p.eye);
-        stage.dataset.sceneCat = String(idx);
-    }
-
     function updateLiveInfo() {
         var c = currentCat();
         var conf = c.confidence + '%';
 
-        setSceneCat(c);
+        $('demoTitle').textContent = '演示画面 · ' + c.name;
         $('catAvatar').textContent = c.emoji;
         $('catName').textContent = c.name;
         $('catNick').textContent = c.nickname;
@@ -3141,7 +2817,6 @@
         $('metaLocation').textContent = c.spot;
         $('metaViewers').textContent = fmt(c.viewers);
         $('viewerCount').textContent = fmt(c.viewers);
-        $('trackLabel').textContent = '身份识别 · ' + c.name + ' · ' + conf;
         $('aiSideAvatar').textContent = c.emoji;
         $('aiSideName').textContent = c.name;
         $('aiSideConf').textContent = conf;
@@ -3349,13 +3024,7 @@
                 c.feedCount += 1;
                 $('houseFeedTotal').textContent = fmt(c.feedCount) + ' 次';
 
-                // 投喂成功：场景猫咪轻微起伏 + 爱心飘浮 + 互动区生成投喂通知
-                var sceneCat = $('sceneCat');
-                if (sceneCat) {
-                    sceneCat.classList.add('is-nudged');
-                    setTimeout(function () { sceneCat.classList.remove('is-nudged'); }, 320);
-                }
-
+                // 投喂成功：爱心飘浮 + 互动区生成投喂通知
                 burstHearts(4);
                 appendMsg({
                     type: 'feed',
@@ -3460,7 +3129,7 @@
         $('liveVideo').classList.toggle('is-paused', !isPlaying);
         var state = $('liveState');
         state.classList.toggle('is-paused', !isPlaying);
-        state.querySelector('span').textContent = isPlaying ? '直播中' : '已暂停';
+        state.querySelector('span').textContent = playStateText();
     }
 
     function toggleMute() {
@@ -3526,15 +3195,11 @@
             stage.hidden = true;
             offline.hidden = false;
         } else {
-            // 未配置摄像头：才使用完整猫屋演示场景
+            // 未配置摄像头：显示深色演示空画面，不再加载猫屋场景
             img.hidden = true;
             stage.hidden = false;
             offline.hidden = true;
         }
-
-        $('stageHint').textContent = mode === 'live' ? ''
-            : mode === 'offline' ? '直播画面中断，正在尝试重连…'
-            : '演示画面 · 接入直播源后自动切换实时画面';
 
         updateAiBadge();
         updateSourceBadge();
