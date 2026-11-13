@@ -27,9 +27,9 @@
            统一在这里维护圆角 / 间距 / 阴影，页面内不再散落硬编码。
            ============================================================ */
         :root {
-            --lp-pink: #d88da3;
-            --lp-pink-deep: #c8708b;
-            --lp-pink-soft: #f7e3e9;
+            --lp-pink: #D68DA2;
+            --lp-pink-deep: #b96a82;
+            --lp-pink-soft: #f8e7ed;
             --lp-sage: #9fb59d;
             --lp-sage-deep: #55744f;
             --lp-sage-soft: #e6eee3;
@@ -40,10 +40,10 @@
             --lp-muted: #7d7160;
             --lp-line: rgba(239, 228, 223, 0.9);
             --lp-card: linear-gradient(180deg, rgba(255, 253, 251, 0.96), rgba(250, 246, 242, 0.93));
-            --lp-shadow: 0 6px 18px rgba(123, 97, 101, 0.07);
-            --lp-shadow-lg: 0 14px 30px rgba(123, 97, 101, 0.12);
-            --lp-r-xl: 28px;
-            --lp-r-lg: 22px;
+            --lp-shadow: 0 4px 14px rgba(123, 97, 101, 0.05);
+            --lp-shadow-lg: 0 10px 26px rgba(123, 97, 101, 0.09);
+            --lp-r-xl: 22px;
+            --lp-r-lg: 18px;
             --lp-r-md: 16px;
             --lp-r-sm: 12px;
             --lp-gap: 20px;
@@ -171,12 +171,13 @@
             isolation: isolate;
             /* 以播放器高度为参照缩放猫咪，避免大屏下主体偏小 */
             container-type: size;
-            /* 深棕改为暖灰棕，降低对比度，和奶油白页面更协调 */
+            /* 深暖灰棕：降低饱和度，用玫瑰粉 / 鼠尾草绿微光衔接品牌色 */
             background:
-                radial-gradient(120% 90% at 50% 0%, rgba(152, 118, 100, 0.3), transparent 62%),
-                linear-gradient(180deg, #4b3c34 0%, #3a2f2a 48%, #2c2521 100%);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            box-shadow: var(--lp-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+                radial-gradient(120% 90% at 18% 0%, rgba(214, 141, 162, 0.16), transparent 58%),
+                radial-gradient(90% 80% at 88% 100%, rgba(159, 181, 157, 0.12), transparent 55%),
+                linear-gradient(160deg, #3b3531 0%, #322d2a 48%, #282523 100%);
+            border: 1px solid rgba(255, 240, 244, 0.1);
+            box-shadow: 0 10px 26px rgba(96, 74, 70, 0.12), inset 0 1px 0 rgba(255, 245, 248, 0.12);
             color: #fff;
         }
         /* 轻微暗角：让画面四角收拢，突出中央主体 */
@@ -186,11 +187,11 @@
             inset: 0;
             z-index: 2;
             pointer-events: none;
-            box-shadow: inset 0 0 90px rgba(22, 14, 11, 0.32);
+            box-shadow: inset 0 0 80px rgba(20, 16, 14, 0.22);
         }
         /* 接入真实/合成画面时减弱暗角，避免把本就不亮的画面压得更黑 */
         .lp-player.is-stream::after {
-            box-shadow: inset 0 0 70px rgba(22, 14, 11, 0.16);
+            box-shadow: inset 0 0 60px rgba(20, 16, 14, 0.12);
         }
         .lp-player.is-stream .lp-stream {
             filter: brightness(1.03);
@@ -229,20 +230,20 @@
             position: absolute;
             inset: 0;
             background:
-                radial-gradient(ellipse at 50% 98%, rgba(255, 198, 152, 0.16), transparent 58%),
-                radial-gradient(circle at 50% 34%, rgba(255, 212, 172, 0.13), transparent 55%),
-                radial-gradient(circle at 80% 14%, rgba(216, 141, 163, 0.13), transparent 45%),
-                radial-gradient(circle at 12% 84%, rgba(159, 181, 157, 0.1), transparent 40%),
-                linear-gradient(180deg, rgba(96, 76, 64, 0.22), rgba(38, 30, 26, 0.55));
+                radial-gradient(ellipse at 50% 98%, rgba(214, 141, 162, 0.16), transparent 58%),
+                radial-gradient(circle at 50% 34%, rgba(255, 240, 244, 0.06), transparent 55%),
+                radial-gradient(circle at 80% 14%, rgba(214, 141, 162, 0.1), transparent 45%),
+                radial-gradient(circle at 12% 84%, rgba(159, 181, 157, 0.12), transparent 40%),
+                linear-gradient(180deg, rgba(72, 62, 56, 0.22), rgba(36, 31, 29, 0.5));
         }
         .lp-stage::after {
             content: "";
             position: absolute;
             inset: 0;
             background-image: repeating-linear-gradient(
-                0deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 4px
+                0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px
             );
-            opacity: 0.4;
+            opacity: 0.3;
         }
         /* 离线时整体压暗，避免看起来像“正常直播” */
         .lp-stage.is-offline { filter: saturate(0.65) brightness(0.72); }
@@ -250,14 +251,14 @@
         .lp-player.is-paused .lp-stage-cat,
         .lp-player.is-paused .lp-progress-fill::before { animation-play-state: paused; }
 
-        /* 猫咪与 AI 追踪框：尺寸随播放器宽度缩放，不用固定宽高 */
+        /* 猫咪与 AI 追踪框：外框贴合识别目标，不再使用固定大小的空框 */
         .lp-stage-cat {
             position: relative;
             z-index: 1;
-            display: grid;
-            place-items: center;
-            width: clamp(150px, 30%, 280px);
-            aspect-ratio: 1.2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 18px;
             animation: lpFloat 5.5s ease-in-out infinite;
         }
         .lp-cat-emoji {
@@ -285,9 +286,9 @@
         .lp-track {
             position: absolute;
             inset: 0;
-            border: 1px solid rgba(238, 178, 196, 0.34);
-            border-radius: 20px;
-            box-shadow: inset 0 0 24px rgba(216, 141, 163, 0.08);
+            border: 1px solid rgba(238, 178, 196, 0.42);
+            border-radius: 16px;
+            box-shadow: inset 0 0 20px rgba(214, 141, 162, 0.1);
         }
         .lp-corner {
             position: absolute;
@@ -583,6 +584,42 @@
             accent-color: #f39ab0;
             cursor: pointer;
         }
+        /* 统一线性图标：播放/静音状态由播放器 class 控制，不再切换 emoji */
+        .lp-ic {
+            display: block;
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .lp-ic-play { display: none; }
+        .lp-player.is-paused .lp-ic-play { display: block; }
+        .lp-player.is-paused .lp-ic-pause { display: none; }
+        .lp-ic-muted { display: none; }
+        .lp-player.is-muted .lp-ic-muted { display: block; }
+        .lp-player.is-muted .lp-ic-volume { display: none; }
+        /* 控制栏内的直播状态，暂停时同步变为“已暂停” */
+        .lp-live-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex: 0 0 auto;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 0.66rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .lp-live-state i {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #7fd08a;
+        }
+        .lp-live-state.is-paused { color: #f3d39a; }
+        .lp-live-state.is-paused i { background: #e8b45c; }
 
         /* ============================================================
            5. 直播信息栏（视频下方）
@@ -783,27 +820,10 @@
         }
         .lp-switch-house {
             color: var(--lp-muted);
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-        /* 每张卡片都明确标注直播状态，避免只靠头像上的小圆点传达 */
-        .lp-switch-live {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--lp-sage-deep);
-            font-size: 0.65rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .lp-switch-live::before {
-            content: "";
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #5fae6b;
         }
 
         /* ============================================================
@@ -873,7 +893,7 @@
             border-radius: 999px;
             background: #f3efe9;
             color: var(--lp-muted);
-            font-size: 0.64rem;
+            font-size: 0.68rem;
             font-weight: 600;
             white-space: nowrap;
         }
@@ -983,7 +1003,7 @@
             padding: 14px 16px;
             border: none;
             border-radius: 999px;
-            background: linear-gradient(135deg, #d98ba2 0%, #e6aabb 52%, #d88da3 100%);
+            background: linear-gradient(135deg, #bd6b84 0%, #D68DA2 55%, #c27489 100%);
             color: #fff;
             font-size: 0.92rem;
             font-weight: 700;
@@ -1039,12 +1059,14 @@
         .lp-device-status.is-done { background: #e8f3e4; color: var(--lp-sage-deep); }
         .lp-device-status.is-err { background: #fdecea; color: #b8463f; }
 
-        /* 猫屋信息卡片：紧凑的 2×2 指标 */
+        /* 猫屋信息卡片：鼠尾草绿轻声调，和投喂卡形成职责区分 */
         .lp-house {
             display: flex;
             flex-direction: column;
             gap: 12px;
             padding: 20px;
+            background: linear-gradient(180deg, #f7faf4, #fdfcf9);
+            border-color: rgba(159, 181, 157, 0.32);
         }
         .lp-house-head {
             display: flex;
@@ -1116,7 +1138,7 @@
         }
         .lp-house-grid dt {
             color: var(--lp-muted);
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             white-space: nowrap;
         }
         .lp-house-grid dd {
@@ -1197,7 +1219,7 @@
             gap: 6px;
             margin-top: 4px;
             color: var(--lp-muted);
-            font-size: 0.7rem;
+            font-size: 0.72rem;
         }
 
         /* 消息列表：独立滚动，不带动页面 */
@@ -1205,7 +1227,7 @@
             display: flex;
             flex: 1 1 auto;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             min-height: 0;
             padding: 12px 14px;
             overflow-y: auto;
@@ -1222,11 +1244,11 @@
             background: rgba(216, 141, 163, 0.3);
         }
 
-        /* 单条消息：普通留言 / 投喂 / AI / 巡查 / 系统各自成体系 */
+        /* 单条消息：用户气泡 / 投喂动态 / AI 系统通知 / 巡查 / 系统，形状与色系统一 */
         .lp-msg {
             display: flex;
             gap: 9px;
-            padding: 9px 10px;
+            padding: 8px 10px;
             border: 1px solid transparent;
             border-radius: 16px;
             animation: lpMsgIn 0.26s ease both;
@@ -1250,63 +1272,66 @@
         .lp-msg-head {
             display: flex;
             align-items: center;
-            gap: 5px;
-            flex-wrap: wrap;
-            font-size: 0.73rem;
+            gap: 6px;
+            flex-wrap: nowrap;
+            font-size: 0.74rem;
             line-height: 1.35;
         }
         .lp-msg-user {
-            max-width: 62%;
+            flex: 0 1 auto;
+            min-width: 0;
             color: var(--lp-ink);
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .lp-msg-tag {
-            padding: 1px 6px;
+            flex: 0 0 auto;
+            margin-left: auto;
+            padding: 2px 7px;
             border-radius: 999px;
-            font-size: 0.61rem;
+            font-size: 0.66rem;
             font-weight: 700;
-            line-height: 1.7;
+            line-height: 1.55;
         }
         .lp-msg-time {
-            margin-left: auto;
-            padding-left: 4px;
+            flex: 0 0 auto;
             color: var(--lp-muted);
-            font-size: 0.66rem;
+            font-size: 0.68rem;
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
         }
         .lp-msg-text {
-            margin-top: 3px;
+            margin-top: 4px;
             color: #5f5557;
-            font-size: 0.82rem;
-            line-height: 1.6;
+            font-size: 0.84rem;
+            line-height: 1.65;
             word-break: break-word;
             white-space: pre-wrap;
         }
 
         /* 普通用户留言：干净的白底气泡 */
         .lp-msg.is-user {
-            background: rgba(255, 255, 255, 0.92);
-            border-color: rgba(239, 228, 223, 0.85);
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.94);
+            border-color: rgba(239, 228, 223, 0.9);
         }
-        .lp-msg.is-user .lp-msg-tag { background: #f1ece7; color: var(--lp-muted); }
-        /* 远程投喂动态：粉色底 + 左侧强调条 */
+        .lp-msg.is-user .lp-msg-tag { background: #e8f1fb; color: #47719f; }
+        /* 投喂动态：奶油底 + 琥珀色强调，和投喂按钮的粉色区分开 */
         .lp-msg.is-feed {
-            background: linear-gradient(135deg, #fdf1f5, #fffafc);
-            border-color: rgba(216, 141, 163, 0.26);
-            box-shadow: inset 3px 0 0 rgba(216, 141, 163, 0.55);
+            background: linear-gradient(135deg, #fdf8f1, #fffdf9);
+            border-color: rgba(224, 163, 62, 0.22);
+            box-shadow: inset 3px 0 0 rgba(224, 163, 62, 0.5);
         }
-        .lp-msg.is-feed .lp-msg-avatar { background: linear-gradient(135deg, #e79bb0, var(--lp-pink)); }
-        .lp-msg.is-feed .lp-msg-tag { background: #f6d7e1; color: #a9556f; }
+        .lp-msg.is-feed .lp-msg-avatar { background: linear-gradient(135deg, #f0c89b, #e0a33e); }
+        .lp-msg.is-feed .lp-msg-tag { background: #fbf0de; color: #a8691f; }
         /* AI 系统通知：鼠尾草绿底 + 左侧强调条 */
         .lp-msg.is-ai {
             background: linear-gradient(135deg, #eff5ec, #f9fcf7);
             border-color: rgba(159, 181, 157, 0.38);
-            box-shadow: inset 3px 0 0 rgba(159, 181, 157, 0.75);
+            box-shadow: inset 3px 0 0 rgba(159, 181, 157, 0.72);
         }
         .lp-msg.is-ai .lp-msg-avatar { background: linear-gradient(135deg, #a9c0a7, #86a283); }
         .lp-msg.is-ai .lp-msg-tag { background: #dce8d9; color: var(--lp-sage-deep); }
@@ -1326,7 +1351,7 @@
         }
         .lp-msg.is-system .lp-msg-avatar { background: linear-gradient(135deg, #c6b9ae, #ad9f94); }
         .lp-msg.is-system .lp-msg-tag { background: #efe6dd; color: var(--lp-muted); }
-        .lp-msg:hover { border-color: rgba(216, 141, 163, 0.4); }
+        .lp-msg:hover { border-color: rgba(214, 141, 162, 0.4); }
 
         /* 输入区 */
         .lp-composer {
@@ -1434,7 +1459,7 @@
         .lp-sec-note {
             margin-left: auto;
             color: var(--lp-muted);
-            font-size: 0.72rem;
+            font-size: 0.74rem;
         }
 
         .lp-ai-grid {
@@ -1443,7 +1468,7 @@
             gap: var(--lp-gap);
             align-items: stretch;
         }
-        .lp-timeline-card { padding: 16px 18px; }
+        .lp-timeline-card { padding: 18px 20px; }
         .lp-timeline {
             display: flex;
             flex-direction: column;
@@ -1451,12 +1476,33 @@
             padding: 0;
             list-style: none;
         }
+        /* 默认只展示 4 条主要事件，出现时间 / 历史识别按需展开 */
+        .lp-timeline.is-collapsed .lp-tl[data-secondary] { display: none; }
+        .lp-tl-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin: 10px 0 2px 28px;
+            padding: 6px 12px;
+            border: 1px solid var(--lp-line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--lp-ink-2);
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s ease, color 0.2s ease;
+        }
+        .lp-tl-toggle:hover {
+            border-color: rgba(214, 141, 162, 0.5);
+            color: var(--lp-pink-deep);
+        }
         .lp-tl {
             position: relative;
             display: grid;
             grid-template-columns: 18px minmax(0, 1fr);
             gap: 10px;
-            padding: 6px 0;
+            padding: 8px 0;
         }
         /* 时间轴竖线与节点 */
         .lp-tl-dot {
@@ -1486,9 +1532,9 @@
         }
         .lp-tl:last-child .lp-tl-dot::after { display: none; }
         .lp-tl-card {
-            padding: 8px 12px;
+            padding: 10px 14px;
             border: 1px solid rgba(239, 228, 223, 0.9);
-            border-radius: 14px;
+            border-radius: 16px;
             background: rgba(255, 255, 255, 0.72);
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -1504,11 +1550,11 @@
         }
         .lp-tl-top time {
             color: var(--lp-muted);
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }
-        .lp-tl-top strong { font-size: 0.84rem; }
+        .lp-tl-top strong { font-size: 0.86rem; }
         .lp-tl-ic {
             font-size: 0.82rem;
             line-height: 1;
@@ -1618,7 +1664,7 @@
         .lp-stat span {
             display: block;
             color: var(--lp-muted);
-            font-size: 0.64rem;
+            font-size: 0.68rem;
         }
         .lp-ai-cat {
             display: flex;
@@ -1646,29 +1692,30 @@
         .lp-ai-cat small {
             display: block;
             color: var(--lp-muted);
-            font-size: 0.66rem;
+            font-size: 0.7rem;
         }
-        /* 识别覆盖：四只猫的置信度概况，填满侧卡片的纵向空间 */
+        /* 识别覆盖：四只猫的置信度概况，2×2 排列降低纵向密度 */
         .lp-coverage {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 12px;
         }
         .lp-coverage h4 {
+            grid-column: 1 / -1;
             color: var(--lp-muted);
-            font-size: 0.72rem;
+            font-size: 0.74rem;
             font-weight: 600;
         }
         .lp-cov {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             min-width: 0;
             color: var(--lp-ink-2);
             font-size: 0.72rem;
         }
         .lp-cov span {
-            flex: 0 0 40px;
+            flex: 0 0 34px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1699,7 +1746,7 @@
             border-radius: 12px;
             background: #f8f4f0;
             color: var(--lp-muted);
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             line-height: 1.6;
         }
         /* 待人工确认提示：让“异常提醒 ≠ 健康诊断”在概览卡里也清晰可见 */
@@ -1890,14 +1937,8 @@
             .topbar .menu { order: initial; width: auto; }
         }
 
-        /* 桌面端短视口：互动栏改为视口高度，优先保证输入框可见 */
-        @media (min-width: 961px) and (max-height: 820px) {
-            .lp-chat {
-                align-self: start;
-                height: calc(100vh - 132px);
-                height: calc(100dvh - 132px);
-            }
-        }
+        /* 聊天栏始终填满左栏前三行：不随视口高度收缩，
+           避免短视口下聊天栏与下方功能带之间出现空白 */
 
         /* ≤960：单列。用 display:contents 让子元素参与外层网格排序，
            移动端顺序 = 播放器 → 信息栏 → 实时互动 → 猫咪切换 → 投喂/猫屋 */
@@ -1953,6 +1994,9 @@
             .lp-stage-hint { display: none; }
             .lp-overlay-bottom { padding: 20px 10px 8px; gap: 6px; }
             .lp-ctrl { width: 30px; height: 30px; font-size: 0.78rem; }
+            .lp-ic { width: 14px; height: 14px; }
+            .lp-live-state { display: none; }
+            .lp-stage-cat { padding: 8px 10px; }
             .lp-time { font-size: 0.66rem; }
             .lp-volume { width: 48px; }
 
@@ -2066,7 +2110,7 @@
                                 <span class="lp-corner tr"></span>
                                 <span class="lp-corner bl"></span>
                                 <span class="lp-corner br"></span>
-                                <span class="lp-track-label" id="trackLabel">AI 追踪 · 96.8%</span>
+                                <span class="lp-track-label" id="trackLabel">身份识别 · 咪咪 · 93.6%</span>
                             </div>
                             <div class="lp-cat-emoji" id="liveCatEmoji">🐈</div>
                         </div>
@@ -2078,7 +2122,7 @@
                         <div class="lp-badges">
                             <span class="lp-live"><i></i>LIVE</span>
                             <span class="lp-src is-demo" id="sourceBadge">演示画面</span>
-                            <span class="lp-ai" id="aiStatus"><span id="aiStatusText">AI 模拟识别 · 咪咪</span><span class="lp-ai-conf" id="aiStatusConf"> 93.6%</span></span>
+                            <span class="lp-ai" id="aiStatus"><span id="aiStatusText">AI 模拟识别 · 咪咪</span><span class="lp-ai-conf" id="aiStatusConf"></span></span>
                         </div>
                         <span class="lp-viewers">👁 <b id="viewerCount">9,876</b><span class="lp-viewers-label"> 人正在观看</span></span>
                     </div>
@@ -2094,15 +2138,32 @@
                         </div>
                         <div class="lp-controls">
                             <div class="lp-controls-group">
-                                <button class="lp-ctrl" id="playPauseBtn" title="暂停" aria-label="暂停">⏸</button>
-                                <button class="lp-ctrl" id="muteBtn" title="静音" aria-label="静音">🔊</button>
+                                <button class="lp-ctrl" id="playPauseBtn" title="暂停" aria-label="暂停">
+                                    <svg class="lp-ic lp-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg class="lp-ic lp-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+                                </button>
+                                <button class="lp-ctrl" id="muteBtn" title="静音" aria-label="静音">
+                                    <svg class="lp-ic lp-ic-volume" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+                                        <path d="M16 8.5a5 5 0 010 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                    <svg class="lp-ic lp-ic-muted" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+                                        <path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                                <span class="lp-live-state" id="liveState"><i></i><span>直播中</span></span>
                                 <input class="lp-volume" id="volumeSlider" type="range" min="0" max="100" value="80"
                                        aria-label="音量">
                                 <span class="lp-time" id="elapsed">02:14:36</span>
                             </div>
                             <div class="lp-controls-group">
                                 <button class="lp-ctrl lp-ctrl-text" id="qualityBtn" title="清晰度" aria-label="切换清晰度">HD</button>
-                                <button class="lp-ctrl" id="fullscreenBtn" title="全屏" aria-label="全屏">⛶</button>
+                                <button class="lp-ctrl" id="fullscreenBtn" title="全屏" aria-label="全屏">
+                                    <svg class="lp-ic" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2151,7 +2212,6 @@
                                 <p>投喂成功后会同步到右侧实时互动</p>
                             </div>
                             <div class="lp-feed-tags">
-                                <span class="lp-tag pink">猫迹特色</span>
                                 <span class="lp-tag">演示设备</span>
                             </div>
                         </div>
@@ -2234,11 +2294,12 @@
             <div class="lp-sec-head">
                 <h2>🐾 AI 猫咪动态</h2>
                 <span class="lp-tag">模拟识别</span>
-                <span class="lp-sec-note">AI 结果仅作辅助参考，异常提醒需人工确认</span>
+                <span class="lp-sec-note">AI 置信度不等于识别正确，健康观察需人工确认</span>
             </div>
             <div class="lp-ai-grid">
                 <div class="lp-card lp-timeline-card">
-                    <ol class="lp-timeline" id="aiTimeline"></ol>
+                    <ol class="lp-timeline is-collapsed" id="aiTimeline"></ol>
+                    <button class="lp-tl-toggle" id="aiToggle" type="button" aria-expanded="false">展开更多记录（2）</button>
                 </div>
                 <aside class="lp-card lp-ai-side">
                     <h3>今日识别概览</h3>
@@ -2257,12 +2318,11 @@
                     </div>
                     <div class="lp-coverage" id="aiCoverage"></div>
                     <div class="lp-ai-review">
-                        <span aria-hidden="true">⚠️</span>
-                        <p><b>3 条提醒待人工确认</b><br>确认前仅作为行为观察，不升级为健康结论。</p>
+                        <span aria-hidden="true">🩺</span>
+                        <p><b>3 条健康观察待人工确认</b><br>置信度不代表识别正确，请志愿者复核。</p>
                     </div>
                     <p class="lp-ai-note">
-                        识别结果来自模拟数据，尚未接入真实视觉模型。异常提醒只表示「需要人工复核」，
-                        不等同于健康诊断；涉及 TNR、医疗与领养决策时，请以现场人工核验和专业判断为准。
+                        模拟识别结果，不构成健康诊断；TNR、医疗与领养决策请以现场人工核验为准。
                     </p>
                 </aside>
             </div>
@@ -2400,11 +2460,11 @@
        实时互动：消息结构、渲染与模拟推送
        ============================================================ */
     var TYPE_META = {
-        user:      { label: '留言', cls: 'is-user' },
-        feed:      { label: '投喂', cls: 'is-feed', icon: '🍖' },
-        ai:        { label: 'AI',   cls: 'is-ai', icon: '🤖' },
-        volunteer: { label: '巡查', cls: 'is-volunteer', icon: '🧤' },
-        system:    { label: '系统', cls: 'is-system', icon: '⚙️' }
+        user:      { label: '留言', cls: 'is-user', icon: null },
+        feed:      { label: '公益互动', cls: 'is-feed', icon: '🍖', title: '投喂动态' },
+        ai:        { label: 'AI 识别', cls: 'is-ai', icon: '🤖', title: 'AI 系统通知' },
+        volunteer: { label: '巡查', cls: 'is-volunteer', icon: '🧤', title: '巡查动态' },
+        system:    { label: '系统', cls: 'is-system', icon: '⚙️', title: '系统通知' }
     };
 
     var AVATAR_COLORS = ['#d88da3', '#9fb59d', '#d9a86a', '#8fb8e8', '#c39ac8', '#cf8f7a'];
@@ -2440,7 +2500,8 @@
 
         var user = document.createElement('span');
         user.className = 'lp-msg-user';
-        user.textContent = msg.user;
+        user.textContent = meta.title || msg.user;
+        user.title = msg.user || '';
 
         var tag = document.createElement('span');
         tag.className = 'lp-msg-tag';
@@ -2451,12 +2512,17 @@
         time.textContent = msg.time || '刚刚';
 
         head.appendChild(user);
-        head.appendChild(tag);
         head.appendChild(time);
+        head.appendChild(tag);
+
+        var bodyText = msg.text;
+        if (meta.title && (msg.type === 'feed' || msg.type === 'volunteer')) {
+            bodyText = msg.user + ' · ' + msg.text;
+        }
 
         var text = document.createElement('p');
         text.className = 'lp-msg-text';
-        text.textContent = msg.text;
+        text.textContent = bodyText;
 
         main.appendChild(head);
         main.appendChild(text);
@@ -2495,7 +2561,7 @@
         chatLog = [
             { type: 'user', user: '云养人 2381', text: n0 + ' 今天也在呀，刚才还对着镜头打了个哈欠', time: '刚刚' },
             { type: 'feed', user: '爱心用户 8752', text: '为 ' + n2 + ' 投喂了 轻量守护（6 份猫粮）', time: '刚刚' },
-            { type: 'ai', user: 'AI 识别', text: '检测到 ' + n0 + ' 进入猫屋 · 置信度 ' + cats[0].confidence + '%', time: '1 分钟前' },
+            { type: 'ai', user: 'AI 识别', text: '检测到 ' + n0 + ' 进入猫屋', time: '1 分钟前' },
             { type: 'user', user: '小鹿软糖', text: '这个机位比上周清楚多了，进食过程也能看清', time: '1 分钟前' },
             { type: 'volunteer', user: '志愿者 阿岚', text: '完成 ' + cats[0].area + ' 猫屋巡查：猫粮余量充足，饮水机正常', time: '3 分钟前' },
             { type: 'feed', user: '喵守护者', text: '为 ' + n3 + ' 投喂了 周末加餐（25 份猫粮）', time: '5 分钟前' },
@@ -2558,7 +2624,7 @@
             appendMsg({
                 type: 'ai',
                 user: 'AI 识别',
-                text: cat.name + ' ' + pick(SIM_AI_ACTIONS) + ' · 置信度 ' + (92 + Math.random() * 6).toFixed(1) + '%',
+                text: cat.name + ' ' + pick(SIM_AI_ACTIONS),
                 time: '刚刚'
             });
         } else if (roll < 0.9) {
@@ -2621,7 +2687,8 @@
         }
         // AI 识别目前始终是模拟能力，不随摄像头接入而宣称“真实识别”
         text.textContent = 'AI 模拟识别 · ' + c.name;
-        conf.textContent = ' ' + c.confidence + '%';
+        // 置信度统一放在播放器识别框 / AI 时间轴，顶部只保留状态
+        conf.textContent = '';
         badge.className = 'lp-ai';
     }
 
@@ -2681,7 +2748,6 @@
                 '<span class="lp-switch-info">' +
                     '<span class="lp-switch-name">' + esc(c.name) + '</span>' +
                     '<span class="lp-switch-house">' + esc(houseName(c)) + '</span>' +
-                    '<span class="lp-switch-live">直播中</span>' +
                 '</span>' +
             '</button>';
         }).join('');
@@ -2714,7 +2780,7 @@
         $('metaLocation').textContent = c.spot;
         $('metaViewers').textContent = fmt(c.viewers);
         $('viewerCount').textContent = fmt(c.viewers);
-        $('trackLabel').textContent = 'AI 追踪 · ' + conf;
+        $('trackLabel').textContent = '身份识别 · ' + c.name + ' · ' + conf;
         $('aiSideAvatar').textContent = c.emoji;
         $('aiSideName').textContent = c.name;
         $('aiSideConf').textContent = conf;
@@ -2752,17 +2818,18 @@
               text: '检测到持续进食 3 分 12 秒，摄食节奏处于日常区间' },
             { kind: 'activity', icon: '🐾', title: '活动状态', tag: '已记录', time: '10:46', conf: 89.6,
               text: '在猫屋木台停留 12 分钟后离开画面' },
-            { kind: 'alert', icon: '⚠️', title: '异常提醒', tag: '待人工确认', time: '10:52', conf: 78.4,
-              text: '本次进食时长明显短于近 7 天均值，仅表示需要人工复核，不构成健康诊断' },
-            { kind: 'appear', icon: '👀', title: '出现时间', tag: '规律', time: '09:08', conf: 97.1,
+            { kind: 'alert', icon: '🩺', title: '健康观察', tag: '待人工确认', time: '10:52', conf: 78.4,
+              text: '观察到进食时长明显短于近 7 天均值；仅建议志愿者现场复核，AI 结果不等同于健康诊断' },
+            { kind: 'appear', icon: '👀', title: '出现时间', tag: '规律', time: '09:08', conf: 97.1, secondary: true,
               text: '今日第 2 次出现，比昨日提前约 40 分钟' },
-            { kind: 'history', icon: '🗂', title: '历史识别', tag: '档案', time: '昨天 21:40', conf: 95.3,
+            { kind: 'history', icon: '🗂', title: '历史识别', tag: '档案', time: '昨天 21:40', conf: 95.3, secondary: true,
               text: '近 7 天识别 18 次，累计投喂 ' + c.feedCount + ' 次' }
         ];
 
         $('aiTimeline').innerHTML = nodes.map(function (n) {
             var tagClass = n.kind === 'alert' ? 'lp-tag warn' : 'lp-tag';
-            return '<li class="lp-tl is-' + n.kind + '">' +
+            return '<li class="lp-tl is-' + n.kind + (n.secondary ? ' is-secondary' : '') + '"' +
+                (n.secondary ? ' data-secondary="1"' : '') + '>' +
                 '<span class="lp-tl-dot" aria-hidden="true"></span>' +
                 '<div class="lp-tl-card">' +
                     '<div class="lp-tl-top">' +
@@ -2852,7 +2919,7 @@
         appendMsg({
             type: 'ai',
             user: 'AI 识别',
-            text: '已切换到 ' + c.name + ' 的直播画面 · AI 重新锁定个体（置信度 ' + c.confidence + '%）',
+            text: '已切换到 ' + c.name + ' 的直播画面 · AI 重新锁定个体',
             time: '刚刚'
         }, true);
         showToast('已切换到 ' + c.name + ' · ' + houseName(c));
@@ -3020,26 +3087,28 @@
 
     function togglePlay() {
         isPlaying = !isPlaying;
-        $('playPauseBtn').textContent = isPlaying ? '⏸' : '▶';
         $('playPauseBtn').title = isPlaying ? '暂停' : '播放';
         $('playPauseBtn').setAttribute('aria-label', isPlaying ? '暂停' : '播放');
         $('playPauseBtn').classList.toggle('is-on', !isPlaying);
         $('liveVideo').classList.toggle('is-paused', !isPlaying);
+        var state = $('liveState');
+        state.classList.toggle('is-paused', !isPlaying);
+        state.querySelector('span').textContent = isPlaying ? '直播中' : '已暂停';
     }
 
     function toggleMute() {
         isMuted = !isMuted;
-        $('muteBtn').textContent = isMuted ? '🔇' : '🔊';
         $('muteBtn').title = isMuted ? '取消静音' : '静音';
         $('muteBtn').setAttribute('aria-label', isMuted ? '取消静音' : '静音');
         $('muteBtn').classList.toggle('is-on', isMuted);
+        $('liveVideo').classList.toggle('is-muted', isMuted);
         $('volumeSlider').value = isMuted ? 0 : 80;
     }
 
     function onVolumeChange(event) {
         var value = Number(event.target.value);
         isMuted = value === 0;
-        $('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+        $('liveVideo').classList.toggle('is-muted', isMuted);
         $('muteBtn').classList.toggle('is-on', isMuted);
     }
 
@@ -3190,6 +3259,14 @@
         $('chatForm').addEventListener('submit', sendMessage);
         $('chatInput').addEventListener('input', function () {
             $('sendBtn').disabled = !$('chatInput').value.trim();
+        });
+
+        // AI 时间轴：默认收起次要记录，异常/健康观察始终可见
+        $('aiToggle').addEventListener('click', function () {
+            var list = $('aiTimeline');
+            var collapsed = list.classList.toggle('is-collapsed');
+            this.setAttribute('aria-expanded', String(!collapsed));
+            this.textContent = collapsed ? '展开更多记录（2）' : '收起更多记录';
         });
 
         $('playPauseBtn').addEventListener('click', togglePlay);
