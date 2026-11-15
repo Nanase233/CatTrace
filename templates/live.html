@@ -2497,6 +2497,7 @@
        数据分析
        ============================================================ */
     function renderCharts() {
+if (!$('feedChart') || !$('visitPie') || !$('visitLegend')) return; // 本页没有看板图表容器，缺元素时直接跳过，避免中断后续初始化
         var days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         var values = [23, 31, 28, 35, 42, 38, 45];
         var max = Math.max.apply(null, values);

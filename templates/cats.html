@@ -13,6 +13,8 @@
 
     <!-- 全局样式表，?v= 参数用于缓存刷新（Jinja2 模板变量 cache_bust） -->
     <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <!-- 页面补充样式：标题、筛选条、卡片头像、状态徽章、详情弹窗、领养流程/表单 -->
+    <link rel="stylesheet" href="/static/css/pages.css?v={{ cache_bust }}">
     <!-- PWA Web App Manifest，定义应用图标、名称等安装信息 -->
     <link rel="manifest" href="/static/manifest.json">
     <!-- PWA 主题色，影响浏览器地址栏/状态栏颜色 -->
@@ -75,6 +77,7 @@
             <select id="statusFilter" class="filter-select">
                 <option value="all">所有状态</option>
                 <option value="adoptable">可领养</option>
+                <option value="free">自由活动</option>
                 <option value="adopted">已领养</option>
                 <option value="monitoring">监控中</option>
             </select>
@@ -187,33 +190,58 @@
         // 页面业务逻辑
         // ==============================
 
+        // 最近一次从接口拿到的猫咪列表，筛选和详情弹窗都从这里取数据
+        let allCats = [];
+
         // 从后端 API 加载所有猫咪列表
         async function loadCats() {
             try {
                 // 请求猫咪列表接口（无筛选参数，返回全部猫咪）
                 const response = await fetch('/api/cats');
                 const data = await response.json();
+                // 后端 /api/cats 直接返回数组；兼容旧版 {cats: [...]} 结构
+                allCats = Array.isArray(data) ? data : (data.cats || []);
                 // 渲染猫咪卡片网格
-                renderCatsGrid(data.cats);
+                renderCatsGrid(allCats);
             } catch (error) {
                 showToast('加载猫咪列表失败', 'error');
             }
         }
 
+        // 统一推导展示状态：可领养优先，其余用后端 status 字段
+        function statusOf(cat) {
+            if (cat.adoption_ready) return 'adoptable';
+            return cat.status || 'free';
+        }
+
+        // 头像底色：后端 color 是中文描述（如"橘白相间"）不能直接当 CSS 用，
+        // 这里按猫的 id 从一组品牌色里取，保证每只猫颜色稳定且好看
+        const AVATAR_PALETTE = ['#f6d7c4', '#e6d9f0', '#d7e8f6', '#fbe0e5', '#e2f0dc'];
+        function avatarColor(cat) {
+            const c = cat.color || '';
+            if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c) || /^rgba?\(/i.test(c)) return c;
+            return AVATAR_PALETTE[Number(cat.id || 0) % AVATAR_PALETTE.length];
+        }
+
         // 将猫咪数据渲染为卡片网格，插入 #catsGrid 容器
         function renderCatsGrid(cats) {
             const grid = document.getElementById('catsGrid');
+            if (!grid) return;
+            if (!cats || cats.length === 0) {
+                grid.innerHTML = '<p class="no-data">暂时没有符合条件的猫咪档案。</p>';
+                return;
+            }
             // 使用模板字符串生成卡片 HTML
             // 每张卡片绑定 onclick 事件，点击调用 showCatDetail() 打开详情弹窗
             grid.innerHTML = cats.map(cat => `
                 <div class="cat-card" onclick="showCatDetail('${cat.id}')">
-                    <!-- 猫咪头像：背景色取 cat.color，默认粉色；emoji 取 cat.emoji，默认猫脸 -->
-                    <div class="cat-card-avatar" style="background:${cat.color || '#d88da3'}">${cat.emoji || '🐱'}</div>
+                    <!-- 猫咪头像：背景色按 id 取品牌色；emoji 取 cat.emoji，默认猫脸 -->
+                    <div class="cat-card-avatar" style="background:${avatarColor(cat)}">${cat.emoji || '🐱'}</div>
                     <div class="cat-card-info">
                         <h3>${cat.name}</h3>
                         <p>📍 ${cat.location}</p>
-                        <!-- 状态徽章：class 包含 status 值（如 adoptable/adopted/monitoring），用于 CSS 着色 -->
-                        <span class="status-badge ${cat.status}">${getStatusText(cat.status)}</span>
+                        <!-- 状态徽章：class 包含状态值，用于 CSS 着色 -->
+                        <span class="status-badge ${statusOf(cat)}">${getStatusText(statusOf(cat))}</span>
                     </div>
                 </div>
             `).join('');
@@ -224,13 +252,47 @@
             const statusMap = {
                 'adoptable': '可领养',
                 'adopted': '已领养',
-                'monitoring': '监控中'
+                'monitoring': '监控中',
+                'free': '自由活动',
+                'missing': '寻找中'
             };
             return statusMap[status] || status;
         }
 
-        // 打开猫咪详情弹窗
+        let currentCat = null;   // 详情弹窗当前展示的猫咪
+
+        // 打开猫咪详情弹窗，并用已加载的列表数据填充内容
         function showCatDetail(catId) {
+            const cat = allCats.find(c => String(c.id) === String(catId));
+            if (!cat) { showToast('没有找到这只猫咪的档案', 'error'); return; }
+            currentCat = cat;
+
+            document.getElementById('detailAvatar').textContent = cat.emoji || '🐱';
+            document.getElementById('detailName').textContent = cat.name || '未命名';
+            document.getElementById('detailLocation').textContent = '📍 ' + (cat.location || '位置待补充');
+
+            const badge = document.getElementById('detailStatus');
+            const status = statusOf(cat);
+            badge.className = 'status-badge ' + status;
+            badge.textContent = getStatusText(status);
+
+            const genderMap = { female: '母', male: '公' };
+            document.getElementById('detailGender').textContent = genderMap[cat.gender] || cat.gender || '-';
+            document.getElementById('detailAge').textContent = cat.age || '-';
+            document.getElementById('detailWeight').textContent = cat.weight ? cat.weight + ' kg' : '-';
+            document.getElementById('detailPersonality').textContent = cat.nickname || '性格待观察';
+
+            // 健康记录：把档案里的健康/绝育信息整理成两行
+            document.getElementById('healthRecords').innerHTML = `
+                <div class="health-item"><span>健康状况</span><strong>${cat.health || '未知'}</strong></div>
+                <div class="health-item"><span>绝育情况</span><strong>${cat.neutered ? '已绝育' : '未绝育'}</strong></div>
+            `;
+            // 投喂历史：展示累计投喂与浏览量（明细需要登录后从云端拉取）
+            document.getElementById('feedHistory').innerHTML = `
+                <div class="feed-item"><span>累计投喂</span><strong>${cat.feed_count || 0} 次</strong></div>
+                <div class="feed-item"><span>档案浏览</span><strong>${cat.views || 0} 次</strong></div>
+            `;
+
             // 将弹窗 display 设为 flex 使其居中显示
             document.getElementById('catDetailModal').style.display = 'flex';
         }
@@ -260,14 +322,15 @@
             fetch('/api/cats')
                 .then(r => r.json())
                 .then(data => {
-                    let filtered = data.cats;
+                    // 后端直接返回数组，这里兼容旧的 {cats: [...]} 结构
+                    let filtered = Array.isArray(data) ? data.slice() : (data.cats || []);
                     // 按名字模糊搜索过滤
                     if (search) {
                         filtered = filtered.filter(cat => cat.name.toLowerCase().includes(search));
                     }
                     // 按状态精确过滤（"all" 不过滤）
                     if (status !== 'all') {
-                        filtered = filtered.filter(cat => cat.status === status);
+                        filtered = filtered.filter(cat => statusOf(cat) === status);
                     }
                     // 重新渲染筛选后的结果
                     renderCatsGrid(filtered);
@@ -284,6 +347,41 @@
                 // 延迟 300ms 确保卡片渲染完成后再打开弹窗
                 setTimeout(() => showCatDetail(catId), 300);
             }
+        });
+
+        // ==============================
+        // 详情弹窗里的操作按钮
+        // ==============================
+
+        // 投喂：给当前详情里的猫咪记一次投喂
+        document.getElementById('detailFeedBtn').addEventListener('click', async () => {
+            if (!currentCat) return;
+            try {
+                const res = await fetch('/api/feed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cat_id: currentCat.id })
+                });
+                const data = await res.json();
+                if (data.success === false) { showToast(data.message || '投喂失败', 'error'); return; }
+                currentCat.feed_count = (currentCat.feed_count || 0) + 1;
+                document.getElementById('feedHistory').innerHTML = `
+                    <div class="feed-item"><span>累计投喂</span><strong>${currentCat.feed_count} 次</strong></div>
+                    <div class="feed-item"><span>档案浏览</span><strong>${currentCat.views || 0} 次</strong></div>
+                `;
+                // 卡片上的投喂数同步刷新
+                renderCatsGrid(allCats);
+                showToast('投喂成功，谢谢你的守护！', 'success');
+            } catch (error) {
+                showToast('投喂失败，请稍后重试', 'error');
+            }
+        });
+
+        // 举报异常：关闭详情并提示到社区共治里提交
+        document.getElementById('detailReportBtn').addEventListener('click', () => {
+            if (!currentCat) return;
+            closeCatDetail();
+            showToast('可在首页「社区共治」中提交异常举报，志愿者会跟进处理', 'info');
         });
     </script>
 </body>
