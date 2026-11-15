@@ -1773,7 +1773,11 @@ function registerServiceWorker() {
     // file:// 下浏览器不支持 Service Worker（双击打开的离线页面），直接跳过
     if (location.protocol === 'file:') return;
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js').then(r => console.log('SW注册成功:', r.scope)).catch(e => console.log('SW注册失败:', e));
+        // GitHub Pages 项目页部署在 /CatTrace/ 子路径下，站点根目录没有 /static/sw.js，
+// 注册失败属于预期情况（catch 里静默忽略，不往控制台抛错误）
+navigator.serviceWorker.register('/static/sw.js')
+.then(function (r) { console.log('SW注册成功:', r.scope); })
+.catch(function () { });
     }
 }
 
