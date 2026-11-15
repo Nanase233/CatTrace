@@ -2344,8 +2344,23 @@
             conf.textContent = '';
             badge.className = 'lp-ai is-off';
         } else if (camMode === 'live') {
-            text.textContent = 'AI 实时识别 · ' + c.name;
-            conf.textContent = '';
+            // 有 /stats 就用树莓派的真实判定（cat / nocat / starting + 剪耳结论）
+            var s = liveStats || {};
+            var verdict = s.verdict || '';
+            var label = verdict === 'cat' ? '猫'
+                : (verdict === 'nocat' || verdict === 'notcat') ? '未发现猫'
+                : verdict === 'uncertain' ? '判定不确定'
+                : verdict === 'starting' ? '启动中'
+                : c.name;
+            var percent = (verdict === 'cat' && s.p_cat != null)
+                ? ' ' + Math.round(s.p_cat * 100) + '%'
+                : '';
+            var ear = '';
+            if (s.ear_enabled && s.notched === true) ear = ' · 已绝育';
+            else if (s.ear_enabled && s.notched === false) ear = ' · 未绝育';
+            if (!ear && s.stream_fps && Number(s.stream_fps) >= 1) ear = ' ' + Number(s.stream_fps).toFixed(1) + ' fps';
+            text.textContent = 'AI 实时识别 · ' + label + percent;
+            conf.textContent = ear;
             badge.className = 'lp-ai';
         } else {
             text.textContent = 'AI 模拟识别 · ' + c.name;
@@ -2762,6 +2777,48 @@ if (!$('feedChart') || !$('visitPie') || !$('visitLegend')) return; // 本页没
        直播能力由 main 上的 live_proxy.py 提供（/api/live/info、/api/live/stream）。
        未配置远端地址时 info.enabled=false，直接进演示模式，不发多余请求。
        ============================================================ */
+    /* 摄像头真实识别状态（/api/live/stats），没有就退回"实时识别 + 猫名" */
+    var liveStats = null;
+    var statsTimer = null;
+    var lastFrameSeq = -1;
+    var lastFrameAt = 0;
+    var reconnectAt = 0;
+
+    /* 断流/冻结时重新建立 MJPEG 连接：换一个带时间戳的 URL，绕开浏览器缓存 */
+    function reconnectStream() {
+        var img = $('liveStreamImg');
+        var base = img.dataset.src || '/api/live/stream';
+        img.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+        lastFrameSeq = -1;
+        lastFrameAt = Date.now();
+    }
+
+    /* 轮询树莓派的 /stats：更新右上角识别徽标，并做"画面冻结"检测 */
+    function pollStats(url) {
+        if (!url || statsTimer) return;
+        statsTimer = setInterval(function () {
+            fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (stats) {
+                    if (!stats) return;
+                    liveStats = stats;
+                    var now = Date.now();
+                    if (stats.stream_frames !== lastFrameSeq) {
+                        // 推流帧号在涨 = 画面是活的
+                        lastFrameSeq = stats.stream_frames;
+                        lastFrameAt = now;
+                    } else if (camMode === 'live' && lastFrameAt && now - lastFrameAt > 5000 && now - reconnectAt > 5000) {
+                        // 5 秒没有新帧 = 画面已冻结（摄像头节点可能卡在最后一帧），主动重连
+                        reconnectAt = now;
+                        reconnectStream();
+                    }
+                    updateAiBadge();
+                    updateHouseState();
+                })
+                .catch(function () {});
+        }, 2000);
+    }
+
     function setCamMode(mode) {
         camMode = mode;
         var img = $('liveStreamImg');
@@ -2771,6 +2828,7 @@ if (!$('feedChart') || !$('visitPie') || !$('visitLegend')) return; // 本页没
             stage.hidden = true;
             img.hidden = false;
             if (!img.getAttribute('src')) img.src = img.dataset.src;
+            if (!lastFrameAt) lastFrameAt = Date.now();
         } else {
             img.hidden = true;
             stage.hidden = false;
@@ -2792,6 +2850,8 @@ if (!$('feedChart') || !$('visitPie') || !$('visitLegend')) return; // 本页没
         function applyInfo(info) {
             var enabled = !!(info && info.enabled);
             setCamMode(enabled ? 'live' : 'demo');
+            // 配了 CATTRACE_LIVE_STATS 才轮询；没配就只显示画面，不显示置信度
+            if (enabled && info && info.stats_url) pollStats(info.stats_url);
             return enabled;
         }
 

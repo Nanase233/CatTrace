@@ -424,7 +424,7 @@
   },
   "/api/learning/insights": {
     "cats_tracked": 0,
-    "generated_at": "2026-11-15T23:39:48",
+    "generated_at": "2026-11-15T23:58:01",
     "insights": [
       "平台累计记录 0 次投喂行为",
       "有 0 位活跃用户（投喂 3 次以上）"

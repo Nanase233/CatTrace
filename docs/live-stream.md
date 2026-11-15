@@ -29,6 +29,28 @@ Flask /api/live/stream（同源代理，app.py + live_proxy.py）
 
 ## 2. 怎么跑
 
+### 第零步（推荐）：没有树莓派也先把链路验证通
+
+`scripts/mock_live_source.py` 会在本机起一个假摄像头（Pillow 现画画面 + 模拟 `/stats`），
+接口和树莓派那一侧完全一致。用它先确认「Flask 代理 → 网页直播间」这段是好的，再去折腾硬件：
+
+```powershell
+# 终端 1：假摄像头，8100 端口
+python scripts/mock_live_source.py --port 8100 --verdict cat
+
+# 终端 2：带地址起网页
+$env:CATTRACE_LIVE_URL      = "http://127.0.0.1:8100/stream"
+$env:CATTRACE_LIVE_STATS    = "http://127.0.0.1:8100/stats"
+$env:CATTRACE_LIVE_SNAPSHOT = "http://127.0.0.1:8100/snapshot.jpg"
+python app.py
+```
+
+打开 `http://127.0.0.1:5000/live`，应该看到：画面切到实时（不再是被占位表情挡住），
+右上角徽标从「AI 模拟识别」变成「AI 实时识别 · 猫 97% · 已绝育」。
+
+`--verdict` 可以换成 `notcat`（徽标显示「未发现猫」）或 `starting`（「启动中」）；
+想验证断流回退，直接把假摄像头的进程停掉。
+
 ### 第一步：树莓派上启动摄像头服务
 
 ```bash
@@ -131,9 +153,11 @@ python app.py
 
 ## 4. 前端行为
 
-- 连上：显示真实画面，隐藏表情，右上角 AI 徽标变绿点。
+- 连上：显示真实画面，隐藏表情；配了 `CATTRACE_LIVE_STATS` 时右上角徽标显示树莓派的**真实判定**
+  ——「AI 实时识别 · 猫 97% · 已绝育」/「未发现猫」/「启动中」，没配则只显示「AI 实时识别 · 猫名」。
 - 断流：显示「📡 摄像头断流」+ 重试按钮，表情回来，按 2s → 4s → 8s → 16s → 30s 退避重连。
-- 画面冻结：轮询 `/stats` 时若 `stream_frames` 连续 5 秒不增长，判定「画面已冻结」并自动重连，避免一直停在最后一帧。
+- 画面冻结：每 2 秒轮询 `/stats`，若 `stream_frames` 连续 5 秒不增长，判定「画面已冻结」并主动重连，
+  避免一直停在最后一帧。
 - 6 秒还没出第一帧：判定「摄像头无响应」。
 - 没配地址：完全不打扰，保持原来的占位动画。
 
@@ -154,3 +178,40 @@ python app.py
 - 接正式识别时：让 `pipeline.runner` 成为唯一的摄像头持有者，把抽出来的帧同时
   (a) 写 `/dev/shm` 给识别用，(b) 推给 MJPEG 服务。这样画面就是「模型看到的那一帧」，
   演示时可信度最高，也不会两个进程抢摄像头。
+
+## 7. 常见问题
+
+### Q1. 我打开的是 GitHub Pages 的静态站，为什么看不到摄像头？
+
+静态站只有 HTML/CSS/JS，没有后端 `/api/live/*` 代理，`<img src="/api/live/stream">` 会 404。
+要看摄像头，页面必须跑在 **Flask** 上：
+
+| 场景 | 做法 | Pi 需要公网吗 |
+|---|---|---|
+| 电脑和 Pi 在同一个 Wi-Fi（最常见） | 电脑上 `python app.py` + 三个 `CATTRACE_*` 环境变量，浏览器开 `http://<电脑IP>:5000/live` | 不需要 |
+| 只想在 Pi 自己身上看 | Pi 上也跑一份 Flask，`CATTRACE_LIVE_URL=http://127.0.0.1:8000/stream` | 不需要 |
+| 想给外网 / 手机 4G 看 | Pi 上开内网穿透（cloudflared / ngrok），隧道地址填进 `CATTRACE_LIVE_URL`，Flask 部署到 Render | 需要隧道 |
+
+> Render 免费实例**连不到你家里的局域网**，所以「Render + 家里的 Pi」中间必须有隧道这一跳。
+
+### Q2. 浏览器能打开 `http://<Pi>:8000/`，但网页直播间一直停在占位动画
+
+按顺序查：
+
+1. 在跑 Flask 的那台机器（不是 Pi）上执行 `curl http://<Pi>:8000/stats` —— 不通就是网络或端口问题；
+2. Pi 的防火墙：`sudo ufw status` 里要有 `8000` 的 allow，否则 `sudo ufw allow 8000/tcp`；
+3. 环境变量是不是没生效：Windows 必须在**同一个** PowerShell 窗口里先 `$env:` 再 `python app.py`；
+4. `curl http://127.0.0.1:5000/api/live/info` 应返回 `"enabled": true`；若是 `false`，说明变量没读到；
+5. 都正常但画面不动 → 看第 1 步 `stream_frames` 有没有在涨，不涨就是摄像头卡住（见 Q3）。
+
+### Q3. 树莓派直播几秒就卡住 / 服务反复重启
+
+先怀疑硬件：`vcgencmd get_throttled` 不是 `0x0` 就是欠压，换 5V/3A 电源并重插 CSI 排线。
+实测这台 Pi 就是这个症状（`0x50005`）：`rpicam-still` 正常，但持续出流几秒后 Unicam 超时。
+详见 [pi-kiosk-实测记录.md](./pi-kiosk-实测记录.md) 第 4 节。
+
+### Q4. 徽标一直显示「启动中」
+
+`/stats` 里 `verdict` 还是 `starting`，说明模型或摄像头还在初始化，等 5~10 秒；一直不变就看
+`journalctl --user -u catvision-camera -n 50`，常见原因是模型文件缺失（onnx/json 被覆盖）。
+

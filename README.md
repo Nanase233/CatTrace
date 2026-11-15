@@ -197,6 +197,10 @@ python app.py
 
 完整链路、systemd 常驻和排障见 [docs/live-stream.md](./docs/live-stream.md)。
 
+> 手边没有树莓派时，可以先用 `python scripts/mock_live_source.py --port 8100` 起一个假摄像头，
+> 把 `CATTRACE_LIVE_URL` 指到 `http://127.0.0.1:8100/stream`，就能验证「Flask 代理 → 网页直播间」整条链路。
+> 注意：GitHub Pages 上的静态版没有后端代理，接摄像头必须打开 Flask 版的 `/live`。
+
 ### CatVision 全链路验证（无需摄像头）
 
 ```bash
