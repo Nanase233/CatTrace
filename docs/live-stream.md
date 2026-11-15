@@ -99,7 +99,24 @@ journalctl --user -u catvision-camera.service -f
 仓库默认假设代码在 `~/catvision`、虚拟环境在 `~/venvs/catvision`；路径不同就改这两行。
 `systemctl --user enable` 需要用户 linger 已开启（`loginctl show-user <用户> -p Linger` 应为 `Linger=yes`）。
 
-### 第二步：电脑上带着地址启动网页
+### 第二步：启动网页（带摄像头地址）
+
+**推荐：一条命令**，它会先探一次树莓派再启动 Flask，省掉手抄环境变量：
+
+```bash
+# 电脑上跑（树莓派只当摄像头节点）
+python scripts/serve_live.py --pi 192.168.1.50
+
+# 或者直接在树莓派本机跑（手机热点 / 陌生网络下最省事）
+python scripts/serve_live.py --pi 127.0.0.1
+```
+
+预检通过会打印 `/stats` 的判定和 `/snapshot` 的字节数，然后给出本机和手机的访问地址；
+预检失败也会照样启动网页（页面显示「设备离线」），并提示最可能的四个原因。
+
+> 树莓派上跑网页只需要 `pip install flask`（`app.py` 不依赖 Pillow / pydantic）。
+
+也可以手工设环境变量（等价做法）：
 
 Linux / macOS：
 
