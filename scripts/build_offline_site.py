@@ -32,7 +32,9 @@ sys.path.insert(0, BASE_DIR)
 # 必须在 import app 之前指定数据文件，避免污染仓库里的 data.json。
 OFFLINE_TMP = tempfile.mkdtemp(prefix='cattrace-offline-')
 os.environ.setdefault('PROJECTCAT_DATA_FILE', os.path.join(OFFLINE_TMP, 'data.json'))
-os.environ.setdefault('PROJECTCAT_LIVE_URL', '')  # 离线版不代理树莓派视频流
+# 离线版不代理任何摄像头流；同时覆盖项目内外的两套环境变量名
+os.environ['PROJECTCAT_LIVE_URL'] = ''
+os.environ['CATTRACE_LIVE_URL'] = ''
 
 import app as app_module  # noqa: E402
 
@@ -41,6 +43,7 @@ PAGES = [
     ('/', 'index.html'),
     ('/cats', 'cats.html'),
     ('/adopt', 'adopt.html'),
+    ('/diary', 'diary.html'),
     ('/live', 'live.html'),
 ]
 
