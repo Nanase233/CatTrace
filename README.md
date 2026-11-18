@@ -197,6 +197,10 @@ python app.py
 
 完整链路、systemd 常驻和排障见 [docs/live-stream.md](./docs/live-stream.md)。
 
+> 手边没有树莓派时，可以先用 `python scripts/mock_live_source.py --port 8100` 起一个假摄像头，
+> 把 `CATTRACE_LIVE_URL` 指到 `http://127.0.0.1:8100/stream`，就能验证「Flask 代理 → 网页直播间」整条链路。
+> 注意：GitHub Pages 上的静态版没有后端代理，接摄像头必须打开 Flask 版的 `/live`。
+
 ### CatVision 全链路验证（无需摄像头）
 
 ```bash
@@ -220,9 +224,23 @@ python scripts/verify_catvision.py
 没有摄像头的开发机 L1~L4 全绿、L5 自动 `[SKIP]`；树莓派插着 CSI 摄像头时 L1~L5 全绿。
 判据和实测记录见 [docs/验证指南.md](./docs/验证指南.md)。
 
-### 静态演示页（零依赖）
+### 离线版网页（双击即开，无需安装）
 
-`demo.html` 是早期的产品原型静态演示（旧版界面），双击即可打开，无需 Python、无需网络；在线预览：<https://chenglian07.github.io/CatTrace/demo.html>。最新网页请访问上面的「在线体验」地址。详见 [docs/demo-guide.md](./docs/demo-guide.md)。
+仓库根目录的 `index.html`、`live.html`、`cats.html`、`adopt.html` 就是**最新网页的离线版**：
+由 `scripts/build_offline_site.py` 从 `templates/` + `static/` 导出，并把 `/api/*` 接口数据
+打包进 `static/js/offline-mock.js`，所以双击就能看到带数据的完整页面 —— 不需要 Python、
+不需要后端、也不需要联网。在线预览：<https://chenglian07.github.io/CatTrace/>。
+
+投喂、领养申请这类写操作在离线版里只给成功提示，不会真的写入数据。
+
+网页改完后重新导出一份：
+
+```bash
+python scripts/build_offline_site.py
+```
+
+> `demo.html` 是最早的产品原型静态页（旧版界面），仅作历史对照保留，已不代表最新界面。
+> 两者的区别与使用方式见 [docs/demo-guide.md](./docs/demo-guide.md)。
 
 ---
 
@@ -240,7 +258,7 @@ python scripts/verify_catvision.py
 | [docs/live-stream.md](./docs/live-stream.md) | 树莓派摄像头接入网页直播间的完整链路与部署说明 |
 | [docs/roadmap.md](./docs/roadmap.md) | P0-P3 路线图与远期规划 |
 | [docs/business-plan.md](./docs/business-plan.md) | 市场分析、技术方案、产品范围 |
-| [docs/demo-guide.md](./docs/demo-guide.md) | demo.html 静态演示页使用说明 |
+| [docs/demo-guide.md](./docs/demo-guide.md) | 离线版网页（双击即开）与 demo.html 使用说明 |
 | [docs/验证指南.md](./docs/验证指南.md) | 摄像头接入 + 模块联调五层验证说明 |
 | [docs/pi-kiosk-实测记录.md](./docs/pi-kiosk-实测记录.md) | 2026-10-31 实测：kiosk 部署、已修问题、摄像头 CSI 超时 |
 | [docs/接手流程.md](./docs/接手流程.md) | 新成员必读：环境搭建、分工、PR 流程 |

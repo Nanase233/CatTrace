@@ -924,7 +924,19 @@ const CatsPage = {
             return matchesFilter && (!this.searchQuery || searchAttrs.includes(this.searchQuery.toLowerCase()));
         });
         if (filtered.length === 0) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🐱</div><p class="empty-text">没有找到匹配的猫咪</p><button class="empty-btn" onclick="CatsPage.resetFilter()">重置筛选</button></div>'; return; }
-        grid.innerHTML = filtered.map(cat => '</div>' + CatUI.getEmoji(cat.color) + '</div><div class="cat-card-info"><h3 class="cat-name">' + CatUI.esc(cat.name) + '</h3><p class="cat-nickname">"' + CatUI.esc(cat.nickname || '') + '"</p><div class="cat-tags"><span class="tag">' + (cat.gender === 'male' ? '♂ 公' : '♀ 母') + ' ' + CatUI.esc(cat.age) + '</span><span class="tag">' + CatUI.esc(cat.color) + '</span>' + (cat.neutered ? '<span class="tag tag-success">已绝育</span>' : '') + '</div><p class="cat-card-location">📍 ' + CatUI.esc(cat.location) + '</p></div><div class="cat-card-actions"><button class="btn btn-primary btn-sm" onclick="showCatDetailPopup(' + cat.id + ')">查看详情</button><button class="btn btn-secondary btn-sm" onclick="ShareUI.shareCat(' + cat.id + ')">📤</button></div>')).join(''));
+        grid.innerHTML = filtered.map(cat =>
+            '<div class="cat-card" data-cat="' + cat.id + '">' +
+            '<div class="cat-card-image">' + CatUI.getEmoji(cat.color) + '</div>' +
+            '<div class="cat-card-info"><h3 class="cat-name">' + CatUI.esc(cat.name) + '</h3>' +
+            '<p class="cat-nickname">' + CatUI.esc(cat.nickname || '') + '</p>' +
+            '<div class="cat-tags"><span class="tag">' + (cat.gender === 'male' ? '♂ 公' : '♀ 母') + ' ' + CatUI.esc(cat.age) + '</span>' +
+            '<span class="tag">' + CatUI.esc(cat.color) + '</span>' +
+            (cat.neutered ? '<span class="tag tag-success">已绝育</span>' : '') + '</div>' +
+            '<p class="cat-card-location">📍 ' + CatUI.esc(cat.location) + '</p></div>' +
+            '<div class="cat-card-actions">' +
+            '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();showCatDetailPopup(' + cat.id + ')">查看详情</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();ShareUI.shareCat(' + cat.id + ')">📤</button>' +
+            '</div></div>').join('');
     },
 
     /**
@@ -1758,8 +1770,14 @@ function initEnhancedFeatures() {
  * 注册成功/失败均在控制台输出日志
  */
 function registerServiceWorker() {
+    // file:// 下浏览器不支持 Service Worker（双击打开的离线页面），直接跳过
+    if (location.protocol === 'file:') return;
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js').then(r => console.log('SW注册成功:', r.scope)).catch(e => console.log('SW注册失败:', e));
+        // GitHub Pages 项目页部署在 /CatTrace/ 子路径下，站点根目录没有 /static/sw.js，
+// 注册失败属于预期情况（catch 里静默忽略，不往控制台抛错误）
+navigator.serviceWorker.register('/static/sw.js')
+.then(function (r) { console.log('SW注册成功:', r.scope); })
+.catch(function () { });
     }
 }
 

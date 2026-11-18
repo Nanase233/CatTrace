@@ -1,0 +1,352 @@
+/* ============================================================
+   猫咪档案 / 领养中心 页面补充样式（pages.css）
+   ------------------------------------------------------------
+   style.css 是首页改版前留下的公共样式，其中缺少这两个页面
+   实际用到的若干类（标题、筛选条、卡片头像、状态徽章、详情弹窗、
+   领养流程步骤等），这里按现有设计变量补齐，保证与首页、云直播
+   同一套配色、圆角和阴影。只新增规则，不覆盖 style.css 的既有类。
+   ============================================================ */
+
+/* ---------- 页面标题 ---------- */
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 6px 0 18px;
+    letter-spacing: 0.02em;
+}
+
+/* ---------- 搜索 / 筛选条 ---------- */
+.cats-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.search-input,
+.filter-select {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 9px 16px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.search-input {
+    flex: 1 1 220px;
+    min-width: 180px;
+}
+
+.filter-select {
+    cursor: pointer;
+    padding-right: 34px;
+}
+
+.search-input:focus,
+.filter-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ---------- 猫咪卡片：头像区与文字 ---------- */
+.cat-card-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 140px;
+    font-size: 3.4rem;
+    line-height: 1;
+}
+
+.cat-card-info h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.cat-card-info p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 10px;
+}
+
+/* ---------- 状态徽章 ---------- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 11px;
+    border-radius: var(--radius-pill);
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.status-badge.adoptable { background: #e3f0df; color: #4d7a46; }
+.status-badge.free { background: #e7eff8; color: #47688a; }
+.status-badge.adopted { background: #efe7f6; color: #6a5192; }
+.status-badge.monitoring { background: #fdf1d6; color: #936c22; }
+.status-badge.missing { background: #fbe3e3; color: #a43a3a; }
+
+/* ---------- 空列表提示 ---------- */
+.no-data {
+    grid-column: 1 / -1;
+    padding: 40px 0;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ---------- 猫咪详情弹窗 ---------- */
+/* style.css 里的 .cat-detail-modal 是按"整层遮罩 + 居中 flex"写的
+   （position:fixed / 100% 宽高 / opacity:0 / pointer-events:none），
+   而本页的详情弹窗是 .modal 里的内容面板，必须把这几条复位，
+   否则面板会铺满全屏、内容被当成 flex 子项横向挤压 */
+.modal-content.cat-detail-modal {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: calc(100% - 32px);
+    max-width: 560px;
+    height: auto;
+    max-height: 86vh;
+    display: block;
+    z-index: auto;
+    opacity: 1;
+    pointer-events: auto;
+    /* 面板本身不透明，避免透出后面的卡片网格；内边距替代 style.css 的 .modal-body */
+    background: #fffdfc;
+    padding: 22px 24px 20px;
+}
+
+.cat-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.cat-detail-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 64px;
+    height: 64px;
+    font-size: 2rem;
+    border-radius: 20px;
+    background: var(--primary-light);
+}
+
+.cat-detail-info h2 {
+    margin: 0 0 4px;
+    font-size: 1.3rem;
+    color: var(--text);
+}
+
+.cat-detail-info p {
+    margin: 0 0 8px;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+}
+
+.cat-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cat-detail-section h3 {
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+.detail-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+}
+
+.detail-info-item,
+.health-item,
+.feed-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: #fdf9f5;
+    font-size: 0.86rem;
+}
+
+.detail-label,
+.health-item span,
+.feed-item span {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.detail-value,
+.health-item strong,
+.feed-item strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.health-records,
+.feed-history {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cat-detail-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.cat-detail-actions .btn {
+    flex: 1;
+}
+
+/* 窄屏下详情弹窗信息改为单列 */
+@media (max-width: 520px) {
+    .detail-info-grid { grid-template-columns: 1fr; }
+    .page-title { font-size: 1.4rem; }
+}
+
+/* ---------- 领养中心：流程步骤 ---------- */
+.adopt-process {
+    margin: 34px 0;
+}
+
+.process-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    align-items: stretch;
+}
+
+.process-step {
+    padding: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.process-step h3 {
+    margin: 10px 0 6px;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.process-step p {
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* ---------- 领养中心：申请表单 ---------- */
+.adopt-form-section {
+    margin-top: 8px;
+}
+
+.adopt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.adopt-form .form-group label {
+    margin-bottom: 6px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.adopt-form .form-group input,
+.adopt-form .form-group select,
+.adopt-form .form-group textarea {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    outline: none;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.adopt-form .form-group input:focus,
+.adopt-form .form-group select:focus,
+.adopt-form .form-group textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.btn-block {
+    width: 100%;
+    margin-top: 4px;
+}
+
+/* ---------- 页脚链接行 ---------- */
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    color: var(--text-muted);
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-links a:hover {
+    color: var(--primary-dark);
+}

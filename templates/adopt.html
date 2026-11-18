@@ -13,6 +13,8 @@
 
     <!-- 全局样式表，?v= 参数用于缓存刷新（Jinja2 模板变量 cache_bust） -->
     <link rel="stylesheet" href="/static/css/style.css?v={{ cache_bust }}">
+    <!-- 页面补充样式：标题、筛选条、卡片头像、状态徽章、详情弹窗、领养流程/表单 -->
+    <link rel="stylesheet" href="/static/css/pages.css?v={{ cache_bust }}">
     <!-- PWA Web App Manifest，定义应用图标、名称等安装信息 -->
     <link rel="manifest" href="/static/manifest.json">
     <!-- PWA 主题色，影响浏览器地址栏/状态栏颜色 -->
@@ -183,16 +185,29 @@
         // 从后端 API 加载状态为"可领养"的猫咪列表
         async function loadAdoptableCats() {
             try {
-                // 请求猫咪列表接口，status=adoptable 过滤可领养状态
-                const response = await fetch('/api/cats?status=adoptable');
+                // 请求猫咪列表接口（后端返回全部猫咪，可领养状态在这里筛）
+                const response = await fetch('/api/cats');
                 const data = await response.json();
+                // 兼容后端直接返回数组的写法，以及旧的 {cats: [...]} 结构
+                const list = Array.isArray(data) ? data : (data.cats || []);
+                // 「可领养」以 adoption_ready 为准，兼容 status=adoptable 的旧数据
+                const adoptable = list.filter(cat => cat.adoption_ready || cat.status === 'adoptable');
                 // 渲染猫咪卡片到页面
-                renderAdoptableCats(data.cats);
+                renderAdoptableCats(adoptable);
                 // 同时填充表单中的猫咪下拉选项
-                populateCatSelect(data.cats);
+                populateCatSelect(adoptable);
             } catch (error) {
                 showToast('加载可领养猫咪失败', 'error');
             }
+        }
+
+        // 头像底色：后端 color 是中文描述（如"橘白相间"）不能直接当 CSS 用，
+        // 按 id 从一组品牌色里取，保证每只猫颜色稳定
+        const AVATAR_PALETTE = ['#f6d7c4', '#e6d9f0', '#d7e8f6', '#fbe0e5', '#e2f0dc'];
+        function avatarColor(cat) {
+            const c = cat.color || '';
+            if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c) || /^rgba?\(/i.test(c)) return c;
+            return AVATAR_PALETTE[Number(cat.id || 0) % AVATAR_PALETTE.length];
         }
 
         // 将可领养猫咪渲染为卡片列表，插入 #adoptableCats 容器
@@ -206,8 +221,8 @@
             // 使用模板字符串生成卡片 HTML；每张卡片包含头像、名称、位置、描述和申请按钮
             container.innerHTML = cats.map(cat => `
                 <div class="cat-card">
-                    <!-- 猫咪头像：背景色取 cat.color，默认粉色；emoji 取 cat.emoji，默认猫脸 -->
-                    <div class="cat-card-avatar" style="background:${cat.color || '#d88da3'}">${cat.emoji || '🐱'}</div>
+                    <!-- 猫咪头像：背景色按 id 取品牌色；emoji 取 cat.emoji，默认猫脸 -->
+                    <div class="cat-card-avatar" style="background:${avatarColor(cat)}">${cat.emoji || '🐱'}</div>
                     <div class="cat-card-info">
                         <h3>${cat.name}</h3>
                         <p>📍 ${cat.location}</p>
@@ -247,7 +262,7 @@
             
             try {
                 // POST 请求发送到领养申请接口
-                const response = await fetch('/api/adopt-apply', {
+                const response = await fetch('/api/adopt/apply', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
